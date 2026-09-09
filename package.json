@@ -1,0 +1,51 @@
+{
+  "name": "food-delivery-clone",
+  "version": "1.0.0",
+  "description": "Food Delivery Clone Project to simulate real world food delivery applications like (Talabat, UberEat)",
+  "keywords": [
+    "nodejs",
+    "expressjs",
+    "typescript",
+    "prisma",
+    "postgresql",
+    "docker",
+    "git",
+    "github",
+    "github-actions",
+    "openapi"
+  ],
+  "homepage": "https://github.com/qutuz0x9/Food-Delivery-Clone#readme",
+  "bugs": {
+    "url": "https://github.com/qutuz0x9/Food-Delivery-Clone/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qutuz0x9/Food-Delivery-Clone.git"
+  },
+  "author": "qutuz0x9",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.4.1",
+    "@types/swagger-ui-express": "^4.1.8",
+    "nodemon": "^3.1.14",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.9.0"
+  }
+}
