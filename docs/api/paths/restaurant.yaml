@@ -1,0 +1,291 @@
+listRestaurants:
+  get:
+    tags:
+      - Restaurant
+
+    summary: Browse, search, and filter restaurants
+    description: |
+      Returns a paginated list of restaurants available to the
+      customer (FR-CUS-008: Browse Restaurants).
+
+      Supports free-text search by restaurant name via the `search`
+      parameter (FR-CUS-009: Search Restaurants), and filtering by
+      city, availability status, minimum rating, and maximum delivery
+      fee, along with sorting (FR-CUS-010: Filter Restaurants).
+
+      Only restaurants with `approved` status are returned. Publicly
+      accessible; no authentication required.
+
+    operationId: listRestaurants
+
+    security: []
+
+    parameters:
+      - name: search
+        in: query
+        required: false
+        description: Free-text search on restaurant name.
+        schema:
+          type: string
+        example: grill
+
+      - name: city
+        in: query
+        required: false
+        description: Filter restaurants located in this city.
+        schema:
+          type: string
+        example: Cairo
+
+      - name: availabilityStatus
+        in: query
+        required: false
+        description: Filter restaurants by current availability.
+        schema:
+          type: string
+          enum:
+            - open
+            - closed
+            - busy
+        example: open
+
+      - name: minRating
+        in: query
+        required: false
+        description: Only return restaurants with an average rating at or above this value.
+        schema:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 5
+        example: 4
+
+      - name: maxDeliveryFee
+        in: query
+        required: false
+        description: Only return restaurants with a delivery fee at or below this value.
+        schema:
+          type: number
+          format: double
+          minimum: 0
+        example: 30
+
+      - name: sort
+        in: query
+        required: false
+        description: Sort order applied to the results.
+        schema:
+          type: string
+          enum:
+            - rating_desc
+            - delivery_time_asc
+            - delivery_fee_asc
+            - name_asc
+          default: rating_desc
+        example: rating_desc
+
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Restaurants retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/ListRestaurantsResponse"
+            example:
+              success: true
+              message: Restaurants retrieved successfully
+              data:
+                restaurants:
+                  - id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                    description: Authentic Egyptian grills and mezze.
+                    logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+                    coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
+                    availabilityStatus: open
+                    minimumOrderAmount: 100
+                    deliveryFee: 25
+                    estimatedDeliveryTime: 35
+                    ratingAverage: 4.5
+                    ratingCount: 128
+                    address:
+                      country: Egypt
+                      city: Cairo
+                      street: 15 Ramses St
+                      building: Building 4
+                      latitude: 30.0561
+                      longitude: 31.2394
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+getRestaurant:
+  get:
+    tags:
+      - Restaurant
+
+    summary: View restaurant details
+    description: |
+      Returns detailed information for a single restaurant, identified
+      by `restaurantId`, including address, operating hours, and
+      currently active promotions (FR-CUS-011).
+
+      Publicly accessible; no authentication required.
+
+    operationId: getRestaurant
+
+    security: []
+
+    parameters:
+      - name: restaurantId
+        in: path
+        required: true
+        description: Unique identifier of the restaurant.
+        schema:
+          type: string
+          format: uuid
+        example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    responses:
+      "200":
+        description: Restaurant details retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/GetRestaurantResponse"
+            example:
+              success: true
+              message: Restaurant details retrieved successfully
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  name: Nile Grill House
+                  description: Authentic Egyptian grills and mezze.
+                  phoneNumber: "+201234567890"
+                  email: contact@nilegrill.example.com
+                  logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+                  coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
+                  availabilityStatus: open
+                  minimumOrderAmount: 100
+                  deliveryFee: 25
+                  estimatedDeliveryTime: 35
+                  ratingAverage: 4.5
+                  ratingCount: 128
+                  address:
+                    country: Egypt
+                    city: Cairo
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  operatingHours:
+                    - dayOfWeek: 0
+                      opensAt: "09:00"
+                      closesAt: "23:00"
+                      isClosed: false
+                    - dayOfWeek: 1
+                      opensAt: "09:00"
+                      closesAt: "23:00"
+                      isClosed: false
+                  activePromotions:
+                    - id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f
+                      title: 20% off orders over 200 EGP
+                      discountType: percentage
+                      discountValue: 20
+                      startsAt: "2024-06-01T00:00:00.000Z"
+                      endsAt: "2024-06-30T23:59:59.000Z"
+                  createdAt: "2023-11-10T08:00:00.000Z"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+getRestaurantMenu:
+  get:
+    tags:
+      - Restaurant
+
+    summary: Browse a restaurant's menu
+    description: |
+      Returns the menu of a single restaurant, identified by
+      `restaurantId`, grouped by category (FR-CUS-012). Only active
+      categories and active menu items are included.
+
+      Publicly accessible; no authentication required.
+
+    operationId: getRestaurantMenu
+
+    security: []
+
+    parameters:
+      - name: restaurantId
+        in: path
+        required: true
+        description: Unique identifier of the restaurant.
+        schema:
+          type: string
+          format: uuid
+        example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    responses:
+      "200":
+        description: Restaurant menu retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/GetRestaurantMenuResponse"
+            example:
+              success: true
+              message: Restaurant menu retrieved successfully
+              data:
+                restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                categories:
+                  - id: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+                    name: Grills
+                    displayOrder: 1
+                    items:
+                      - id: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
+                        name: Grilled Kofta Platter
+                        description: Grilled beef kofta served with rice and salad.
+                        basePrice: 150
+                        isAvailable: true
+                        preparationTime: 20
+                        imageUrl: https://cdn.example.com/menu-items/kofta-platter/1.jpg
+                        categoryId: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+                        categoryName: Grills
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

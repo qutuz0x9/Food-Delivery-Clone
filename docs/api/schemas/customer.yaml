@@ -1,0 +1,781 @@
+RegisterCustomerRequest:
+  type: object
+  required:
+    - email
+    - password
+    - firstName
+    - lastName
+  properties:
+    email:
+      type: string
+      format: email
+      description: Customer email address.
+      example: john@example.com
+
+    password:
+      type: string
+      format: password
+      minLength: 8
+      description: Customer account password.
+      example: StrongPassword123!
+
+    firstName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Customer first name.
+      example: John
+
+    lastName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Customer last name.
+      example: Doe
+
+RegisterCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Customer account created successfully
+
+    data:
+      type: object
+      required:
+        - customer
+      properties:
+        customer:
+          $ref: "#/Customer"
+
+LoginCustomerRequest:
+  type: object
+  required:
+    - email
+    - password
+  properties:
+    email:
+      type: string
+      format: email
+      description: Customer email address.
+      example: john@example.com
+
+    password:
+      type: string
+      format: password
+      description: Customer account password.
+      example: StrongPassword123!
+
+LoginCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Logged in successfully
+
+    data:
+      type: object
+      required:
+        - customer
+        - accessToken
+        - refreshToken
+      properties:
+        customer:
+          $ref: "#/Customer"
+
+        accessToken:
+          type: string
+          description: JWT access token used to authenticate subsequent requests.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.abc123signature
+
+        refreshToken:
+          type: string
+          description: Opaque token used to obtain a new access token via the refresh endpoint.
+          example: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+
+ForgotPasswordCustomerRequest:
+  type: object
+  required:
+    - email
+  properties:
+    email:
+      type: string
+      format: email
+      description: Email address of the customer account to recover.
+      example: john@example.com
+
+ForgotPasswordCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      description: |
+        Generic confirmation message. Returned regardless of whether the
+        email is registered, to avoid revealing account existence.
+      example: If an account with that email exists, a password reset link has been sent.
+
+    data:
+      type: object
+      nullable: true
+      example: null
+
+ResetPasswordCustomerRequest:
+  type: object
+  required:
+    - token
+    - newPassword
+    - confirmPassword
+  properties:
+    token:
+      type: string
+      description: Password reset token received via email.
+      example: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+
+    newPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: New account password.
+      example: NewStrongPassword123!
+
+    confirmPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: Must match `newPassword` exactly.
+      example: NewStrongPassword123!
+
+ResetPasswordCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Password reset successfully
+
+    data:
+      type: object
+      nullable: true
+      example: null
+
+LogoutCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Logged out successfully
+
+    data:
+      type: object
+      nullable: true
+      example: null
+
+Customer:
+  type: object
+  required:
+    - id
+    - email
+    - firstName
+    - lastName
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique customer identifier.
+      example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+
+    email:
+      type: string
+      format: email
+      description: Customer email address.
+      example: john@example.com
+
+    firstName:
+      type: string
+      description: Customer first name.
+      example: John
+
+    lastName:
+      type: string
+      description: Customer last name.
+      example: Doe
+
+CustomerProfile:
+  type: object
+  required:
+    - id
+    - email
+    - firstName
+    - lastName
+    - phoneNumber
+    - emailVerified
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique customer identifier.
+      example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+
+    email:
+      type: string
+      format: email
+      description: Customer email address.
+      example: john@example.com
+
+    firstName:
+      type: string
+      description: Customer first name.
+      example: John
+
+    lastName:
+      type: string
+      description: Customer last name.
+      example: Doe
+
+    phoneNumber:
+      type: string
+      description: Customer phone number.
+      example: "+201234567890"
+
+    profileImageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: URL of the customer's profile picture.
+      example: https://cdn.example.com/profiles/7d8c5e9a.jpg
+
+    dateOfBirth:
+      type: string
+      format: date
+      nullable: true
+      description: Customer date of birth.
+      example: 1995-06-15
+
+    gender:
+      type: string
+      nullable: true
+      enum:
+        - male
+        - female
+      description: Customer gender.
+      example: male
+
+    emailVerified:
+      type: boolean
+      description: Whether the customer's email address has been verified.
+      example: true
+
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the customer account was created.
+      example: "2024-01-15T10:30:00.000Z"
+
+GetCustomerProfileResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Customer profile retrieved successfully
+
+    data:
+      type: object
+      required:
+        - customer
+      properties:
+        customer:
+          $ref: "#/CustomerProfile"
+
+UpdateCustomerProfileRequest:
+  type: object
+  minProperties: 1
+  properties:
+    firstName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Customer first name.
+      example: John
+
+    lastName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Customer last name.
+      example: Doe
+
+    phoneNumber:
+      type: string
+      description: Customer phone number.
+      example: "+201234567890"
+
+    profileImageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: URL of the customer's profile picture.
+      example: https://cdn.example.com/profiles/7d8c5e9a.jpg
+
+    dateOfBirth:
+      type: string
+      format: date
+      nullable: true
+      description: Customer date of birth.
+      example: 1995-06-15
+
+    gender:
+      type: string
+      nullable: true
+      enum:
+        - male
+        - female
+      description: Customer gender.
+      example: male
+
+UpdateCustomerProfileResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Customer profile updated successfully
+
+    data:
+      type: object
+      required:
+        - customer
+      properties:
+        customer:
+          $ref: "#/CustomerProfile"
+
+ChangePasswordCustomerRequest:
+  type: object
+  required:
+    - currentPassword
+    - newPassword
+    - confirmPassword
+  properties:
+    currentPassword:
+      type: string
+      format: password
+      description: Customer's current account password.
+      example: StrongPassword123!
+
+    newPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: New account password.
+      example: NewStrongPassword123!
+
+    confirmPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: Must match `newPassword` exactly.
+      example: NewStrongPassword123!
+
+ChangePasswordCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Password changed successfully
+
+    data:
+      type: object
+      nullable: true
+      example: null
+
+DeliveryAddress:
+  type: object
+  required:
+    - id
+    - label
+    - recipientName
+    - phoneNumber
+    - streetAddress
+    - city
+    - isDefault
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique delivery address identifier.
+      example: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
+
+    label:
+      type: string
+      description: Short label identifying the address (e.g. "Home", "Work").
+      example: Home
+
+    recipientName:
+      type: string
+      description: Name of the person receiving deliveries at this address.
+      example: John Doe
+
+    phoneNumber:
+      type: string
+      description: Contact phone number for this address.
+      example: "+201234567890"
+
+    streetAddress:
+      type: string
+      description: Street address, including building/apartment number.
+      example: 12 Nile Corniche St, Apt 5
+
+    city:
+      type: string
+      description: City name.
+      example: Cairo
+
+    state:
+      type: string
+      nullable: true
+      description: State or governorate.
+      example: Cairo Governorate
+
+    postalCode:
+      type: string
+      nullable: true
+      description: Postal or ZIP code.
+      example: "11511"
+
+    latitude:
+      type: number
+      format: double
+      nullable: true
+      description: Latitude coordinate of the address.
+      example: 30.0444
+
+    longitude:
+      type: number
+      format: double
+      nullable: true
+      description: Longitude coordinate of the address.
+      example: 31.2357
+
+    isDefault:
+      type: boolean
+      description: Whether this is the customer's default delivery address.
+      example: true
+
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the address was created.
+      example: "2024-01-15T10:30:00.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Timestamp when the address was last updated.
+      example: "2024-02-01T09:00:00.000Z"
+
+ListDeliveryAddressesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery addresses retrieved successfully
+
+    data:
+      type: object
+      required:
+        - addresses
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: "#/DeliveryAddress"
+
+CreateDeliveryAddressRequest:
+  type: object
+  required:
+    - label
+    - recipientName
+    - phoneNumber
+    - streetAddress
+    - city
+  properties:
+    label:
+      type: string
+      description: Short label identifying the address (e.g. "Home", "Work").
+      example: Home
+
+    recipientName:
+      type: string
+      description: Name of the person receiving deliveries at this address.
+      example: John Doe
+
+    phoneNumber:
+      type: string
+      description: Contact phone number for this address.
+      example: "+201234567890"
+
+    streetAddress:
+      type: string
+      description: Street address, including building/apartment number.
+      example: 12 Nile Corniche St, Apt 5
+
+    city:
+      type: string
+      description: City name.
+      example: Cairo
+
+    state:
+      type: string
+      nullable: true
+      description: State or governorate.
+      example: Cairo Governorate
+
+    postalCode:
+      type: string
+      nullable: true
+      description: Postal or ZIP code.
+      example: "11511"
+
+    latitude:
+      type: number
+      format: double
+      nullable: true
+      description: Latitude coordinate of the address.
+      example: 30.0444
+
+    longitude:
+      type: number
+      format: double
+      nullable: true
+      description: Longitude coordinate of the address.
+      example: 31.2357
+
+    isDefault:
+      type: boolean
+      default: false
+      description: |
+        Whether this should become the customer's default delivery
+        address. Setting this to `true` unsets `isDefault` on the
+        customer's previously default address. The customer's first
+        address is always saved as the default, regardless of this
+        value.
+      example: true
+
+CreateDeliveryAddressResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery address added successfully
+
+    data:
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          $ref: "#/DeliveryAddress"
+
+GetDeliveryAddressResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery address retrieved successfully
+
+    data:
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          $ref: "#/DeliveryAddress"
+
+UpdateDeliveryAddressRequest:
+  type: object
+  minProperties: 1
+  properties:
+    label:
+      type: string
+      description: Short label identifying the address (e.g. "Home", "Work").
+      example: Home
+
+    recipientName:
+      type: string
+      description: Name of the person receiving deliveries at this address.
+      example: John Doe
+
+    phoneNumber:
+      type: string
+      description: Contact phone number for this address.
+      example: "+201234567890"
+
+    streetAddress:
+      type: string
+      description: Street address, including building/apartment number.
+      example: 12 Nile Corniche St, Apt 5
+
+    city:
+      type: string
+      description: City name.
+      example: Cairo
+
+    state:
+      type: string
+      nullable: true
+      description: State or governorate.
+      example: Cairo Governorate
+
+    postalCode:
+      type: string
+      nullable: true
+      description: Postal or ZIP code.
+      example: "11511"
+
+    latitude:
+      type: number
+      format: double
+      nullable: true
+      description: Latitude coordinate of the address.
+      example: 30.0444
+
+    longitude:
+      type: number
+      format: double
+      nullable: true
+      description: Longitude coordinate of the address.
+      example: 31.2357
+
+    isDefault:
+      type: boolean
+      description: |
+        Whether this should become the customer's default delivery
+        address. Setting this to `true` unsets `isDefault` on the
+        customer's previously default address.
+      example: true
+
+UpdateDeliveryAddressResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery address updated successfully
+
+    data:
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          $ref: "#/DeliveryAddress"
+
+DeleteDeliveryAddressResponse:
+  type: object
+  required:
+    - success
+    - message
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery address deleted successfully
+
+    data:
+      type: object
+      nullable: true
+      example: null

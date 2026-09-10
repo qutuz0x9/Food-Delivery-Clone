@@ -1,0 +1,406 @@
+MenuItemOptionValue:
+  type: object
+  required:
+    - id
+    - name
+    - priceAdjustment
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique option value identifier.
+      example: e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b
+
+    name:
+      type: string
+      description: Option value name.
+      example: Extra cheese
+
+    priceAdjustment:
+      type: number
+      format: double
+      description: Amount added to (or subtracted from) the item's base price when selected.
+      example: 15
+
+    displayOrder:
+      type: integer
+      nullable: true
+      description: Position of this value within its option group.
+      example: 1
+
+MenuItemOptionGroup:
+  type: object
+  required:
+    - id
+    - name
+    - minSelection
+    - maxSelection
+    - isRequired
+    - values
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique option group identifier.
+      example: d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a
+
+    name:
+      type: string
+      description: Option group name.
+      example: Toppings
+
+    minSelection:
+      type: integer
+      description: Minimum number of values the customer must select from this group.
+      example: 0
+
+    maxSelection:
+      type: integer
+      description: Maximum number of values the customer may select from this group.
+      example: 3
+
+    isRequired:
+      type: boolean
+      description: Whether selecting a value from this group is mandatory.
+      example: false
+
+    values:
+      type: array
+      items:
+        $ref: "#/MenuItemOptionValue"
+
+MenuItemSummary:
+  type: object
+  required:
+    - id
+    - name
+    - basePrice
+    - isAvailable
+    - categoryId
+    - categoryName
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique menu item identifier.
+      example: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
+
+    name:
+      type: string
+      description: Menu item name.
+      example: Grilled Kofta Platter
+
+    description:
+      type: string
+      nullable: true
+      description: Short description of the menu item.
+      example: Grilled beef kofta served with rice and salad.
+
+    basePrice:
+      type: number
+      format: double
+      description: Base price of the menu item, before option adjustments.
+      example: 150
+
+    isAvailable:
+      type: boolean
+      description: Whether the item is currently available to order.
+      example: true
+
+    preparationTime:
+      type: integer
+      nullable: true
+      description: Estimated preparation time, in minutes.
+      example: 20
+
+    imageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: URL of the item's primary image.
+      example: https://cdn.example.com/menu-items/kofta-platter/1.jpg
+
+    categoryId:
+      type: string
+      format: uuid
+      description: Identifier of the category this item belongs to.
+      example: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+
+    categoryName:
+      type: string
+      description: Name of the category this item belongs to.
+      example: Grills
+
+MenuItemSearchResult:
+  type: object
+  required:
+    - id
+    - name
+    - basePrice
+    - isAvailable
+    - categoryId
+    - categoryName
+    - restaurantId
+    - restaurantName
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique menu item identifier.
+      example: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
+
+    name:
+      type: string
+      description: Menu item name.
+      example: Grilled Kofta Platter
+
+    description:
+      type: string
+      nullable: true
+      description: Short description of the menu item.
+      example: Grilled beef kofta served with rice and salad.
+
+    basePrice:
+      type: number
+      format: double
+      description: Base price of the menu item, before option adjustments.
+      example: 150
+
+    isAvailable:
+      type: boolean
+      description: Whether the item is currently available to order.
+      example: true
+
+    preparationTime:
+      type: integer
+      nullable: true
+      description: Estimated preparation time, in minutes.
+      example: 20
+
+    imageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: URL of the item's primary image.
+      example: https://cdn.example.com/menu-items/kofta-platter/1.jpg
+
+    categoryId:
+      type: string
+      format: uuid
+      description: Identifier of the category this item belongs to.
+      example: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+
+    categoryName:
+      type: string
+      description: Name of the category this item belongs to.
+      example: Grills
+
+    restaurantId:
+      type: string
+      format: uuid
+      description: Identifier of the restaurant offering this item.
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    restaurantName:
+      type: string
+      description: Name of the restaurant offering this item.
+      example: Nile Grill House
+
+MenuItem:
+  type: object
+  required:
+    - id
+    - name
+    - basePrice
+    - isAvailable
+    - categoryId
+    - categoryName
+    - restaurantId
+    - restaurantName
+    - images
+    - optionGroups
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique menu item identifier.
+      example: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
+
+    name:
+      type: string
+      description: Menu item name.
+      example: Grilled Kofta Platter
+
+    description:
+      type: string
+      nullable: true
+      description: Detailed description of the menu item.
+      example: Grilled beef kofta served with rice, grilled vegetables, and tahini salad.
+
+    basePrice:
+      type: number
+      format: double
+      description: Base price of the menu item, before option adjustments.
+      example: 150
+
+    isAvailable:
+      type: boolean
+      description: Whether the item is currently available to order.
+      example: true
+
+    preparationTime:
+      type: integer
+      nullable: true
+      description: Estimated preparation time, in minutes.
+      example: 20
+
+    categoryId:
+      type: string
+      format: uuid
+      description: Identifier of the category this item belongs to.
+      example: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+
+    categoryName:
+      type: string
+      description: Name of the category this item belongs to.
+      example: Grills
+
+    restaurantId:
+      type: string
+      format: uuid
+      description: Identifier of the restaurant offering this item.
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    restaurantName:
+      type: string
+      description: Name of the restaurant offering this item.
+      example: Nile Grill House
+
+    images:
+      type: array
+      description: Ordered list of image URLs for this item.
+      items:
+        type: string
+        format: uri
+      example:
+        - https://cdn.example.com/menu-items/kofta-platter/1.jpg
+        - https://cdn.example.com/menu-items/kofta-platter/2.jpg
+
+    optionGroups:
+      type: array
+      description: Customizable option groups available for this item.
+      items:
+        $ref: "#/MenuItemOptionGroup"
+
+MenuCategory:
+  type: object
+  required:
+    - id
+    - name
+    - items
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique category identifier.
+      example: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+
+    name:
+      type: string
+      description: Category name.
+      example: Grills
+
+    displayOrder:
+      type: integer
+      nullable: true
+      description: Position of this category within the restaurant's menu.
+      example: 1
+
+    items:
+      type: array
+      items:
+        $ref: "#/MenuItemSummary"
+
+GetRestaurantMenuResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant menu retrieved successfully
+
+    data:
+      type: object
+      required:
+        - restaurantId
+        - categories
+      properties:
+        restaurantId:
+          type: string
+          format: uuid
+          description: Identifier of the restaurant this menu belongs to.
+          example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+        categories:
+          type: array
+          items:
+            $ref: "#/MenuCategory"
+
+GetMenuItemResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Food item details retrieved successfully
+
+    data:
+      type: object
+      required:
+        - menuItem
+      properties:
+        menuItem:
+          $ref: "#/MenuItem"
+
+SearchMenuItemsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Food items retrieved successfully
+
+    data:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/MenuItemSearchResult"
+
+        pagination:
+          $ref: "../schemas/common.yaml#/PaginationMeta"

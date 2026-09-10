@@ -1,0 +1,191 @@
+getMenuItem:
+  get:
+    tags:
+      - Menu
+
+    summary: View food item details
+    description: |
+      Returns detailed information for a single menu item, identified
+      by `menuItemId`, including images and customizable option groups
+      (FR-CUS-013).
+
+      Publicly accessible; no authentication required.
+
+    operationId: getMenuItem
+
+    security: []
+
+    parameters:
+      - name: menuItemId
+        in: path
+        required: true
+        description: Unique identifier of the menu item.
+        schema:
+          type: string
+          format: uuid
+        example: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
+
+    responses:
+      "200":
+        description: Food item details retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/GetMenuItemResponse"
+            example:
+              success: true
+              message: Food item details retrieved successfully
+              data:
+                menuItem:
+                  id: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
+                  name: Grilled Kofta Platter
+                  description: Grilled beef kofta served with rice, grilled vegetables, and tahini salad.
+                  basePrice: 150
+                  isAvailable: true
+                  preparationTime: 20
+                  categoryId: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+                  categoryName: Grills
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  images:
+                    - https://cdn.example.com/menu-items/kofta-platter/1.jpg
+                    - https://cdn.example.com/menu-items/kofta-platter/2.jpg
+                  optionGroups:
+                    - id: d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a
+                      name: Toppings
+                      minSelection: 0
+                      maxSelection: 3
+                      isRequired: false
+                      values:
+                        - id: e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b
+                          name: Extra cheese
+                          priceAdjustment: 15
+                          displayOrder: 1
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+searchMenuItems:
+  get:
+    tags:
+      - Menu
+
+    summary: Search food items
+    description: |
+      Returns a paginated list of food items across restaurants,
+      matching the supplied search term and optional filters
+      (FR-CUS-014).
+
+      Only available items (`isAvailable: true`) belonging to
+      approved restaurants are returned. Publicly accessible; no
+      authentication required.
+
+    operationId: searchMenuItems
+
+    security: []
+
+    parameters:
+      - name: search
+        in: query
+        required: false
+        description: Free-text search on food item name or description.
+        schema:
+          type: string
+        example: kofta
+
+      - name: restaurantId
+        in: query
+        required: false
+        description: Restrict results to items offered by this restaurant.
+        schema:
+          type: string
+          format: uuid
+        example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+      - name: categoryId
+        in: query
+        required: false
+        description: Restrict results to items in this menu category.
+        schema:
+          type: string
+          format: uuid
+        example: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+
+      - name: minPrice
+        in: query
+        required: false
+        description: Only return items with a base price at or above this value.
+        schema:
+          type: number
+          format: double
+          minimum: 0
+        example: 50
+
+      - name: maxPrice
+        in: query
+        required: false
+        description: Only return items with a base price at or below this value.
+        schema:
+          type: number
+          format: double
+          minimum: 0
+        example: 300
+
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Food items retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/SearchMenuItemsResponse"
+            example:
+              success: true
+              message: Food items retrieved successfully
+              data:
+                items:
+                  - id: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
+                    name: Grilled Kofta Platter
+                    description: Grilled beef kofta served with rice and salad.
+                    basePrice: 150
+                    isAvailable: true
+                    preparationTime: 20
+                    imageUrl: https://cdn.example.com/menu-items/kofta-platter/1.jpg
+                    categoryId: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+                    categoryName: Grills
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 12
+                  totalPages: 1
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

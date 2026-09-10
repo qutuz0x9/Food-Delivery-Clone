@@ -1,0 +1,7 @@
+bearerAuth:
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  description: |
+    JWT access token issued at login/registration and refreshed via the
+    refresh token endpoint. Send as `Authorization: Bearer <token>`.

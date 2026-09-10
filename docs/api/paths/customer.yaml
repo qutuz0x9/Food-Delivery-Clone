@@ -1,0 +1,698 @@
+registerCustomer:
+  post:
+    tags:
+      - Customer
+
+    summary: Register a customer
+    description: |
+      Creates a new customer account.
+
+      The registration process validates the supplied information,
+      verifies email uniqueness, creates the user identity, and
+      creates the associated customer profile.
+
+    operationId: registerCustomer
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/customer.yaml#/RegisterCustomerRequest"
+          example:
+            email: john@example.com
+            password: StrongPassword123!
+            firstName: John
+            lastName: Doe
+
+    responses:
+      "201":
+        description: Customer account created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/RegisterCustomerResponse"
+            example:
+              success: true
+              message: Customer account created successfully
+              data:
+                customer:
+                  id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  email: john@example.com
+                  firstName: John
+                  lastName: Doe
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+loginCustomer:
+  post:
+    tags:
+      - Customer
+
+    summary: Log in a customer
+    description: |
+      Authenticates a customer using their email and password.
+
+      On success, the system validates the credentials and grants
+      access by issuing a JWT access token and a refresh token.
+
+    operationId: loginCustomer
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/customer.yaml#/LoginCustomerRequest"
+          example:
+            email: john@example.com
+            password: StrongPassword123!
+
+    responses:
+      "200":
+        description: Customer logged in successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/LoginCustomerResponse"
+            example:
+              success: true
+              message: Logged in successfully
+              data:
+                customer:
+                  id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  email: john@example.com
+                  firstName: John
+                  lastName: Doe
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.abc123signature
+                refreshToken: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+forgotPasswordCustomer:
+  post:
+    tags:
+      - Customer
+
+    summary: Request a customer password reset
+    description: |
+      Initiates the password recovery flow for a customer who has
+      forgotten their password (FR-CUS-005.1).
+
+      If the supplied email matches a registered customer account, a
+      password reset token is generated and emailed to the customer.
+      To avoid revealing account existence, the endpoint always
+      responds with the same generic success message, whether or not
+      the email is registered.
+
+    operationId: forgotPasswordCustomer
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/customer.yaml#/ForgotPasswordCustomerRequest"
+          example:
+            email: john@example.com
+
+    responses:
+      "200":
+        description: Password reset request processed
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/ForgotPasswordCustomerResponse"
+            example:
+              success: true
+              message: If an account with that email exists, a password reset link has been sent.
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+resetPasswordCustomer:
+  post:
+    tags:
+      - Customer
+
+    summary: Reset a customer password
+    description: |
+      Completes the password recovery flow for a customer, verifying
+      the customer's identity via the reset token before setting the
+      new password (FR-CUS-005.2).
+
+      The token must match an unused, unexpired password reset token
+      previously issued via the forgot-password request. On success,
+      the token is marked as used and all existing refresh tokens for
+      the account are revoked, requiring the customer to log in again.
+
+    operationId: resetPasswordCustomer
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/customer.yaml#/ResetPasswordCustomerRequest"
+          example:
+            token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+            newPassword: NewStrongPassword123!
+            confirmPassword: NewStrongPassword123!
+
+    responses:
+      "200":
+        description: Password reset successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/ResetPasswordCustomerResponse"
+            example:
+              success: true
+              message: Password reset successfully
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "422":
+        $ref: "../responses/common.yaml#/InvalidResetToken"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+logoutCustomer:
+  post:
+    tags:
+      - Customer
+
+    summary: Log out a customer
+    description: |
+      Logs out the currently authenticated customer by revoking the
+      refresh token, ending the session securely.
+
+      The refresh token is read from the `refreshToken` HttpOnly cookie
+      set during login/registration — it is not accepted in the request
+      body or as a query parameter.
+
+    operationId: logoutCustomer
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Customer logged out successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/LogoutCustomerResponse"
+            example:
+              success: true
+              message: Logged out successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+customerProfile:
+  get:
+    tags:
+      - Customer
+
+    summary: View customer profile
+    description: |
+      Returns the profile information of the currently authenticated
+      customer (FR-CUS-006.1).
+
+    operationId: getCustomerProfile
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Customer profile retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/GetCustomerProfileResponse"
+            example:
+              success: true
+              message: Customer profile retrieved successfully
+              data:
+                customer:
+                  id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  email: john@example.com
+                  firstName: John
+                  lastName: Doe
+                  phoneNumber: "+201234567890"
+                  profileImageUrl: https://cdn.example.com/profiles/7d8c5e9a.jpg
+                  dateOfBirth: 1995-06-15
+                  gender: male
+                  emailVerified: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Customer
+
+    summary: Update customer profile
+    description: |
+      Updates the profile information of the currently authenticated
+      customer (FR-CUS-006.2). Only the supplied fields are updated;
+      omitted fields remain unchanged.
+
+    operationId: updateCustomerProfile
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/customer.yaml#/UpdateCustomerProfileRequest"
+          example:
+            firstName: John
+            lastName: Doe
+            phoneNumber: "+201234567890"
+            dateOfBirth: 1995-06-15
+            gender: male
+
+    responses:
+      "200":
+        description: Customer profile updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/UpdateCustomerProfileResponse"
+            example:
+              success: true
+              message: Customer profile updated successfully
+              data:
+                customer:
+                  id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  email: john@example.com
+                  firstName: John
+                  lastName: Doe
+                  phoneNumber: "+201234567890"
+                  profileImageUrl: https://cdn.example.com/profiles/7d8c5e9a.jpg
+                  dateOfBirth: 1995-06-15
+                  gender: male
+                  emailVerified: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+changePasswordCustomer:
+  post:
+    tags:
+      - Customer
+
+    summary: Change customer password
+    description: |
+      Changes the password of the currently authenticated customer
+      (FR-CUS-006.3). Requires the customer's current password for
+      verification. On success, all existing refresh tokens for the
+      account are revoked, requiring the customer to log in again.
+
+    operationId: changePasswordCustomer
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/customer.yaml#/ChangePasswordCustomerRequest"
+          example:
+            currentPassword: StrongPassword123!
+            newPassword: NewStrongPassword123!
+            confirmPassword: NewStrongPassword123!
+
+    responses:
+      "200":
+        description: Password changed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/ChangePasswordCustomerResponse"
+            example:
+              success: true
+              message: Password changed successfully
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+deliveryAddresses:
+  get:
+    tags:
+      - Customer
+
+    summary: List delivery addresses
+    description: |
+      Returns all delivery addresses saved by the currently
+      authenticated customer (FR-CUS-007).
+
+    operationId: listDeliveryAddresses
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery addresses retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/ListDeliveryAddressesResponse"
+            example:
+              success: true
+              message: Delivery addresses retrieved successfully
+              data:
+                addresses:
+                  - id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                    isDefault: true
+                    createdAt: "2024-01-15T10:30:00.000Z"
+                    updatedAt: "2024-02-01T09:00:00.000Z"
+                  - id: b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e
+                    label: Work
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 45 Tahrir Square
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11512"
+                    latitude: 30.0455
+                    longitude: 31.2360
+                    isDefault: false
+                    createdAt: "2024-01-20T14:00:00.000Z"
+                    updatedAt: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Customer
+
+    summary: Add a new delivery address
+    description: |
+      Creates a new delivery address for the currently authenticated
+      customer (FR-CUS-007.1).
+
+    operationId: createDeliveryAddress
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/customer.yaml#/CreateDeliveryAddressRequest"
+          example:
+            label: Home
+            recipientName: John Doe
+            phoneNumber: "+201234567890"
+            streetAddress: 12 Nile Corniche St, Apt 5
+            city: Cairo
+            state: Cairo Governorate
+            postalCode: "11511"
+            latitude: 30.0444
+            longitude: 31.2357
+            isDefault: true
+
+    responses:
+      "201":
+        description: Delivery address added successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/CreateDeliveryAddressResponse"
+            example:
+              success: true
+              message: Delivery address added successfully
+              data:
+                address:
+                  id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
+                  label: Home
+                  recipientName: John Doe
+                  phoneNumber: "+201234567890"
+                  streetAddress: 12 Nile Corniche St, Apt 5
+                  city: Cairo
+                  state: Cairo Governorate
+                  postalCode: "11511"
+                  latitude: 30.0444
+                  longitude: 31.2357
+                  isDefault: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+                  updatedAt: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+deliveryAddress:
+  parameters:
+    - name: addressId
+      in: path
+      required: true
+      description: Unique identifier of the delivery address.
+      schema:
+        type: string
+        format: uuid
+      example: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
+
+  get:
+    tags:
+      - Customer
+
+    summary: Get one delivery address
+    description: |
+      Returns a single delivery address belonging to the currently
+      authenticated customer, identified by `addressId` (FR-CUS-007).
+
+    operationId: getDeliveryAddress
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery address retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/GetDeliveryAddressResponse"
+            example:
+              success: true
+              message: Delivery address retrieved successfully
+              data:
+                address:
+                  id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
+                  label: Home
+                  recipientName: John Doe
+                  phoneNumber: "+201234567890"
+                  streetAddress: 12 Nile Corniche St, Apt 5
+                  city: Cairo
+                  state: Cairo Governorate
+                  postalCode: "11511"
+                  latitude: 30.0444
+                  longitude: 31.2357
+                  isDefault: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Customer
+
+    summary: Update one delivery address
+    description: |
+      Updates a single delivery address belonging to the currently
+      authenticated customer, identified by `addressId` (FR-CUS-007.2).
+      Only the supplied fields are updated; omitted fields remain
+      unchanged.
+
+    operationId: updateDeliveryAddress
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/customer.yaml#/UpdateDeliveryAddressRequest"
+          example:
+            label: Home
+            recipientName: John Doe
+            phoneNumber: "+201234567890"
+            streetAddress: 12 Nile Corniche St, Apt 5
+            city: Cairo
+            state: Cairo Governorate
+            postalCode: "11511"
+            isDefault: true
+
+    responses:
+      "200":
+        description: Delivery address updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/UpdateDeliveryAddressResponse"
+            example:
+              success: true
+              message: Delivery address updated successfully
+              data:
+                address:
+                  id: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d
+                  label: Home
+                  recipientName: John Doe
+                  phoneNumber: "+201234567890"
+                  streetAddress: 12 Nile Corniche St, Apt 5
+                  city: Cairo
+                  state: Cairo Governorate
+                  postalCode: "11511"
+                  latitude: 30.0444
+                  longitude: 31.2357
+                  isDefault: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+                  updatedAt: "2024-02-05T12:15:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Customer
+
+    summary: Delete one delivery address
+    description: |
+      Deletes a single delivery address belonging to the currently
+      authenticated customer, identified by `addressId` (FR-CUS-007.3).
+
+      Previously placed orders retain their own immutable delivery
+      address snapshot (`delivery_address` table) and are unaffected
+      by this deletion. If the deleted address was the customer's
+      default, no other address is automatically promoted to default;
+      the customer must select a new default explicitly.
+
+    operationId: deleteDeliveryAddress
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery address deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/DeleteDeliveryAddressResponse"
+            example:
+              success: true
+              message: Delivery address deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

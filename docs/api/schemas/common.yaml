@@ -1,0 +1,88 @@
+ErrorResponse:
+  type: object
+  required:
+    - success
+    - message
+    - error
+  properties:
+    success:
+      type: boolean
+      example: false
+
+    message:
+      type: string
+      example: Email address is already registered
+
+    error:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          example: EMAIL_ALREADY_EXISTS
+
+ValidationErrorResponse:
+  type: object
+  required:
+    - success
+    - message
+    - error
+  properties:
+    success:
+      type: boolean
+      example: false
+
+    message:
+      type: string
+      example: Validation failed
+
+    error:
+      type: object
+      required:
+        - code
+        - fields
+      properties:
+        code:
+          type: string
+          example: VALIDATION_ERROR
+
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            email: Invalid email address
+            password: Password must contain at least 8 characters
+
+PaginationMeta:
+  type: object
+  required:
+    - page
+    - limit
+    - totalItems
+    - totalPages
+  properties:
+    page:
+      type: integer
+      minimum: 1
+      description: Current page number.
+      example: 1
+
+    limit:
+      type: integer
+      minimum: 1
+      description: Number of items returned per page.
+      example: 20
+
+    totalItems:
+      type: integer
+      minimum: 0
+      description: Total number of items matching the query.
+      example: 57
+
+    totalPages:
+      type: integer
+      minimum: 0
+      description: Total number of available pages.
+      example: 3
