@@ -279,7 +279,7 @@ CREATE TABLE "shopping_cart" (
 CREATE TABLE "shopping_cart_items" (
   "id" uuid PRIMARY KEY NOT NULL,
   "shopping_cart_id" uuid NOT NULL,
-  "menu_item_id" integer NOT NULL,
+  "menu_item_id" uuid NOT NULL,
   "quantity" integer NOT NULL,
   "unit_price" decimal NOT NULL,
   "total_price" decimal NOT NULL
@@ -290,9 +290,7 @@ CREATE TABLE "orders" (
   "order_number" varchar UNIQUE NOT NULL,
   "customer_id" uuid NOT NULL,
   "restaurant_id" uuid NOT NULL,
-  "delivery_address_id" integer NOT NULL,
-  "driver_id" uuid,
-  "payment_id" uuid NOT NULL,
+  "delivery_address_id" uuid NOT NULL,
   "status" order_status NOT NULL,
   "subtotal" decimal NOT NULL,
   "delivery_fee" decimal NOT NULL,
@@ -528,6 +526,7 @@ CREATE TABLE "earnings" (
   "id" uuid PRIMARY KEY NOT NULL,
   "driver_id" uuid NOT NULL,
   "order_id" uuid NOT NULL,
+  "driver_assignment_id" uuid,
   "base_fee" decimal(10,2) NOT NULL,
   "bonus" decimal(10,2) NOT NULL DEFAULT 0,
   "tip" decimal(10,2) NOT NULL DEFAULT 0,
@@ -623,6 +622,14 @@ CREATE UNIQUE INDEX ON "menu_items" ("restaurant_id", "name");
 
 CREATE UNIQUE INDEX ON "menu_item_option_values" ("option_group_id", "name");
 
+CREATE UNIQUE INDEX "driver_assignments_active_order_unique" ON "driver_assignments" ("order_id") WHERE "status" IN ('pending', 'accepted');
+
+COMMENT ON COLUMN "orders"."accepted_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
+COMMENT ON COLUMN "orders"."prepared_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
+COMMENT ON COLUMN "orders"."picked_up_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
+COMMENT ON COLUMN "orders"."delivered_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
+COMMENT ON COLUMN "orders"."cancelled_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
+
 COMMENT ON COLUMN "customers"."user_id" IS 'This for Identity Table';
 
 ALTER TABLE "user_claims" ADD CONSTRAINT "user_claims_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
@@ -653,11 +660,11 @@ ALTER TABLE "shopping_cart" ADD CONSTRAINT "shopping_cart_restuarant_id_fkey" FO
 
 ALTER TABLE "shopping_cart_items" ADD CONSTRAINT "shopping_cart_items_shopping_cart_id" FOREIGN KEY ("shopping_cart_id") REFERENCES "shopping_cart" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
+ALTER TABLE "shopping_cart_items" ADD CONSTRAINT "shopping_cart_items_menu_item_id_fkey" FOREIGN KEY ("menu_item_id") REFERENCES "menu_items" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
 ALTER TABLE "orders" ADD CONSTRAINT "orders_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "customers" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "orders" ADD CONSTRAINT "orders_restaurant_id_fkey" FOREIGN KEY ("restaurant_id") REFERENCES "restaurants" ("id") DEFERRABLE INITIALLY IMMEDIATE;
-
-ALTER TABLE "orders" ADD CONSTRAINT "order_driver_id_fkey" FOREIGN KEY ("driver_id") REFERENCES "drivers" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "orders" ADD CONSTRAINT "order_delivery_address_id" FOREIGN KEY ("delivery_address_id") REFERENCES "delivery_address" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -704,6 +711,8 @@ ALTER TABLE "driver_documents" ADD CONSTRAINT "driver_documents_driver_id_fkey" 
 ALTER TABLE "earnings" ADD CONSTRAINT "earnings_driver_id_fkey" FOREIGN KEY ("driver_id") REFERENCES "drivers" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "earnings" ADD CONSTRAINT "earnings_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "earnings" ADD CONSTRAINT "earnings_driver_assignment_id_fkey" FOREIGN KEY ("driver_assignment_id") REFERENCES "driver_assignments" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "driver_locations" ADD CONSTRAINT "driver_locations_driver_id_fkey" FOREIGN KEY ("driver_id") REFERENCES "drivers" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
