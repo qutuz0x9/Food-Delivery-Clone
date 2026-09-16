@@ -20,6 +20,13 @@ requirement or field is ambiguous, ask before inventing new behavior.
 > preserves the order's delivery address even if the customer later edits or deletes their saved address. Don't
 > merge them.
 
+> Note: `restaurant_categories` and `menu_categories` are intentionally separate tables. `restaurant_categories`
+> represents the restaurant's own main category/cuisine tags (e.g. Dessert, Burger, Pizza) — one restaurant can have
+> multiple rows via `restaurant_id` (no uniqueness constraint), so a restaurant may belong to more than one category.
+> `menu_categories` represents each restaurant's own menu sections used to group its `menu_items` (e.g. Starters,
+> Mains, Drinks) — every restaurant defines its own set. `menu_items.category_id` references `menu_categories` only;
+> there is no relation between `menu_items` and `restaurant_categories`. Don't merge them or cross-wire the FKs.
+
 ## Tech Stack
 - **Language:** TypeScript (strict mode)
 - **Runtime/Framework:** Node.js + Express.js
@@ -35,7 +42,8 @@ requirement or field is ambiguous, ask before inventing new behavior.
 - **Customers:** `delivery_addresses`, `shopping_cart`, `shopping_cart_items`
 - **Restaurants:** `restaurants`, `restaurant_addresses`, `restaurant_operating_hours`, `restaurant_availability`,
   `restaurant_promotions`, `restaurant_reviews`, `restaurant_review_replies`, `restaurant_review_images`,
-  `main_categories`, `menu_items`, `menu_item_images`, `menu_item_option_groups`, `menu_item_option_values`
+  `restaurant_categories` (restaurant's main category/cuisine tags), `menu_categories` (per-restaurant menu
+  sections), `menu_items`, `menu_item_images`, `menu_item_option_groups`, `menu_item_option_values`
 - **Orders:** `orders`, `order_items`, `order_status_history`, `payments`, `payment_refunds`
 - **Drivers:** `drivers`, `driver_vehicles`, `driver_documents`, `driver_locations`, `driver_assignments`,
   `driver_payouts`, `driver_reviews`
