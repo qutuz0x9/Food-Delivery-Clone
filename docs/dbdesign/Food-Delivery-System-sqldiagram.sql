@@ -327,6 +327,17 @@ CREATE TABLE "order_items" (
   "special_instructions" text
 );
 
+CREATE TABLE "order_item_options" (
+  "id" uuid PRIMARY KEY NOT NULL,
+  "order_item_id" uuid NOT NULL,
+  "option_group_id" uuid NOT NULL,
+  "option_value_id" uuid NOT NULL,
+  "option_group_name" varchar NOT NULL,
+  "option_value_name" varchar NOT NULL,
+  "price_adjustment" decimal NOT NULL DEFAULT 0,
+  "created_at" timestamp NOT NULL DEFAULT (now())
+);
+
 CREATE TABLE "payments" (
   "id" uuid PRIMARY KEY NOT NULL,
   "order_id" uuid NOT NULL,
@@ -675,6 +686,12 @@ ALTER TABLE "order_status_history" ADD CONSTRAINT "order_status_history_changed_
 ALTER TABLE "order_items" ADD CONSTRAINT "order_item_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "order_items" ADD CONSTRAINT "order_item_menu_item_fkey" FOREIGN KEY ("menu_item_id") REFERENCES "menu_items" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "order_item_options" ADD CONSTRAINT "order_item_options_order_item_id_fkey" FOREIGN KEY ("order_item_id") REFERENCES "order_items" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "order_item_options" ADD CONSTRAINT "order_item_options_option_group_id_fkey" FOREIGN KEY ("option_group_id") REFERENCES "menu_item_option_groups" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "order_item_options" ADD CONSTRAINT "order_item_options_option_value_id_fkey" FOREIGN KEY ("option_value_id") REFERENCES "menu_item_option_values" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "payments" ADD CONSTRAINT "payment_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
