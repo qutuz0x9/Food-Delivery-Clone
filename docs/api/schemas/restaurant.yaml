@@ -372,3 +372,717 @@ GetRestaurantResponse:
       properties:
         restaurant:
           $ref: "#/Restaurant"
+
+RegisterRestaurantRequest:
+  type: object
+  required:
+    - name
+    - email
+    - password
+    - phoneNumber
+    - address
+  properties:
+    name:
+      type: string
+      description: Restaurant name.
+      example: Nile Grill House
+
+    email:
+      type: string
+      format: email
+      description: Restaurant contact email address, also used to log in.
+      example: contact@nilegrill.example.com
+
+    password:
+      type: string
+      format: password
+      description: Account password.
+      example: StrongPassword123!
+
+    phoneNumber:
+      type: string
+      description: Restaurant contact phone number.
+      example: "+201234567890"
+
+    description:
+      type: string
+      nullable: true
+      description: Short description of the restaurant.
+      example: Authentic Egyptian grills and mezze.
+
+    address:
+      $ref: "#/RestaurantAddress"
+
+RegisterRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant account created successfully. It is now pending approval.
+
+    data:
+      type: object
+      required:
+        - restaurant
+      properties:
+        restaurant:
+          type: object
+          required:
+            - id
+            - name
+            - email
+            - phoneNumber
+            - status
+            - createdAt
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+            name:
+              type: string
+              example: Nile Grill House
+
+            email:
+              type: string
+              format: email
+              example: contact@nilegrill.example.com
+
+            phoneNumber:
+              type: string
+              example: "+201234567890"
+
+            status:
+              type: string
+              enum:
+                - pending
+                - approved
+                - rejected
+                - suspended
+              description: Restaurant onboarding/approval status.
+              example: pending
+
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-01-15T10:30:00.000Z"
+
+LoginRestaurantRequest:
+  type: object
+  required:
+    - email
+    - password
+  properties:
+    email:
+      type: string
+      format: email
+      example: contact@nilegrill.example.com
+
+    password:
+      type: string
+      format: password
+      example: StrongPassword123!
+
+LoginRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Logged in successfully
+
+    data:
+      type: object
+      required:
+        - restaurant
+        - accessToken
+        - refreshToken
+      properties:
+        restaurant:
+          $ref: "#/RestaurantProfile"
+
+        accessToken:
+          type: string
+          description: JWT access token used to authenticate subsequent requests.
+          example: "******"
+
+        refreshToken:
+          type: string
+          format: uuid
+          description: Opaque refresh token used to obtain new access tokens.
+          example: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+
+LogoutRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Logged out successfully
+
+    data:
+      type: object
+      nullable: true
+      example: null
+
+ForgotPasswordRestaurantRequest:
+  type: object
+  required:
+    - email
+  properties:
+    email:
+      type: string
+      format: email
+      example: contact@nilegrill.example.com
+
+ForgotPasswordRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: If an account with that email exists, a password reset link has been sent.
+
+    data:
+      type: object
+      nullable: true
+      example: null
+
+ResetPasswordRestaurantRequest:
+  type: object
+  required:
+    - token
+    - newPassword
+    - confirmPassword
+  properties:
+    token:
+      type: string
+      format: uuid
+      example: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+
+    newPassword:
+      type: string
+      format: password
+      example: NewStrongPassword123!
+
+    confirmPassword:
+      type: string
+      format: password
+      example: NewStrongPassword123!
+
+ResetPasswordRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Password reset successfully
+
+    data:
+      type: object
+      nullable: true
+      example: null
+
+RestaurantProfile:
+  type: object
+  required:
+    - id
+    - name
+    - status
+    - availabilityStatus
+    - minimumOrderAmount
+    - deliveryFee
+    - ratingAverage
+    - ratingCount
+    - address
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique restaurant identifier.
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    name:
+      type: string
+      description: Restaurant name.
+      example: Nile Grill House
+
+    description:
+      type: string
+      nullable: true
+      description: Description of the restaurant.
+      example: Authentic Egyptian grills and mezze.
+
+    phoneNumber:
+      type: string
+      nullable: true
+      description: Restaurant contact phone number.
+      example: "+201234567890"
+
+    email:
+      type: string
+      format: email
+      nullable: true
+      description: Restaurant contact email address.
+      example: contact@nilegrill.example.com
+
+    logoUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: URL of the restaurant's logo.
+      example: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+
+    coverImageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: URL of the restaurant's cover image.
+      example: https://cdn.example.com/restaurants/nile-grill/cover.jpg
+
+    status:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+        - suspended
+      description: Restaurant onboarding/approval status, managed by the platform administrator.
+      example: approved
+
+    availabilityStatus:
+      type: string
+      enum:
+        - open
+        - closed
+        - busy
+      description: Current real-time availability of the restaurant.
+      example: open
+
+    minimumOrderAmount:
+      type: number
+      format: double
+      description: Minimum order amount accepted by the restaurant.
+      example: 100
+
+    deliveryFee:
+      type: number
+      format: double
+      description: Delivery fee charged by the restaurant.
+      example: 25
+
+    estimatedDeliveryTime:
+      type: integer
+      nullable: true
+      description: Estimated delivery time, in minutes.
+      example: 35
+
+    ratingAverage:
+      type: number
+      format: double
+      description: Average customer rating (0-5).
+      example: 4.5
+
+    ratingCount:
+      type: integer
+      description: Total number of ratings received.
+      example: 128
+
+    address:
+      $ref: "#/RestaurantAddress"
+
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the restaurant joined the platform.
+      example: "2023-11-10T08:00:00.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Timestamp when the restaurant profile was last updated.
+      example: "2024-02-01T09:00:00.000Z"
+
+GetRestaurantProfileResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant profile retrieved successfully
+
+    data:
+      type: object
+      required:
+        - restaurant
+      properties:
+        restaurant:
+          $ref: "#/RestaurantProfile"
+
+UpdateRestaurantProfileRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Restaurant name.
+      example: Nile Grill House
+
+    description:
+      type: string
+      nullable: true
+      description: Short description of the restaurant.
+      example: Authentic Egyptian grills, mezze, and fresh salads.
+
+    phoneNumber:
+      type: string
+      description: Restaurant contact phone number.
+      example: "+201234567890"
+
+    email:
+      type: string
+      format: email
+      description: Restaurant contact email address.
+      example: contact@nilegrill.example.com
+
+    minimumOrderAmount:
+      type: number
+      format: double
+      description: Minimum order amount accepted by the restaurant.
+      example: 120
+
+    deliveryFee:
+      type: number
+      format: double
+      description: Delivery fee charged by the restaurant.
+      example: 30
+
+    estimatedDeliveryTime:
+      type: integer
+      description: Estimated delivery time, in minutes.
+      example: 40
+
+    address:
+      type: object
+      description: Partial update of the restaurant's address. Only supplied fields are updated.
+      properties:
+        country:
+          type: string
+          example: Egypt
+        city:
+          type: string
+          example: Cairo
+        street:
+          type: string
+          example: 15 Ramses St
+        building:
+          type: string
+          nullable: true
+          example: Building 4
+        latitude:
+          type: number
+          format: double
+          example: 30.0561
+        longitude:
+          type: number
+          format: double
+          example: 31.2394
+
+UpdateRestaurantProfileResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant profile updated successfully
+
+    data:
+      type: object
+      required:
+        - restaurant
+      properties:
+        restaurant:
+          $ref: "#/RestaurantProfile"
+
+UploadRestaurantLogoResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant logo updated successfully
+
+    data:
+      type: object
+      required:
+        - logoUrl
+      properties:
+        logoUrl:
+          type: string
+          format: uri
+          description: URL of the newly uploaded logo.
+          example: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+
+RestaurantOperatingHour:
+  type: object
+  required:
+    - id
+    - dayOfWeek
+    - isClosed
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique operating hour entry identifier.
+      example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+
+    dayOfWeek:
+      type: integer
+      minimum: 0
+      maximum: 6
+      description: Day of the week (0 = Sunday, 6 = Saturday).
+      example: 1
+
+    opensAt:
+      type: string
+      nullable: true
+      description: Opening time on this day, in `HH:mm` format.
+      example: "09:00"
+
+    closesAt:
+      type: string
+      nullable: true
+      description: Closing time on this day, in `HH:mm` format.
+      example: "23:00"
+
+    isClosed:
+      type: boolean
+      description: Whether the restaurant is closed all day on this day.
+      example: false
+
+ListOperatingHoursResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Operating hours retrieved successfully
+
+    data:
+      type: object
+      required:
+        - operatingHours
+      properties:
+        operatingHours:
+          type: array
+          items:
+            $ref: "#/RestaurantOperatingHour"
+
+ReplaceOperatingHoursRequest:
+  type: object
+  required:
+    - operatingHours
+  properties:
+    operatingHours:
+      type: array
+      description: Full weekly schedule. Replaces all existing entries for the restaurant.
+      minItems: 7
+      maxItems: 7
+      items:
+        type: object
+        required:
+          - dayOfWeek
+          - isClosed
+        properties:
+          dayOfWeek:
+            type: integer
+            minimum: 0
+            maximum: 6
+            example: 1
+          opensAt:
+            type: string
+            nullable: true
+            example: "09:00"
+          closesAt:
+            type: string
+            nullable: true
+            example: "23:00"
+          isClosed:
+            type: boolean
+            example: false
+
+ReplaceOperatingHoursResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Operating hours updated successfully
+
+    data:
+      type: object
+      required:
+        - operatingHours
+      properties:
+        operatingHours:
+          type: array
+          items:
+            $ref: "#/RestaurantOperatingHour"
+
+UpdateOperatingHourRequest:
+  type: object
+  properties:
+    opensAt:
+      type: string
+      nullable: true
+      description: Opening time on this day, in `HH:mm` format.
+      example: "10:00"
+
+    closesAt:
+      type: string
+      nullable: true
+      description: Closing time on this day, in `HH:mm` format.
+      example: "22:00"
+
+    isClosed:
+      type: boolean
+      description: Whether the restaurant is closed all day on this day.
+      example: false
+
+UpdateOperatingHourResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Operating hour updated successfully
+
+    data:
+      type: object
+      required:
+        - operatingHour
+      properties:
+        operatingHour:
+          $ref: "#/RestaurantOperatingHour"
+
+UpdateAvailabilityRequest:
+  type: object
+  required:
+    - availabilityStatus
+  properties:
+    availabilityStatus:
+      type: string
+      enum:
+        - open
+        - closed
+        - busy
+      description: New real-time availability status for the restaurant (FR-RES-007).
+      example: closed
+
+UpdateAvailabilityResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant availability updated successfully
+
+    data:
+      type: object
+      required:
+        - availabilityStatus
+      properties:
+        availabilityStatus:
+          type: string
+          enum:
+            - open
+            - closed
+            - busy
+          example: closed

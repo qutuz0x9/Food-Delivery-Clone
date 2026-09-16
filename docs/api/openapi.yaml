@@ -17,12 +17,14 @@ security:
   - bearerAuth: []
 
 tags:
-  - name: Customer
-    description: Customer-related operations
-  - name: Restaurant
-    description: Restaurant browsing, search, and discovery operations
+  - name: Auth
+    description: Registration, login, logout, and password recovery for all account types
+  - name: Customers
+    description: Customer profile and delivery address management
+  - name: Restaurants
+    description: Restaurant browsing/discovery for customers, and restaurant self-service account, profile, and availability management
   - name: Menu
-    description: Restaurant menu browsing and food item search operations
+    description: Restaurant menu browsing, food item search, and restaurant menu/category management
 
 paths:
   /auth/register/customer:
@@ -49,6 +51,30 @@ paths:
     $ref: "./paths/restaurant.yaml#/getRestaurant"
   /restaurants/{restaurantId}/menu:
     $ref: "./paths/restaurant.yaml#/getRestaurantMenu"
+  /restaurants/auth/register:
+    $ref: "./paths/restaurant.yaml#/registerRestaurant"
+  /restaurants/auth/login:
+    $ref: "./paths/restaurant.yaml#/loginRestaurant"
+  /restaurants/auth/logout:
+    $ref: "./paths/restaurant.yaml#/logoutRestaurant"
+  /restaurants/auth/password-reset/request:
+    $ref: "./paths/restaurant.yaml#/forgotPasswordRestaurant"
+  /restaurants/auth/password-reset/confirm:
+    $ref: "./paths/restaurant.yaml#/resetPasswordRestaurant"
+  /restaurants/me:
+    $ref: "./paths/restaurant.yaml#/restaurantProfile"
+  /restaurants/me/logo:
+    $ref: "./paths/restaurant.yaml#/uploadRestaurantLogo"
+  /restaurants/me/operating-hours:
+    $ref: "./paths/restaurant.yaml#/restaurantOperatingHours"
+  /restaurants/me/operating-hours/{operatingHourId}:
+    $ref: "./paths/restaurant.yaml#/restaurantOperatingHour"
+  /restaurants/me/availability:
+    $ref: "./paths/restaurant.yaml#/restaurantAvailability"
+  /restaurants/me/categories:
+    $ref: "./paths/restaurant.yaml#/restaurantMenuCategories"
+  /restaurants/me/categories/{categoryId}:
+    $ref: "./paths/restaurant.yaml#/restaurantMenuCategory"
   /menu-items:
     $ref: "./paths/menu.yaml#/searchMenuItems"
   /menu-items/{menuItemId}:
@@ -118,6 +144,50 @@ components:
       $ref: "./schemas/restaurant.yaml#/ListRestaurantsResponse"
     GetRestaurantResponse:
       $ref: "./schemas/restaurant.yaml#/GetRestaurantResponse"
+    RegisterRestaurantRequest:
+      $ref: "./schemas/restaurant.yaml#/RegisterRestaurantRequest"
+    RegisterRestaurantResponse:
+      $ref: "./schemas/restaurant.yaml#/RegisterRestaurantResponse"
+    LoginRestaurantRequest:
+      $ref: "./schemas/restaurant.yaml#/LoginRestaurantRequest"
+    LoginRestaurantResponse:
+      $ref: "./schemas/restaurant.yaml#/LoginRestaurantResponse"
+    LogoutRestaurantResponse:
+      $ref: "./schemas/restaurant.yaml#/LogoutRestaurantResponse"
+    ForgotPasswordRestaurantRequest:
+      $ref: "./schemas/restaurant.yaml#/ForgotPasswordRestaurantRequest"
+    ForgotPasswordRestaurantResponse:
+      $ref: "./schemas/restaurant.yaml#/ForgotPasswordRestaurantResponse"
+    ResetPasswordRestaurantRequest:
+      $ref: "./schemas/restaurant.yaml#/ResetPasswordRestaurantRequest"
+    ResetPasswordRestaurantResponse:
+      $ref: "./schemas/restaurant.yaml#/ResetPasswordRestaurantResponse"
+    RestaurantProfile:
+      $ref: "./schemas/restaurant.yaml#/RestaurantProfile"
+    GetRestaurantProfileResponse:
+      $ref: "./schemas/restaurant.yaml#/GetRestaurantProfileResponse"
+    UpdateRestaurantProfileRequest:
+      $ref: "./schemas/restaurant.yaml#/UpdateRestaurantProfileRequest"
+    UpdateRestaurantProfileResponse:
+      $ref: "./schemas/restaurant.yaml#/UpdateRestaurantProfileResponse"
+    UploadRestaurantLogoResponse:
+      $ref: "./schemas/restaurant.yaml#/UploadRestaurantLogoResponse"
+    RestaurantOperatingHour:
+      $ref: "./schemas/restaurant.yaml#/RestaurantOperatingHour"
+    ListOperatingHoursResponse:
+      $ref: "./schemas/restaurant.yaml#/ListOperatingHoursResponse"
+    ReplaceOperatingHoursRequest:
+      $ref: "./schemas/restaurant.yaml#/ReplaceOperatingHoursRequest"
+    ReplaceOperatingHoursResponse:
+      $ref: "./schemas/restaurant.yaml#/ReplaceOperatingHoursResponse"
+    UpdateOperatingHourRequest:
+      $ref: "./schemas/restaurant.yaml#/UpdateOperatingHourRequest"
+    UpdateOperatingHourResponse:
+      $ref: "./schemas/restaurant.yaml#/UpdateOperatingHourResponse"
+    UpdateAvailabilityRequest:
+      $ref: "./schemas/restaurant.yaml#/UpdateAvailabilityRequest"
+    UpdateAvailabilityResponse:
+      $ref: "./schemas/restaurant.yaml#/UpdateAvailabilityResponse"
     MenuItemOptionValue:
       $ref: "./schemas/menu.yaml#/MenuItemOptionValue"
     MenuItemOptionGroup:
@@ -136,6 +206,22 @@ components:
       $ref: "./schemas/menu.yaml#/GetMenuItemResponse"
     SearchMenuItemsResponse:
       $ref: "./schemas/menu.yaml#/SearchMenuItemsResponse"
+    MenuCategoryAdmin:
+      $ref: "./schemas/menu.yaml#/MenuCategoryAdmin"
+    ListMenuCategoriesResponse:
+      $ref: "./schemas/menu.yaml#/ListMenuCategoriesResponse"
+    CreateMenuCategoryRequest:
+      $ref: "./schemas/menu.yaml#/CreateMenuCategoryRequest"
+    CreateMenuCategoryResponse:
+      $ref: "./schemas/menu.yaml#/CreateMenuCategoryResponse"
+    GetMenuCategoryResponse:
+      $ref: "./schemas/menu.yaml#/GetMenuCategoryResponse"
+    UpdateMenuCategoryRequest:
+      $ref: "./schemas/menu.yaml#/UpdateMenuCategoryRequest"
+    UpdateMenuCategoryResponse:
+      $ref: "./schemas/menu.yaml#/UpdateMenuCategoryResponse"
+    DeleteMenuCategoryResponse:
+      $ref: "./schemas/menu.yaml#/DeleteMenuCategoryResponse"
     PaginationMeta:
       $ref: "./schemas/common.yaml#/PaginationMeta"
     ErrorResponse:

@@ -5,6 +5,7 @@ RegisterCustomerRequest:
     - password
     - firstName
     - lastName
+    - phoneNumber
   properties:
     email:
       type: string
@@ -32,6 +33,11 @@ RegisterCustomerRequest:
       maxLength: 100
       description: Customer last name.
       example: Doe
+
+    phoneNumber:
+      type: string
+      description: Customer phone number.
+      example: "+201234567890"
 
 RegisterCustomerResponse:
   type: object
@@ -213,6 +219,7 @@ Customer:
     - email
     - firstName
     - lastName
+    - phoneNumber
   properties:
     id:
       type: string
@@ -235,6 +242,11 @@ Customer:
       type: string
       description: Customer last name.
       example: Doe
+
+    phoneNumber:
+      type: string
+      description: Customer phone number.
+      example: "+201234567890"
 
 CustomerProfile:
   type: object

@@ -1,7 +1,7 @@
 listRestaurants:
   get:
     tags:
-      - Restaurant
+      - Restaurants
 
     summary: Browse, search, and filter restaurants
     description: |
@@ -150,7 +150,7 @@ listRestaurants:
 getRestaurant:
   get:
     tags:
-      - Restaurant
+      - Restaurants
 
     summary: View restaurant details
     description: |
@@ -233,7 +233,7 @@ getRestaurant:
 getRestaurantMenu:
   get:
     tags:
-      - Restaurant
+      - Menu
 
     summary: Browse a restaurant's menu
     description: |
@@ -286,6 +286,972 @@ getRestaurantMenu:
 
       "404":
         $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+registerRestaurant:
+  post:
+    tags:
+      - Auth
+
+    summary: Register a restaurant
+    description: |
+      Creates a new restaurant account (FR-RES-001).
+
+      Validates the supplied information, verifies email uniqueness,
+      creates the underlying user identity, and creates the restaurant
+      profile together with its address. The new restaurant is created
+      with `pending` status and cannot receive orders until an
+      administrator approves it.
+
+    operationId: registerRestaurant
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/RegisterRestaurantRequest"
+          example:
+            name: Nile Grill House
+            email: contact@nilegrill.example.com
+            password: StrongPassword123!
+            phoneNumber: "+201234567890"
+            description: Authentic Egyptian grills and mezze.
+            address:
+              country: Egypt
+              city: Cairo
+              street: 15 Ramses St
+              building: Building 4
+              latitude: 30.0561
+              longitude: 31.2394
+
+    responses:
+      "201":
+        description: Restaurant account created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/RegisterRestaurantResponse"
+            example:
+              success: true
+              message: Restaurant account created successfully. It is now pending approval.
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  name: Nile Grill House
+                  email: contact@nilegrill.example.com
+                  phoneNumber: "+201234567890"
+                  status: pending
+                  createdAt: "2024-01-15T10:30:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+loginRestaurant:
+  post:
+    tags:
+      - Auth
+
+    summary: Log in a restaurant
+    description: |
+      Authenticates a restaurant using its email and password (FR-RES-002).
+
+      On success, issues a JWT access token and a refresh token. A
+      restaurant may log in regardless of its approval `status`, but
+      other endpoints may reject actions until the restaurant is
+      `approved`.
+
+    operationId: loginRestaurant
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/LoginRestaurantRequest"
+          example:
+            email: contact@nilegrill.example.com
+            password: StrongPassword123!
+
+    responses:
+      "200":
+        description: Restaurant logged in successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/LoginRestaurantResponse"
+            example:
+              success: true
+              message: Logged in successfully
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  name: Nile Grill House
+                  description: Authentic Egyptian grills and mezze.
+                  phoneNumber: "+201234567890"
+                  email: contact@nilegrill.example.com
+                  logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+                  coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
+                  status: approved
+                  availabilityStatus: open
+                  minimumOrderAmount: 100
+                  deliveryFee: 25
+                  estimatedDeliveryTime: 35
+                  ratingAverage: 4.5
+                  ratingCount: 128
+                  address:
+                    country: Egypt
+                    city: Cairo
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  createdAt: "2023-11-10T08:00:00.000Z"
+                  updatedAt: null
+                accessToken: "******"
+                refreshToken: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+logoutRestaurant:
+  post:
+    tags:
+      - Auth
+
+    summary: Log out a restaurant
+    description: |
+      Logs out the currently authenticated restaurant by revoking the
+      refresh token, ending the session securely (FR-RES-003).
+
+      The refresh token is read from the `refreshToken` HttpOnly cookie
+      set during login — it is not accepted in the request body or as
+      a query parameter.
+
+    operationId: logoutRestaurant
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Restaurant logged out successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/LogoutRestaurantResponse"
+            example:
+              success: true
+              message: Logged out successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+forgotPasswordRestaurant:
+  post:
+    tags:
+      - Auth
+
+    summary: Request a restaurant password reset
+    description: |
+      Initiates the password recovery flow for a restaurant that has
+      forgotten its password (FR-RES-004.1).
+
+      If the supplied email matches a registered restaurant account, a
+      password reset token is generated and emailed to the restaurant.
+      To avoid revealing account existence, the endpoint always
+      responds with the same generic success message, whether or not
+      the email is registered.
+
+    operationId: forgotPasswordRestaurant
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/ForgotPasswordRestaurantRequest"
+          example:
+            email: contact@nilegrill.example.com
+
+    responses:
+      "200":
+        description: Password reset request processed
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/ForgotPasswordRestaurantResponse"
+            example:
+              success: true
+              message: If an account with that email exists, a password reset link has been sent.
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+resetPasswordRestaurant:
+  post:
+    tags:
+      - Auth
+
+    summary: Reset a restaurant password
+    description: |
+      Completes the password recovery flow for a restaurant, verifying
+      the restaurant's identity via the reset token before setting the
+      new password (FR-RES-004.2, FR-RES-004.3).
+
+      The token must match an unused, unexpired password reset token
+      previously issued via the forgot-password request. On success,
+      the token is marked as used and all existing refresh tokens for
+      the account are revoked, requiring the restaurant to log in again.
+
+    operationId: resetPasswordRestaurant
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/ResetPasswordRestaurantRequest"
+          example:
+            token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+            newPassword: NewStrongPassword123!
+            confirmPassword: NewStrongPassword123!
+
+    responses:
+      "200":
+        description: Password reset successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/ResetPasswordRestaurantResponse"
+            example:
+              success: true
+              message: Password reset successfully
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "422":
+        $ref: "../responses/common.yaml#/InvalidResetToken"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantProfile:
+  get:
+    tags:
+      - Restaurants
+
+    summary: View own restaurant profile
+    description: |
+      Returns the profile information of the currently authenticated
+      restaurant (FR-RES-005.1).
+
+    operationId: getRestaurantProfile
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Restaurant profile retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/GetRestaurantProfileResponse"
+            example:
+              success: true
+              message: Restaurant profile retrieved successfully
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  name: Nile Grill House
+                  description: Authentic Egyptian grills and mezze.
+                  phoneNumber: "+201234567890"
+                  email: contact@nilegrill.example.com
+                  logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+                  coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
+                  status: approved
+                  availabilityStatus: open
+                  minimumOrderAmount: 100
+                  deliveryFee: 25
+                  estimatedDeliveryTime: 35
+                  ratingAverage: 4.5
+                  ratingCount: 128
+                  address:
+                    country: Egypt
+                    city: Cairo
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  createdAt: "2023-11-10T08:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Restaurants
+
+    summary: Update own restaurant profile
+    description: |
+      Updates the profile information of the currently authenticated
+      restaurant (FR-RES-005.2). Only the supplied fields are updated;
+      omitted fields remain unchanged. The address, if supplied, is
+      also updated as a partial patch.
+
+    operationId: updateRestaurantProfile
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/UpdateRestaurantProfileRequest"
+          example:
+            name: Nile Grill House
+            description: Authentic Egyptian grills, mezze, and fresh salads.
+            phoneNumber: "+201234567890"
+            minimumOrderAmount: 120
+            deliveryFee: 30
+            estimatedDeliveryTime: 40
+            address:
+              street: 20 Ramses St
+              building: Building 4
+
+    responses:
+      "200":
+        description: Restaurant profile updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/UpdateRestaurantProfileResponse"
+            example:
+              success: true
+              message: Restaurant profile updated successfully
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  name: Nile Grill House
+                  description: Authentic Egyptian grills, mezze, and fresh salads.
+                  phoneNumber: "+201234567890"
+                  email: contact@nilegrill.example.com
+                  logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+                  coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
+                  status: approved
+                  availabilityStatus: open
+                  minimumOrderAmount: 120
+                  deliveryFee: 30
+                  estimatedDeliveryTime: 40
+                  ratingAverage: 4.5
+                  ratingCount: 128
+                  address:
+                    country: Egypt
+                    city: Cairo
+                    street: 20 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  createdAt: "2023-11-10T08:00:00.000Z"
+                  updatedAt: "2024-02-05T12:15:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+uploadRestaurantLogo:
+  post:
+    tags:
+      - Restaurants
+
+    summary: Upload or update restaurant logo
+    description: |
+      Uploads a new logo image for the currently authenticated
+      restaurant, replacing any existing logo (FR-RES-005.3).
+
+    operationId: uploadRestaurantLogo
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - logo
+            properties:
+              logo:
+                type: string
+                format: binary
+                description: Logo image file (JPEG or PNG).
+
+    responses:
+      "200":
+        description: Restaurant logo updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/UploadRestaurantLogoResponse"
+            example:
+              success: true
+              message: Restaurant logo updated successfully
+              data:
+                logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantOperatingHours:
+  get:
+    tags:
+      - Restaurants
+
+    summary: View operating hours
+    description: |
+      Returns the weekly operating hours schedule of the currently
+      authenticated restaurant (FR-RES-006).
+
+    operationId: listRestaurantOperatingHours
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Operating hours retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/ListOperatingHoursResponse"
+            example:
+              success: true
+              message: Operating hours retrieved successfully
+              data:
+                operatingHours:
+                  - id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                    dayOfWeek: 0
+                    opensAt: "09:00"
+                    closesAt: "23:00"
+                    isClosed: false
+                  - id: 2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e
+                    dayOfWeek: 1
+                    opensAt: "09:00"
+                    closesAt: "23:00"
+                    isClosed: false
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  put:
+    tags:
+      - Restaurants
+
+    summary: Replace the weekly operating hours schedule
+    description: |
+      Replaces the entire weekly operating hours schedule of the
+      currently authenticated restaurant with the supplied entries,
+      one per day of the week (FR-RES-006.1, FR-RES-006.2, FR-RES-006.3).
+
+    operationId: replaceRestaurantOperatingHours
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/ReplaceOperatingHoursRequest"
+          example:
+            operatingHours:
+              - dayOfWeek: 0
+                opensAt: "09:00"
+                closesAt: "23:00"
+                isClosed: false
+              - dayOfWeek: 1
+                opensAt: "09:00"
+                closesAt: "23:00"
+                isClosed: false
+              - dayOfWeek: 2
+                opensAt: "09:00"
+                closesAt: "23:00"
+                isClosed: false
+              - dayOfWeek: 3
+                opensAt: "09:00"
+                closesAt: "23:00"
+                isClosed: false
+              - dayOfWeek: 4
+                opensAt: "09:00"
+                closesAt: "23:00"
+                isClosed: false
+              - dayOfWeek: 5
+                opensAt: "12:00"
+                closesAt: "01:00"
+                isClosed: false
+              - dayOfWeek: 6
+                opensAt: null
+                closesAt: null
+                isClosed: true
+
+    responses:
+      "200":
+        description: Operating hours updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/ReplaceOperatingHoursResponse"
+            example:
+              success: true
+              message: Operating hours updated successfully
+              data:
+                operatingHours:
+                  - id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                    dayOfWeek: 0
+                    opensAt: "09:00"
+                    closesAt: "23:00"
+                    isClosed: false
+                  - id: 2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e
+                    dayOfWeek: 6
+                    opensAt: null
+                    closesAt: null
+                    isClosed: true
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantOperatingHour:
+  parameters:
+    - name: operatingHourId
+      in: path
+      required: true
+      description: Unique identifier of the operating hour entry.
+      schema:
+        type: string
+        format: uuid
+      example: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+
+  patch:
+    tags:
+      - Restaurants
+
+    summary: Update operating hours for a specific day
+    description: |
+      Updates the operating hours for a single day, identified by
+      `operatingHourId`, belonging to the currently authenticated
+      restaurant (FR-RES-006.3). Only the supplied fields are updated;
+      omitted fields remain unchanged.
+
+    operationId: updateRestaurantOperatingHour
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/UpdateOperatingHourRequest"
+          example:
+            opensAt: "10:00"
+            closesAt: "22:00"
+            isClosed: false
+
+    responses:
+      "200":
+        description: Operating hour updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/UpdateOperatingHourResponse"
+            example:
+              success: true
+              message: Operating hour updated successfully
+              data:
+                operatingHour:
+                  id: 1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
+                  dayOfWeek: 1
+                  opensAt: "10:00"
+                  closesAt: "22:00"
+                  isClosed: false
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantAvailability:
+  patch:
+    tags:
+      - Restaurants
+
+    summary: Change restaurant availability
+    description: |
+      Updates the real-time availability status of the currently
+      authenticated restaurant (FR-RES-007.1, FR-RES-007.2), used to
+      mark the restaurant as `open`, `closed`, or temporarily `busy`
+      independent of its scheduled operating hours.
+
+    operationId: updateRestaurantAvailability
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/UpdateAvailabilityRequest"
+          example:
+            availabilityStatus: closed
+
+    responses:
+      "200":
+        description: Restaurant availability updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/UpdateAvailabilityResponse"
+            example:
+              success: true
+              message: Restaurant availability updated successfully
+              data:
+                availabilityStatus: closed
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuCategories:
+  get:
+    tags:
+      - Menu
+
+    summary: List own menu categories
+    description: |
+      Returns all menu categories (menu sections such as Starters,
+      Mains, Drinks) defined by the currently authenticated
+      restaurant, including inactive ones (FR-RES-008).
+
+    operationId: listRestaurantMenuCategories
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Menu categories retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/ListMenuCategoriesResponse"
+            example:
+              success: true
+              message: Menu categories retrieved successfully
+              data:
+                categories:
+                  - id: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+                    name: Grills
+                    displayOrder: 1
+                    isActive: true
+                    createdAt: "2023-11-10T08:00:00.000Z"
+                  - id: b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e
+                    name: Beverages
+                    displayOrder: 2
+                    isActive: true
+                    createdAt: "2023-11-10T08:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Menu
+
+    summary: Create a menu category
+    description: |
+      Creates a new menu category for the currently authenticated
+      restaurant (FR-RES-008.1). Menu items are later assigned to this
+      category (FR-RES-009.6).
+
+    operationId: createRestaurantMenuCategory
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/menu.yaml#/CreateMenuCategoryRequest"
+          example:
+            name: Starters
+            displayOrder: 1
+            isActive: true
+
+    responses:
+      "201":
+        description: Menu category created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/CreateMenuCategoryResponse"
+            example:
+              success: true
+              message: Menu category created successfully
+              data:
+                category:
+                  id: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+                  name: Starters
+                  displayOrder: 1
+                  isActive: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuCategory:
+  parameters:
+    - name: categoryId
+      in: path
+      required: true
+      description: Unique identifier of the menu category.
+      schema:
+        type: string
+        format: uuid
+      example: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+
+  get:
+    tags:
+      - Menu
+
+    summary: Get one menu category
+    description: |
+      Returns a single menu category belonging to the currently
+      authenticated restaurant, identified by `categoryId` (FR-RES-008).
+
+    operationId: getRestaurantMenuCategory
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Menu category retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/GetMenuCategoryResponse"
+            example:
+              success: true
+              message: Menu category retrieved successfully
+              data:
+                category:
+                  id: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+                  name: Grills
+                  displayOrder: 1
+                  isActive: true
+                  createdAt: "2023-11-10T08:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Menu
+
+    summary: Update a menu category
+    description: |
+      Updates a single menu category belonging to the currently
+      authenticated restaurant, identified by `categoryId`
+      (FR-RES-008.2). Only the supplied fields are updated; omitted
+      fields remain unchanged.
+
+    operationId: updateRestaurantMenuCategory
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/menu.yaml#/UpdateMenuCategoryRequest"
+          example:
+            name: Starters & Salads
+            displayOrder: 2
+            isActive: true
+
+    responses:
+      "200":
+        description: Menu category updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/UpdateMenuCategoryResponse"
+            example:
+              success: true
+              message: Menu category updated successfully
+              data:
+                category:
+                  id: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+                  name: Starters & Salads
+                  displayOrder: 2
+                  isActive: true
+                  createdAt: "2023-11-10T08:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Menu
+
+    summary: Delete a menu category
+    description: |
+      Deletes a single menu category belonging to the currently
+      authenticated restaurant, identified by `categoryId`
+      (FR-RES-008.3).
+
+      A category that still has menu items assigned to it cannot be
+      deleted; the items must be reassigned or removed first.
+
+    operationId: deleteRestaurantMenuCategory
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Menu category deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/DeleteMenuCategoryResponse"
+            example:
+              success: true
+              message: Menu category deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"

@@ -1,7 +1,7 @@
 registerCustomer:
   post:
     tags:
-      - Customer
+      - Auth
 
     summary: Register a customer
     description: |
@@ -26,6 +26,7 @@ registerCustomer:
             password: StrongPassword123!
             firstName: John
             lastName: Doe
+            phoneNumber: "+201234567890"
 
     responses:
       "201":
@@ -43,6 +44,7 @@ registerCustomer:
                   email: john@example.com
                   firstName: John
                   lastName: Doe
+                  phoneNumber: "+201234567890"
 
       "400":
         $ref: "../responses/common.yaml#/ValidationError"
@@ -56,7 +58,7 @@ registerCustomer:
 loginCustomer:
   post:
     tags:
-      - Customer
+      - Auth
 
     summary: Log in a customer
     description: |
@@ -95,6 +97,7 @@ loginCustomer:
                   email: john@example.com
                   firstName: John
                   lastName: Doe
+                  phoneNumber: "+201234567890"
                 accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.abc123signature
                 refreshToken: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
 
@@ -110,7 +113,7 @@ loginCustomer:
 forgotPasswordCustomer:
   post:
     tags:
-      - Customer
+      - Auth
 
     summary: Request a customer password reset
     description: |
@@ -157,7 +160,7 @@ forgotPasswordCustomer:
 resetPasswordCustomer:
   post:
     tags:
-      - Customer
+      - Auth
 
     summary: Reset a customer password
     description: |
@@ -209,7 +212,7 @@ resetPasswordCustomer:
 logoutCustomer:
   post:
     tags:
-      - Customer
+      - Auth
 
     summary: Log out a customer
     description: |
@@ -246,7 +249,7 @@ logoutCustomer:
 customerProfile:
   get:
     tags:
-      - Customer
+      - Customers
 
     summary: View customer profile
     description: |
@@ -289,7 +292,7 @@ customerProfile:
 
   patch:
     tags:
-      - Customer
+      - Customers
 
     summary: Update customer profile
     description: |
@@ -353,7 +356,7 @@ customerProfile:
 changePasswordCustomer:
   post:
     tags:
-      - Customer
+      - Customers
 
     summary: Change customer password
     description: |
@@ -402,7 +405,7 @@ changePasswordCustomer:
 deliveryAddresses:
   get:
     tags:
-      - Customer
+      - Customers
 
     summary: List delivery addresses
     description: |
@@ -461,7 +464,7 @@ deliveryAddresses:
 
   post:
     tags:
-      - Customer
+      - Customers
 
     summary: Add a new delivery address
     description: |
@@ -539,7 +542,7 @@ deliveryAddress:
 
   get:
     tags:
-      - Customer
+      - Customers
 
     summary: Get one delivery address
     description: |
@@ -588,7 +591,7 @@ deliveryAddress:
 
   patch:
     tags:
-      - Customer
+      - Customers
 
     summary: Update one delivery address
     description: |
@@ -658,7 +661,7 @@ deliveryAddress:
 
   delete:
     tags:
-      - Customer
+      - Customers
 
     summary: Delete one delivery address
     description: |

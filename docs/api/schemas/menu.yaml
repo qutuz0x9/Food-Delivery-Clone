@@ -404,3 +404,192 @@ SearchMenuItemsResponse:
 
         pagination:
           $ref: "../schemas/common.yaml#/PaginationMeta"
+
+MenuCategoryAdmin:
+  type: object
+  required:
+    - id
+    - name
+    - isActive
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique category identifier.
+      example: a7b8c9d0-e1f2-4a3b-8c9d-0e1f2a3b4c5d
+
+    name:
+      type: string
+      description: Category name.
+      example: Grills
+
+    displayOrder:
+      type: integer
+      nullable: true
+      description: Position of this category within the restaurant's menu.
+      example: 1
+
+    isActive:
+      type: boolean
+      description: Whether the category is currently shown to customers.
+      example: true
+
+    createdAt:
+      type: string
+      format: date-time
+      description: Timestamp when the category was created.
+      example: "2023-11-10T08:00:00.000Z"
+
+ListMenuCategoriesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu categories retrieved successfully
+
+    data:
+      type: object
+      required:
+        - categories
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/MenuCategoryAdmin"
+
+CreateMenuCategoryRequest:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      description: Category name (FR-RES-008.1).
+      example: Starters
+
+    displayOrder:
+      type: integer
+      nullable: true
+      description: Position of this category within the restaurant's menu.
+      example: 1
+
+    isActive:
+      type: boolean
+      default: true
+      description: Whether the category is shown to customers.
+      example: true
+
+CreateMenuCategoryResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu category created successfully
+
+    data:
+      type: object
+      required:
+        - category
+      properties:
+        category:
+          $ref: "#/MenuCategoryAdmin"
+
+GetMenuCategoryResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu category retrieved successfully
+
+    data:
+      type: object
+      required:
+        - category
+      properties:
+        category:
+          $ref: "#/MenuCategoryAdmin"
+
+UpdateMenuCategoryRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Category name (FR-RES-008.2).
+      example: Starters & Salads
+
+    displayOrder:
+      type: integer
+      nullable: true
+      example: 2
+
+    isActive:
+      type: boolean
+      example: true
+
+UpdateMenuCategoryResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu category updated successfully
+
+    data:
+      type: object
+      required:
+        - category
+      properties:
+        category:
+          $ref: "#/MenuCategoryAdmin"
+
+DeleteMenuCategoryResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu category deleted successfully
+
+    data:
+      type: object
+      nullable: true
+      example: null
