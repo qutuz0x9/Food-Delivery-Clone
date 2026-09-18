@@ -29,10 +29,31 @@ Generate high-quality, meaningful git commits following the Conventional Commits
 5. **Write the subject**: imperative mood, max 72 chars, no period, specific.
 6. **Write the body** explaining *why* the change was made, not just what changed.
 7. **Add a footer** if applicable (breaking changes, issue links), then the attribution line (see Footer).
-8. **Create the commit** with `git commit -m` (use a HEREDOC for multi-line messages).
+8. **Get the user's approval of the message** (see Message Review). Do not run `git commit` until the user has
+   explicitly accepted the exact message.
+9. **Create the commit** with `git commit` (use a HEREDOC for multi-line messages) using the approved text verbatim.
    - Never use `--no-verify` or `--amend` unless the user asks.
-   - If a hook fails, fix the cause and create a new commit.
-9. **Report** the commit hash and subject.
+   - If a hook fails, fix the cause and create a new commit. Show the user any change to the message first.
+10. **Report** the commit hash and subject.
+
+## Message Review
+
+The user always reviews the message before the commit is created.
+
+1. Show the full draft message (subject, body and footer) in a code block, plus the list of files it will commit.
+2. Ask with `AskUserQuestion`, putting the full message in the `preview` field of the first option:
+   - **Commit (Recommended)**: commit exactly this message
+   - **Edit**: change the message
+   - **Cancel**: abort without committing
+3. Act on the answer:
+   - **Commit**: create the commit with the shown message, unchanged.
+   - **Edit**: if the user gave instructions ("shorter", "change type to fix", or replacement text through the
+     free-text "Other" answer), apply them. If they only chose Edit, ask what to change. Show the revised message and
+     go back to step 2. Repeat until they accept or cancel. If they supply a complete replacement message, use it
+     verbatim, but still re-check it against the Subject Line Rules and point out any violation (over 72 chars,
+     trailing period, non-conventional type) so they can decide.
+   - **Cancel**: stop. Nothing is committed, and staged files stay staged.
+4. Approval covers only the message shown. If the message changes for any reason after approval, ask again.
 
 ## Commit Format
 
@@ -139,6 +160,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 
 ## Rules & Quality Standards
 
+- Never commit without the user's explicit approval of the exact message. Silence or a vague reply is not approval.
 - Only commit what is staged. Never stage files on your own.
 - Never skip hooks (`--no-verify`) or rewrite history unless the user explicitly asks.
 - Never commit files that look like secrets (`.env`, credentials). Warn the user instead.
