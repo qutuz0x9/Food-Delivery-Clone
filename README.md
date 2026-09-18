@@ -19,7 +19,7 @@ This project is in the design/documentation phase — no business logic or datab
 
 - **App scaffold**: a minimal Express + TypeScript app (`src/app.ts`, `src/index.ts`) that serves the bundled OpenAPI spec via Swagger UI at `/api-docs`.
 - **Database design**: the full relational schema is finalized in `docs/dbdesign/Food-Delivery-System-sqldiagram.sql`, covering identity/auth, customers, restaurants, menus, orders, payments, drivers, and audit logging.
-- **OpenAPI documentation**: split into `docs/api/paths/`, `docs/api/schemas/`, and `docs/api/responses/` per domain, following the conventions in `.github/instructions/openapi.instructions.md`. Documented so far, tagged by resource domain (`Auth`, `Customers`, `Restaurants`, `Menu`):
+- **OpenAPI documentation**: split into `docs/api/paths/`, `docs/api/schemas/`, and `docs/api/responses/` per domain, following the conventions in `.claude/rules/open-api-rules.md`. Documented so far, tagged by resource domain (`Auth`, `Customers`, `Restaurants`, `Menu`):
   - **Auth** — customer and restaurant registration, login, logout, and password recovery.
   - **Customers** — profile management and delivery address CRUD.
   - **Restaurants** — public browsing/search/filtering, restaurant self-service profile, logo upload, operating hours, and availability status.
