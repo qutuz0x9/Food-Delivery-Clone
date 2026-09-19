@@ -32,13 +32,18 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.1",
     "@types/swagger-ui-express": "^4.1.8",
+    "eslint": "^10.11.0",
     "nodemon": "^3.1.14",
+    "oxlint": "^1.83.0",
+    "oxlint-tsgolint": "^7.0.2002",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   },

@@ -75,7 +75,14 @@ Two easily-confused pairs in the schema — don't merge or cross-wire them:
 npm run dev     # nodemon + tsx, watches src/ and docs/api/, serves at http://localhost:3000 (Swagger UI at /api-docs)
 npm run build   # tsc compile to dist/
 npm start       # run compiled dist/index.js
+npm run lint    # oxlint with type-aware rules (config: .oxlintrc.json)
+npm run lint:fix  # same, applying safe auto-fixes
 ```
+
+Run `npm run lint` and `npm run build` after code changes and fix new findings. Oxlint is used instead of ESLint
+because typescript-eslint can't load TypeScript 7 (no JS compiler API). Two rules encode conventions from below:
+`no-restricted-imports` bans `@prisma/client` outside `*.repository.ts` and `src/config/`, and
+`promise/prefer-await-to-then` bans `.then()` chains.
 
 No test runner is configured yet (`npm test` is a placeholder). Once implementation starts, use `jest` + `supertest`
 for HTTP integration tests.
