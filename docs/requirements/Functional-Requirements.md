@@ -89,8 +89,8 @@ Below is the **complete Customer Functional Requirements Table**, including both
 |Category|Count|
 |---|--:|
 |Parent Functional Requirements|**27**|
-|Child Functional Requirements|**47**|
-|**Total Customer Functional Requirements**|**74**|
+|Child Functional Requirements|**48**|
+|**Total Customer Functional Requirements**|**75**|
 
 ---
 
@@ -180,10 +180,8 @@ Below is the **complete Customer Functional Requirements Table**, including both
 |Category|Count|
 |---|--:|
 |Parent Functional Requirements|**22**|
-|Child Functional Requirements|**49**|
-|**Total Restaurant Functional Requirements**|**71**|
-
-This collection provides full traceability for the **Restaurant** actor, from high-level capabilities to detailed system behaviors, and is suitable for inclusion in the Software Requirements Specification (SRS).
+|Child Functional Requirements|**54**|
+|**Total Restaurant Functional Requirements**|**76**|
 
 ---
 
@@ -255,8 +253,8 @@ This collection provides full traceability for the **Restaurant** actor, from hi
 |Category|Count|
 |---|--:|
 |Parent Functional Requirements|**18**|
-|Child Functional Requirements|**39**|
-|**Total Delivery Driver Functional Requirements**|**57**|
+|Child Functional Requirements|**40**|
+|**Total Delivery Driver Functional Requirements**|**58**|
 
 ---
 
@@ -355,19 +353,15 @@ This collection provides full traceability for the **Restaurant** actor, from hi
 |Category|Count|
 |---|--:|
 |Parent Functional Requirements|**18**|
-|Child Functional Requirements|**59**|
-|**Total Administrator Functional Requirements**|**77**|
+|Child Functional Requirements|**67**|
+|**Total Administrator Functional Requirements**|**85**|
 
 ## Overall Project Functional Requirements Summary
 
 |Actor|Parent FRs|Child FRs|Total FRs|
 |---|--:|--:|--:|
-|Customer|27|47|**74**|
-|Restaurant|22|49|**71**|
-|Delivery Driver|18|39|**57**|
-|Administrator|18|59|**77**|
-|**Grand Total**|**85**|**194**|**279**|
-
-One small observation after putting everything together: the administrator ends up with slightly more detailed requirements than the customer. That's fairly typical in management systems because administrative functions often include approval workflows, reporting, configuration, and auditing, all of which naturally expand into more child requirements. The overall structure is well balanced for a food delivery system of this scope.
-
----
+|Customer|27|48|**75**|
+|Restaurant|22|54|**76**|
+|Delivery Driver|18|40|**58**|
+|Administrator|18|67|**85**|
+|**Grand Total**|**85**|**209**|**294**|
