@@ -48,15 +48,16 @@ to them.
 
 ```ts
 // VULNERABLE: any authenticated user can read any order (IDOR)
-router.get("/orders/:orderId", authenticate, asyncHandler(async (req, res) => {
+router.get("/orders/:orderId", authenticate, async (req, res) => {
   res.json(await orderService.getById(req.params.orderId));
-}));
+});
 
 // SECURE: role guard plus ownership check in the service
-router.get("/orders/:orderId", authenticate, requireRole("CUSTOMER"), asyncHandler(async (req, res) => {
+router.get("/orders/:orderId", authenticate, requireRole("CUSTOMER"), async (req, res) => {
   res.json(await orderService.getForCustomer(req.params.orderId, req.user.id));
-}));
+});
 // service throws NotFoundError when the order does not belong to the customer
+// (Express 5 forwards the rejected promise to the error middleware, so no asyncHandler wrapper is needed)
 ```
 
 **A02 - Cryptographic Failures**
