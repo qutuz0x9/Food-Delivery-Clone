@@ -17,11 +17,12 @@ UI. Most work right now is on the OpenAPI spec (`docs/api/`) and the DB schema (
 - `docs/dbdesign/Food-Delivery-System-sqldiagram.sql` — canonical, always-up-to-date DDL (tables, columns, types,
   constraints, FKs). Read this file directly for exact field-level details; don't rely on summaries, which drift.
   `Food-Delivery-System-dbdesign.pdf` in the same folder is the visual ERD companion (not editable from here).
-- `docs/requirements/Functional-Requirements.md` — 279 functional requirements defining scope and behavior: 85
-  parents (`FR-CUS-###`, `FR-RES-###`, `FR-DRV-###`, `FR-ADM-###`) and 194 children (`FR-CUS-002.1`, ...). Customer 74,
-  Restaurant 71, Driver 57, Admin 77. Cite the ID in spec descriptions and code comments.
+- `docs/requirements/Functional-Requirements.md` — the functional requirements that define scope and behavior: parents
+  (`FR-CUS-###`, `FR-RES-###`, `FR-DRV-###`, `FR-ADM-###`) with numbered children (`FR-CUS-002.1`, ...). Each actor's
+  summary table sits at the end of its section, and the rows are the source of truth if a count drifts. Cite the ID in
+  spec descriptions and code comments.
 - `docs/requirements/APIs-Endpoints.md` — REST endpoint index for **Customer, Restaurant and Driver only**. There is
-  no Administrator section yet (77 `FR-ADM-*` requirements have no endpoints), so don't invent admin routes; ask.
+  no Administrator section yet (none of the `FR-ADM-*` requirements have endpoints), so don't invent admin routes; ask.
 - `docs/api/openapi.yaml` — API surface documentation (WIP).
 
 Always cross-check new features against the Functional Requirements doc and the DB design SQL before implementing.
@@ -32,8 +33,8 @@ The endpoint index is a planning draft and is not consistent with itself or with
 the same thing (customer `/auth/login` vs. restaurant `/restaurants/auth/login`; driver reuses `/auth/login`). The spec
 already differs in places (`/auth/login/customer`, `/customers/me/change-password`). When documenting or building a
 route, follow the spec's conventions, and flag any conflict with the index instead of silently picking one. Static
-segments must be registered before parameter routes (`/orders/active` and `/deliveries/history` would otherwise match
-`/:orderId` and `/:assignmentId`).
+segments must be registered before parameter routes (`/restaurants/me/orders/active` and `/driver/deliveries/history`
+would otherwise match `/restaurants/me/orders/:orderId` and `/driver/deliveries/:assignmentId`).
 
 ### Requirements the schema doesn't back yet
 
@@ -44,6 +45,8 @@ These FRs have no table or column in the DB design. Raise it and ask before impl
   `GET /payment-methods` endpoint): no settings table.
 - **Platform-level food categories** (`FR-ADM-008`) and **platform promotions** (`FR-ADM-012`): `restaurant_categories`
   and `restaurant_promotions` both require a `restaurant_id`, so there is nothing platform-wide.
+- **Rejecting a driver registration** (`FR-ADM-007.3`): `driver_status` is `pending` / `active` / `inactive` /
+  `suspended`, with no `rejected` value (`restaurant_status` has one).
 
 Two easily-confused pairs in the schema — don't merge or cross-wire them:
 
@@ -55,19 +58,8 @@ Two easily-confused pairs in the schema — don't merge or cross-wire them:
   The restaurant's "food categories" requirement (`FR-RES-008`) and `/restaurants/me/categories` map to
   **`menu_categories`**, not `restaurant_categories`.
 
-### Business rules from the requirements
-
-- Registration needs a unique email (`FR-CUS-002.3`). Password reset verifies identity first, via
-  `password_reset_tokens`.
-- Restaurant and driver registrations start as `pending` and need admin approval or rejection
-  (`FR-ADM-006.2/.3`, `FR-ADM-007.2/.3`), which maps to `restaurant_status` / `driver_status`. Admin
-  activate/deactivate maps to `account_status`.
-- Order total = subtotal + delivery fee + tax − discount (`FR-CUS-019.3`), calculated server-side. Each order gets a
-  unique `order_number` (`FR-CUS-019.5`).
-- Cancellation is only allowed when the order is eligible under the platform policy, and it notifies the restaurant
-  and the driver (`FR-CUS-022`).
-- Ratings and reviews (restaurant and driver) are only for completed orders (`FR-CUS-024` to `026`). Restaurants can
-  reply (`FR-RES-020`). Admins moderate through `review_status` (`FR-ADM-013`).
+Business rules taken from the requirements (registration, approvals, order totals, cancellation, reviews) are in
+`.claude/rules/domain-rules.md`. It loads when you work on `src/**` or `docs/api/**`.
 
 ## Commands
 
@@ -80,42 +72,32 @@ npm run lint:fix  # same, applying safe auto-fixes
 ```
 
 Run `npm run lint` and `npm run build` after code changes and fix new findings. Oxlint is used instead of ESLint
-because typescript-eslint can't load TypeScript 7 (no JS compiler API). Two rules encode conventions from below:
-`no-restricted-imports` bans `@prisma/client` outside `*.repository.ts` and `src/config/`, and
-`promise/prefer-await-to-then` bans `.then()` chains.
+because typescript-eslint can't load TypeScript 7 (no JS compiler API). Two rules enforce conventions from
+`.claude/rules/coding-conventions.md`: `no-restricted-imports` bans `@prisma/client` outside `*.repository.ts` and
+`src/config/`, and `promise/prefer-await-to-then` bans `.then()` chains.
+
+CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run lint` and `npm run build` on pushes to `main` and on PRs. Pin
+any new action to a full commit SHA with a version comment, as the existing steps do.
 
 No test runner is configured yet (`npm test` is a placeholder). Once implementation starts, use `jest` + `supertest`
 for HTTP integration tests.
 
-Lint the OpenAPI spec after any edit under `docs/api/`:
+The TypeScript setup is strict and ESM (relative imports need `.js`, no `enum`, `import type`), and the app bundles the
+OpenAPI spec at startup. Details are in `.claude/rules/typescript-setup.md`, which loads when you work on
+`src/**/*.ts` or `tsconfig.json`.
+
+## OpenAPI Spec (`docs/api/`)
+
+The spec conventions (file layout, `$ref` rules, naming, response envelope, security, pagination, examples, lint) live
+in `.claude/rules/open-api-rules.md`, which loads automatically when you work on `docs/api/**/*.yaml`. Read it before
+editing the spec, and lint after every edit:
 
 ```bash
 npx @redocly/cli lint docs/api/openapi.yaml
 ```
 
-Fix any new errors before considering the doc update complete. The `no-server-example.com` warning on the
-`localhost` dev server URL is expected and should be ignored.
-
-## OpenAPI Spec Conventions (`docs/api/`)
-
-- Layout: `openapi.yaml` (root: info/servers/tags/security/`$ref` index only) + `paths/<domain>.yaml` +
-  `schemas/<domain>.yaml` + `responses/common.yaml` + `security/common.yaml`. Never grow `openapi.yaml` into a
-  monolith — group by domain (auth, customers, restaurants, menu, orders, payments, drivers, admin), not by method.
-- Each `paths/<domain>.yaml` is keyed by an internal operation name, not the URL; the root document maps the URL to
-  it via `$ref`. When multiple methods share a URL, define one Path Item key with all methods, and put shared path
-  parameters at the Path Item level (not duplicated per-operation).
-- Mirror every schema/response used by a path into the root `components.schemas` / `components.responses` via
-  `$ref` so tooling can list all models from the root doc.
-- Target OpenAPI 3.0.3. `operationId` is `camelCase` matching the controller action. Schema names `PascalCase`;
-  schema properties `camelCase` (DB `snake_case` columns map to camelCase at the API boundary).
-- Response envelope: success `{ success: true, message, data }`, error `{ success: false, message, error: { code, ... } }`.
-  Never inline 400/401/403/404/409/422/500 bodies in a path file — reference `responses/common.yaml`.
-- Root sets `security: [bearerAuth]` globally; public endpoints (browsing, register, login, password reset) must
-  explicitly override with `security: []` — never rely on omission.
-- Paginated endpoints use `page` (default 1) / `limit` (default 20, max 100) query params and return
-  `schemas/common.yaml#/PaginationMeta` under `data.pagination`.
-- Every operation needs example values in `requestBody` and each response's `content`.
-- Update `docs/api/` in the same change as any route addition/modification — don't let it drift from implemented routes.
+Update `docs/api/` in the same change as any route you add or modify in `src/`, so it doesn't drift from the
+implemented routes. That rule is repeated here because the rules file doesn't load when you're only editing code.
 
 ## Planned Architecture (once implementation starts)
 
@@ -140,31 +122,6 @@ The requirements also imply features outside this module list: cart (`shopping_c
 notifications, and dashboards/reports (`FR-RES-021`, `FR-DRV-016/017`, `FR-ADM-014/015`). Decide where each one lives
 (its own module or inside an existing one) before implementing it.
 
-Coding conventions to follow once code exists:
-
-- `async/await` only, never mixed with raw `.then()`.
-- Wrap every route handler (e.g. `asyncHandler`) so errors reach centralized error-handling middleware — no
-  per-controller `try/catch` + `res.status()`.
-- Throw typed application errors (`NotFoundError`, `ValidationError`, `ForbiddenError`, ...) from services; the
-  error middleware maps them to HTTP status + a consistent JSON error shape.
-- Validate all request input with zod at the route boundary.
-- Prisma models are PascalCase singular, mapped to the existing snake_case tables/columns via `@map`/`@@map` —
-  never rename the underlying DB schema.
-- Never expose `password_hash`, token values, or other secrets in API responses — use explicit response DTOs.
-- Use `prisma.$transaction` for any multi-table write (e.g. placing an order: cart -> order -> order_items ->
-  order_status_history -> payment).
-- Respect soft deletes: filter `deleted_at: null` by default. Only `users` and `roles` have `deleted_at` in the
-  schema. "Delete customer/restaurant/driver account" (`FR-ADM-005.6`, `006.7`, `007.7`) is a soft delete of the
-  linked `users` row, not a hard delete of the profile row.
-- Every order status change appends to `order_status_history` (with `changed_by_user_id`) — never overwrite status in
-  place. The `orders.accepted_at/prepared_at/picked_up_at/delivered_at/cancelled_at` columns are denormalized caches of
-  the history, and the history is the source of truth. Financial operations (refunds, payouts) must be auditable and
-  immutable once processed.
-- Protect routes with JWT auth middleware + a role-guard middleware; never check roles ad hoc in controllers.
-- Administrator actions that mutate state (order status, account activation, refunds) must be recorded in `audit_log`.
-
-## Git Commits
-
-Follow Conventional Commits: `<type>(<scope>): <description>`, imperative mood, ≤72 char subject, no period. Types:
-`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `revert`. Explain *why* in the body, not just
-what changed.
+Coding conventions (async/await and error handling, zod validation, DTOs, Prisma mapping, transactions, soft deletes,
+order status history, role guards, `audit_log`) are in `.claude/rules/coding-conventions.md`. It loads automatically
+when you work on `src/**/*.ts` or `src/prisma/schema.prisma`.

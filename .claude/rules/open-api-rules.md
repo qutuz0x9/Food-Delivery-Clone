@@ -1,5 +1,6 @@
 ---
-applyTo: "docs/api/**/*.yaml"
+paths:
+  - "docs/api/**/*.yaml"
 ---
 
 # OpenAPI Specification Instructions
@@ -73,9 +74,11 @@ docs/api/
   `camelCase` to match the JSON wire format (the DB's `snake_case` columns are mapped to camelCase at the
   API boundary — see Prisma `@map`/`@@map` conventions).
 - Every path must declare `tags` using one of the tag names defined in the root `tags` list.
-- Version all paths under `/api/v1` per the project's API conventions — keep the `servers` entry and every
-  path prefix consistent with this.
-- Every operation must include example values in both `requestBody` and each response's `content`.
+- The API is versioned under `/api/v1`. That prefix lives in the root `servers` URL
+  (`http://localhost:3000/api/v1`), so path keys in `openapi.yaml` start at the resource (`/auth/login/customer`,
+  `/restaurants/{restaurantId}`) and must not repeat `/api/v1`, or Swagger UI would call `/api/v1/api/v1/...`.
+- Every operation must include example values in its `requestBody` (when it has one) and in each response's
+  `content`.
 
 ## Response Envelope & Errors
 
@@ -100,6 +103,10 @@ docs/api/
   `responses/` files in the same change — do not let `docs/api/` drift from the implemented routes.
 - New domains get a new `paths/<domain>.yaml` and `schemas/<domain>.yaml` file; don't add unrelated
   endpoints to an existing domain file.
+- Cite the functional requirement ID (e.g. `FR-CUS-012`) in an operation's description, and check the DB
+  design SQL for exact field names and types before writing a schema.
+- To add endpoints from `docs/requirements/APIs-Endpoints.md`, use the `/openapi-generator` skill. It merges into
+  the existing spec and does not regenerate it.
 
 ## Validating Changes
 
