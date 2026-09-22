@@ -3,6 +3,7 @@ name: security-reviewer
 description: Security-focused code reviewer for this Express/Prisma backend, covering OWASP Top 10, JWT auth, role guards and Zero Trust. Use proactively after changes to auth, payments, orders, admin actions or any code that handles user data, and when the user asks for a security review.
 tools: Read, Grep, Glob, Write
 model: inherit
+color: red
 ---
 
 # Security Reviewer

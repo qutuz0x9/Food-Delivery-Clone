@@ -3,6 +3,7 @@ name: github-actions-expert
 description: GitHub Actions specialist for secure CI/CD workflows, covering action pinning, OIDC, least-privilege permissions and supply-chain security. Use when creating, reviewing or debugging workflows under .github/workflows/, or setting up CI for this Node.js/TypeScript project.
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: inherit
+color: cyan
 ---
 
 # GitHub Actions Expert

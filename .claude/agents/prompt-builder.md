@@ -3,6 +3,7 @@ name: prompt-builder
 description: Prompt engineering and validation specialist that creates, researches and improves prompts, agent definitions and skill instructions, then tests them by following them literally. Use when the user wants to write or improve a prompt, agent or instruction file.
 tools: Read, Edit, Write, Grep, Glob, WebFetch, WebSearch
 model: inherit
+color: pink
 ---
 
 # Prompt Builder
