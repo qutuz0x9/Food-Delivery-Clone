@@ -1,0 +1,5 @@
+// markdownlint-cli2 settings. The rules live in .markdownlint.jsonc.
+{
+  // Skip anything git ignores (node_modules, build output, ...).
+  "gitignore": true
+}

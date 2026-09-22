@@ -1,0 +1,14 @@
+// Markdown lint rules, shared by `npx markdownlint-cli2` and the VS Code
+// markdownlint extension, so the editor and the command line agree.
+// Rule reference: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+{
+  "default": true,
+
+  // Line length is off: tables and links are wider than any sensible limit.
+  "MD013": false,
+
+  // "any": each table just needs to be internally consistent (aligned, compact or tight is
+  // fine). "aligned" (forcing column-width padding) breaks on tables with paragraph-length
+  // cells (see the database-architect agent's audit reports under docs/database-report/).
+  "MD060": { "style": "any" }
+}
