@@ -1,0 +1,13 @@
+{
+  // Root-level config files (prisma.config.ts). Type-check only, nothing is shipped.
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "outDir": "./node_modules/.cache/tsconfig-tooling",
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["prisma.config.ts"]
+}

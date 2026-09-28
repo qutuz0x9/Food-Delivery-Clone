@@ -32,11 +32,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "lint": "oxlint --type-aware",
-    "lint:fix": "oxlint --type-aware --fix"
+    "lint:fix": "oxlint --type-aware --fix",
+    "contract:emit": "prisma contract emit"
   },
   "devDependencies": {
+    "@prisma/cli-engine": "^0.4.0",
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.1",
     "@types/swagger-ui-express": "^4.1.8",
@@ -45,11 +47,13 @@
     "nodemon": "^3.1.14",
     "oxlint": "^1.83.0",
     "oxlint-tsgolint": "^7.0.2002",
+    "prisma": "^8.0.0-rc.15",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^13.0.0",
+    "@prisma/orm-postgres": "^8.0.0-rc.11",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "swagger-ui-express": "^5.0.1"

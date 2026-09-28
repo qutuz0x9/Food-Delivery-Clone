@@ -2,3 +2,6 @@
 /dist
 /.env
 docs/summery
+node_modules/
+dist/
+.env
