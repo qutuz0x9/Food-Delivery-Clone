@@ -63,5 +63,6 @@ build.
 ## Checking Your Work
 
 - `npm run build` — compile with `tsc` (also produces `dist/`).
-- `npx tsc --noEmit` — type-check only. There is no `typecheck` script.
+- `npx tsc -p tsconfig.tooling.json` — type-check root config files such as `prisma.config.ts`. `tsconfig.json` is
+  only a solution file (references to `tsconfig.build.json` and `tsconfig.tooling.json`), so plain `tsc` does nothing.
 - `npm run lint` — oxlint with type-aware rules, not ESLint.
