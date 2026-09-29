@@ -35,7 +35,19 @@
     "build": "tsc -p tsconfig.build.json",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "contract:emit": "prisma contract emit"
+    "prebuild": "prisma contract emit",
+    "contract:emit": "prisma contract emit",
+    "contract:infer": "prisma contract infer",
+    "db:init": "prisma db init",
+    "db:update": "prisma db update",
+    "db:migrate": "prisma db migrate --advance-ref db",
+    "db:migrate:show": "prisma db migrate --show",
+    "db:verify": "prisma db verify",
+    "db:schema": "prisma db schema",
+    "migration:plan": "prisma migration plan --name",
+    "migration:show": "prisma migration show",
+    "migration:status": "prisma migration status",
+    "migration:log": "prisma migration log"
   },
   "devDependencies": {
     "@prisma/cli-engine": "^0.4.0",
