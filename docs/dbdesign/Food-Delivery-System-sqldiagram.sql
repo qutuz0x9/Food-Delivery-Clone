@@ -38,8 +38,7 @@ CREATE TYPE "refund_status" AS ENUM (
 CREATE TYPE "restaurant_status" AS ENUM (
   'pending',
   'approved',
-  'rejected',
-  'suspended'
+  'rejected'
 );
 
 CREATE TYPE "restaurant_availability" AS ENUM (
@@ -58,7 +57,6 @@ CREATE TYPE "discount_type" AS ENUM (
 CREATE TYPE "driver_status" AS ENUM (
   'active',
   'inactive',
-  'suspended',
   'pending'
 );
 
@@ -172,7 +170,7 @@ CREATE TABLE "user_tokens" (
   "value" text NOT NULL,
   "expires_at" timestamp,
   "created_at" timestamp NOT NULL DEFAULT (now()),
-  PRIMARY KEY ("login_provider", "token_name")
+  PRIMARY KEY ("user_id", "login_provider", "token_name")
 );
 
 CREATE TABLE "roles" (
@@ -226,6 +224,7 @@ CREATE TABLE "password_reset_tokens" (
 CREATE TABLE "audit_log" (
   "id" uuid PRIMARY KEY NOT NULL,
   "user_id" uuid NOT NULL,
+  "actor_email" varchar NOT NULL,
   "action" varchar NOT NULL,
   "entity_name" varchar NOT NULL,
   "entity_id" uuid,
@@ -236,6 +235,16 @@ CREATE TABLE "audit_log" (
   "user_agent" text NOT NULL,
   "status" varchar,
   "created_at" timestamp NOT NULL DEFAULT (now())
+);
+
+CREATE TABLE "admins" (
+  "id" uuid PRIMARY KEY NOT NULL,
+  "user_id" uuid UNIQUE NOT NULL,
+  "first_name" varchar NOT NULL,
+  "last_name" varchar NOT NULL,
+  "profile_image_url" varchar,
+  "created_at" timestamp NOT NULL DEFAULT (now()),
+  "updated_at" timestamp
 );
 
 CREATE TABLE "customers" (
@@ -635,6 +644,24 @@ CREATE UNIQUE INDEX ON "menu_item_option_values" ("option_group_id", "name");
 
 CREATE UNIQUE INDEX "driver_assignments_active_order_unique" ON "driver_assignments" ("order_id") WHERE "status" IN ('pending', 'accepted');
 
+CREATE INDEX ON "user_claims" ("user_id");
+
+CREATE INDEX ON "user_logins" ("user_id");
+
+CREATE INDEX ON "user_roles" ("role_id");
+
+CREATE INDEX ON "role_claims" ("role_id");
+
+CREATE INDEX ON "refresh_tokens" ("user_id");
+
+CREATE INDEX ON "password_reset_tokens" ("user_id");
+
+CREATE INDEX ON "audit_log" ("user_id");
+
+CREATE INDEX ON "audit_log" ("entity_name", "entity_id");
+
+CREATE INDEX ON "audit_log" ("created_at");
+
 COMMENT ON COLUMN "orders"."accepted_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
 COMMENT ON COLUMN "orders"."prepared_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
 COMMENT ON COLUMN "orders"."picked_up_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
@@ -642,6 +669,8 @@ COMMENT ON COLUMN "orders"."delivered_at" IS 'Denormalized cache of the latest m
 COMMENT ON COLUMN "orders"."cancelled_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
 
 COMMENT ON COLUMN "customers"."user_id" IS 'This for Identity Table';
+
+COMMENT ON COLUMN "audit_log"."actor_email" IS 'Point-in-time snapshot of the acting user''s email, captured at write time — not kept in sync with users.email. Preserves who acted even if the account''s email later changes or the account is soft-deleted.';
 
 ALTER TABLE "user_claims" ADD CONSTRAINT "user_claims_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
@@ -660,6 +689,8 @@ ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_fkey" FOREIG
 ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_token_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "audit_log" ADD CONSTRAINT "audit_log_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+
+ALTER TABLE "admins" ADD CONSTRAINT "admin_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "customers" ADD CONSTRAINT "customer_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 

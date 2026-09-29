@@ -12,10 +12,13 @@ The FR doc stays the source of truth. If this list and the doc disagree, the doc
 - Registration needs a unique email (`FR-CUS-002.3`). Password reset verifies identity first, via
   `password_reset_tokens`.
 - Restaurant and driver registrations start as `pending` and need admin approval or rejection
-  (`FR-ADM-006.2/.3`, `FR-ADM-007.2/.3`). Restaurants map to `restaurant_status` (`pending` / `approved` / `rejected` /
-  `suspended`). Drivers map to `driver_status`, which is `pending` / `active` / `inactive` / `suspended` and has **no
+  (`FR-ADM-006.2/.3`, `FR-ADM-007.2/.3`). Restaurants map to `restaurant_status` (`pending` / `approved` /
+  `rejected`). Drivers map to `driver_status`, which is `pending` / `active` / `inactive` and has **no
   `rejected` (or `approved`) value**, so rejecting a driver (`FR-ADM-007.3`) has no clean mapping yet. Ask before
-  choosing one and don't add an enum value on your own. Admin activate/deactivate maps to `account_status` on `users`.
+  choosing one and don't add an enum value on your own. `restaurant_status`/`driver_status` carry only this
+  approval workflow now — neither has a `suspended` value. Suspending an account (any actor) and admin
+  activate/deactivate both map to `account_status` on `users`, the single platform-wide source of truth for
+  login/suspension state.
 - Order total = subtotal + delivery fee + tax − discount (`FR-CUS-019.3`), calculated server-side. Each order gets a
   unique `order_number` (`FR-CUS-019.5`).
 - Cancellation (`FR-CUS-022.1` to `.4`) is only allowed when the order is eligible under the platform's cancellation

@@ -45,8 +45,9 @@ These FRs have no table or column in the DB design. Raise it and ask before impl
   `GET /payment-methods` endpoint): no settings table.
 - **Platform-level food categories** (`FR-ADM-008`) and **platform promotions** (`FR-ADM-012`): `restaurant_categories`
   and `restaurant_promotions` both require a `restaurant_id`, so there is nothing platform-wide.
-- **Rejecting a driver registration** (`FR-ADM-007.3`): `driver_status` is `pending` / `active` / `inactive` /
-  `suspended`, with no `rejected` value (`restaurant_status` has one).
+- **Rejecting a driver registration** (`FR-ADM-007.3`): `driver_status` is `pending` / `active` / `inactive`,
+  with no `rejected` value (`restaurant_status` has one). Neither `driver_status` nor `restaurant_status` has a
+  `suspended` value — suspension for every actor routes through `users.account_status` instead.
 
 Two easily-confused pairs in the schema — don't merge or cross-wire them:
 
