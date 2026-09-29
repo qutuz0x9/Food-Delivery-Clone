@@ -1,0 +1,1650 @@
+[
+  {
+    "id": "schema.identity",
+    "label": "Create schema \"identity\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"identity\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"identity\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.audit_log",
+    "label": "Create table \"audit_log\"",
+    "summary": "Creates table \"audit_log\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "audit_log"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"audit_log\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"audit_log\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"audit_log\"",
+        "sql": "CREATE TABLE \"identity\".\"audit_log\" (\n  \"action\" text NOT NULL,\n  \"actor_email\" text NOT NULL,\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"entity_id\" uuid,\n  \"entity_name\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"ip_address\" inet NOT NULL,\n  \"new_value\" jsonb,\n  \"old_value\" jsonb,\n  \"request_id\" text,\n  \"status\" text,\n  \"user_agent\" text NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"audit_log\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"audit_log\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.password_reset_tokens",
+    "label": "Create table \"password_reset_tokens\"",
+    "summary": "Creates table \"password_reset_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "password_reset_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"password_reset_tokens\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"password_reset_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"password_reset_tokens\"",
+        "sql": "CREATE TABLE \"identity\".\"password_reset_tokens\" (\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"device_id\" text,\n  \"expires_at\" timestamp(6) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"ip_address\" inet,\n  \"token_hash\" text NOT NULL,\n  \"used_at\" timestamp(6),\n  \"user_id\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"password_reset_tokens\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"password_reset_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.refresh_tokens",
+    "label": "Create table \"refresh_tokens\"",
+    "summary": "Creates table \"refresh_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "refresh_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"refresh_tokens\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"refresh_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"refresh_tokens\"",
+        "sql": "CREATE TABLE \"identity\".\"refresh_tokens\" (\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"device_id\" text,\n  \"expires_at\" timestamp(6) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"ip_address\" inet,\n  \"replaced_by_token\" uuid,\n  \"revoked_at\" timestamp(6),\n  \"revoked_reason\" text,\n  \"token_hash\" text NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"refresh_tokens\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"refresh_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.role_claims",
+    "label": "Create table \"role_claims\"",
+    "summary": "Creates table \"role_claims\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "role_claims"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"role_claims\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"role_claims\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"role_claims\"",
+        "sql": "CREATE TABLE \"identity\".\"role_claims\" (\n  \"claim_type\" text NOT NULL,\n  \"claim_value\" text NOT NULL,\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"role_id\" uuid,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"role_claims\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"role_claims\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.roles",
+    "label": "Create table \"roles\"",
+    "summary": "Creates table \"roles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"roles\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"roles\"",
+        "sql": "CREATE TABLE \"identity\".\"roles\" (\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"deleted_at\" timestamp(6),\n  \"description\" text,\n  \"id\" uuid NOT NULL,\n  \"name\" text NOT NULL,\n  \"normalized_name\" text NOT NULL,\n  \"updated_at\" timestamp(6),\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"roles\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user_claims",
+    "label": "Create table \"user_claims\"",
+    "summary": "Creates table \"user_claims\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "user_claims"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user_claims\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_claims\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user_claims\"",
+        "sql": "CREATE TABLE \"identity\".\"user_claims\" (\n  \"claim_type\" text NOT NULL,\n  \"claim_value\" text NOT NULL,\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user_claims\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_claims\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user_logins",
+    "label": "Create table \"user_logins\"",
+    "summary": "Creates table \"user_logins\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "user_logins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user_logins\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_logins\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user_logins\"",
+        "sql": "CREATE TABLE \"identity\".\"user_logins\" (\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"expires_at\" timestamp(6),\n  \"login_provider\" text NOT NULL,\n  \"name\" text,\n  \"user_id\" uuid NOT NULL,\n  \"value\" text NOT NULL,\n  PRIMARY KEY (\"login_provider\", \"value\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user_logins\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_logins\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user_roles",
+    "label": "Create table \"user_roles\"",
+    "summary": "Creates table \"user_roles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "user_roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user_roles\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user_roles\"",
+        "sql": "CREATE TABLE \"identity\".\"user_roles\" (\n  \"role_id\" uuid NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  PRIMARY KEY (\"user_id\", \"role_id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user_roles\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user_tokens",
+    "label": "Create table \"user_tokens\"",
+    "summary": "Creates table \"user_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "user_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user_tokens\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user_tokens\"",
+        "sql": "CREATE TABLE \"identity\".\"user_tokens\" (\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"expires_at\" timestamp(6),\n  \"login_provider\" text NOT NULL,\n  \"token_name\" text NOT NULL,\n  \"user_id\" uuid NOT NULL,\n  \"value\" text NOT NULL,\n  PRIMARY KEY (\"user_id\", \"login_provider\", \"token_name\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user_tokens\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.users",
+    "label": "Create table \"users\"",
+    "summary": "Creates table \"users\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "table",
+        "name": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"users\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"users\"",
+        "sql": "CREATE TABLE \"identity\".\"users\" (\n  \"account_status\" text DEFAULT 'active' NOT NULL,\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"deleted_at\" timestamp(6),\n  \"email\" text NOT NULL,\n  \"email_verified_at\" timestamp(6),\n  \"id\" uuid NOT NULL,\n  \"normalized_email\" text NOT NULL,\n  \"password_hash\" text NOT NULL,\n  \"phone_number\" text NOT NULL,\n  \"phone_verified_at\" timestamp(6),\n  \"updated_at\" timestamp(6),\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"users_account_status_check_6d1da24a\" CHECK (\"account_status\" IN ('active', 'inactive', 'locked', 'suspended'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"users\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.admins",
+    "label": "Create table \"admins\"",
+    "summary": "Creates table \"admins\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "admins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"admins\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admins\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"admins\"",
+        "sql": "CREATE TABLE \"public\".\"admins\" (\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"first_name\" text NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"last_name\" text NOT NULL,\n  \"profile_image_url\" text,\n  \"updated_at\" timestamp(6),\n  \"user_id\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"admins\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admins\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.password_reset_tokens.password_reset_tokens_token_hash_key",
+    "label": "Add unique constraint on \"password_reset_tokens\" (token_hash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "unique",
+        "name": "password_reset_tokens_token_hash_key",
+        "table": "password_reset_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"password_reset_tokens_token_hash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "password_reset_tokens_token_hash_key",
+          "identity",
+          "\"identity\".\"password_reset_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"password_reset_tokens_token_hash_key\"",
+        "sql": "ALTER TABLE \"identity\".\"password_reset_tokens\" ADD CONSTRAINT \"password_reset_tokens_token_hash_key\" UNIQUE (\"token_hash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"password_reset_tokens_token_hash_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "password_reset_tokens_token_hash_key",
+          "identity",
+          "\"identity\".\"password_reset_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.refresh_tokens.refresh_tokens_token_hash_key",
+    "label": "Add unique constraint on \"refresh_tokens\" (token_hash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "unique",
+        "name": "refresh_tokens_token_hash_key",
+        "table": "refresh_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"refresh_tokens_token_hash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refresh_tokens_token_hash_key",
+          "identity",
+          "\"identity\".\"refresh_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"refresh_tokens_token_hash_key\"",
+        "sql": "ALTER TABLE \"identity\".\"refresh_tokens\" ADD CONSTRAINT \"refresh_tokens_token_hash_key\" UNIQUE (\"token_hash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"refresh_tokens_token_hash_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refresh_tokens_token_hash_key",
+          "identity",
+          "\"identity\".\"refresh_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.roles.roles_name_key",
+    "label": "Add unique constraint on \"roles\" (name)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "unique",
+        "name": "roles_name_key",
+        "table": "roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"roles_name_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "roles_name_key",
+          "identity",
+          "\"identity\".\"roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"roles_name_key\"",
+        "sql": "ALTER TABLE \"identity\".\"roles\" ADD CONSTRAINT \"roles_name_key\" UNIQUE (\"name\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"roles_name_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "roles_name_key",
+          "identity",
+          "\"identity\".\"roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.roles.roles_normalized_name_key",
+    "label": "Add unique constraint on \"roles\" (normalized_name)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "unique",
+        "name": "roles_normalized_name_key",
+        "table": "roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"roles_normalized_name_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "roles_normalized_name_key",
+          "identity",
+          "\"identity\".\"roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"roles_normalized_name_key\"",
+        "sql": "ALTER TABLE \"identity\".\"roles\" ADD CONSTRAINT \"roles_normalized_name_key\" UNIQUE (\"normalized_name\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"roles_normalized_name_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "roles_normalized_name_key",
+          "identity",
+          "\"identity\".\"roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.users.users_email_key",
+    "label": "Add unique constraint on \"users\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "unique",
+        "name": "users_email_key",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key",
+          "identity",
+          "\"identity\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_email_key\"",
+        "sql": "ALTER TABLE \"identity\".\"users\" ADD CONSTRAINT \"users_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_email_key",
+          "identity",
+          "\"identity\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.users.users_normalized_email_key",
+    "label": "Add unique constraint on \"users\" (normalized_email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "unique",
+        "name": "users_normalized_email_key",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_normalized_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_normalized_email_key",
+          "identity",
+          "\"identity\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_normalized_email_key\"",
+        "sql": "ALTER TABLE \"identity\".\"users\" ADD CONSTRAINT \"users_normalized_email_key\" UNIQUE (\"normalized_email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_normalized_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_normalized_email_key",
+          "identity",
+          "\"identity\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.users.users_phone_number_key",
+    "label": "Add unique constraint on \"users\" (phone_number)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "unique",
+        "name": "users_phone_number_key",
+        "table": "users"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"users_phone_number_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_phone_number_key",
+          "identity",
+          "\"identity\".\"users\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"users_phone_number_key\"",
+        "sql": "ALTER TABLE \"identity\".\"users\" ADD CONSTRAINT \"users_phone_number_key\" UNIQUE (\"phone_number\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"users_phone_number_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "users_phone_number_key",
+          "identity",
+          "\"identity\".\"users\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.admins.admins_user_id_key",
+    "label": "Add unique constraint on \"admins\" (user_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "admins_user_id_key",
+        "table": "admins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"admins_user_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admins_user_id_key",
+          "public",
+          "\"public\".\"admins\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"admins_user_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"admins\" ADD CONSTRAINT \"admins_user_id_key\" UNIQUE (\"user_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"admins_user_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admins_user_id_key",
+          "public",
+          "\"public\".\"admins\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audit_log.audit_log_created_at_idx_225d8c0f",
+    "label": "Create index \"audit_log_created_at_idx_225d8c0f\" on \"audit_log\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "audit_log_created_at_idx_225d8c0f",
+        "table": "audit_log"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audit_log_created_at_idx_225d8c0f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"audit_log_created_at_idx_225d8c0f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audit_log_created_at_idx_225d8c0f\"",
+        "sql": "CREATE INDEX \"audit_log_created_at_idx_225d8c0f\" ON \"identity\".\"audit_log\" (\"created_at\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audit_log_created_at_idx_225d8c0f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"audit_log_created_at_idx_225d8c0f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audit_log.audit_log_entity_name_entity_id_idx_9c0357fa",
+    "label": "Create index \"audit_log_entity_name_entity_id_idx_9c0357fa\" on \"audit_log\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "audit_log_entity_name_entity_id_idx_9c0357fa",
+        "table": "audit_log"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audit_log_entity_name_entity_id_idx_9c0357fa\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"audit_log_entity_name_entity_id_idx_9c0357fa\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audit_log_entity_name_entity_id_idx_9c0357fa\"",
+        "sql": "CREATE INDEX \"audit_log_entity_name_entity_id_idx_9c0357fa\" ON \"identity\".\"audit_log\" (\"entity_name\", \"entity_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audit_log_entity_name_entity_id_idx_9c0357fa\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"audit_log_entity_name_entity_id_idx_9c0357fa\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.audit_log.audit_log_user_id_idx_6c952402",
+    "label": "Create index \"audit_log_user_id_idx_6c952402\" on \"audit_log\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "audit_log_user_id_idx_6c952402",
+        "table": "audit_log"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"audit_log_user_id_idx_6c952402\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"audit_log_user_id_idx_6c952402\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"audit_log_user_id_idx_6c952402\"",
+        "sql": "CREATE INDEX \"audit_log_user_id_idx_6c952402\" ON \"identity\".\"audit_log\" (\"user_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"audit_log_user_id_idx_6c952402\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"audit_log_user_id_idx_6c952402\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.password_reset_tokens.password_reset_tokens_user_id_idx_6c952402",
+    "label": "Create index \"password_reset_tokens_user_id_idx_6c952402\" on \"password_reset_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "password_reset_tokens_user_id_idx_6c952402",
+        "table": "password_reset_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"password_reset_tokens_user_id_idx_6c952402\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"password_reset_tokens_user_id_idx_6c952402\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"password_reset_tokens_user_id_idx_6c952402\"",
+        "sql": "CREATE INDEX \"password_reset_tokens_user_id_idx_6c952402\" ON \"identity\".\"password_reset_tokens\" (\"user_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"password_reset_tokens_user_id_idx_6c952402\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"password_reset_tokens_user_id_idx_6c952402\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.refresh_tokens.refresh_tokens_user_id_idx_6c952402",
+    "label": "Create index \"refresh_tokens_user_id_idx_6c952402\" on \"refresh_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "refresh_tokens_user_id_idx_6c952402",
+        "table": "refresh_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"refresh_tokens_user_id_idx_6c952402\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"refresh_tokens_user_id_idx_6c952402\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"refresh_tokens_user_id_idx_6c952402\"",
+        "sql": "CREATE INDEX \"refresh_tokens_user_id_idx_6c952402\" ON \"identity\".\"refresh_tokens\" (\"user_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"refresh_tokens_user_id_idx_6c952402\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"refresh_tokens_user_id_idx_6c952402\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.role_claims.role_claims_role_id_idx_d9467c50",
+    "label": "Create index \"role_claims_role_id_idx_d9467c50\" on \"role_claims\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "role_claims_role_id_idx_d9467c50",
+        "table": "role_claims"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"role_claims_role_id_idx_d9467c50\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"role_claims_role_id_idx_d9467c50\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"role_claims_role_id_idx_d9467c50\"",
+        "sql": "CREATE INDEX \"role_claims_role_id_idx_d9467c50\" ON \"identity\".\"role_claims\" (\"role_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"role_claims_role_id_idx_d9467c50\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"role_claims_role_id_idx_d9467c50\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_claims.user_claims_user_id_idx_6c952402",
+    "label": "Create index \"user_claims_user_id_idx_6c952402\" on \"user_claims\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "user_claims_user_id_idx_6c952402",
+        "table": "user_claims"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_claims_user_id_idx_6c952402\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_claims_user_id_idx_6c952402\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_claims_user_id_idx_6c952402\"",
+        "sql": "CREATE INDEX \"user_claims_user_id_idx_6c952402\" ON \"identity\".\"user_claims\" (\"user_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_claims_user_id_idx_6c952402\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_claims_user_id_idx_6c952402\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_logins.user_logins_user_id_idx_6c952402",
+    "label": "Create index \"user_logins_user_id_idx_6c952402\" on \"user_logins\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "user_logins_user_id_idx_6c952402",
+        "table": "user_logins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_logins_user_id_idx_6c952402\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_logins_user_id_idx_6c952402\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_logins_user_id_idx_6c952402\"",
+        "sql": "CREATE INDEX \"user_logins_user_id_idx_6c952402\" ON \"identity\".\"user_logins\" (\"user_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_logins_user_id_idx_6c952402\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_logins_user_id_idx_6c952402\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_roles.user_roles_role_id_idx_d9467c50",
+    "label": "Create index \"user_roles_role_id_idx_d9467c50\" on \"user_roles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "user_roles_role_id_idx_d9467c50",
+        "table": "user_roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_roles_role_id_idx_d9467c50\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_roles_role_id_idx_d9467c50\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_roles_role_id_idx_d9467c50\"",
+        "sql": "CREATE INDEX \"user_roles_role_id_idx_d9467c50\" ON \"identity\".\"user_roles\" (\"role_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_roles_role_id_idx_d9467c50\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_roles_role_id_idx_d9467c50\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_roles.user_roles_user_id_idx_6c952402",
+    "label": "Create index \"user_roles_user_id_idx_6c952402\" on \"user_roles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "user_roles_user_id_idx_6c952402",
+        "table": "user_roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_roles_user_id_idx_6c952402\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_roles_user_id_idx_6c952402\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_roles_user_id_idx_6c952402\"",
+        "sql": "CREATE INDEX \"user_roles_user_id_idx_6c952402\" ON \"identity\".\"user_roles\" (\"user_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_roles_user_id_idx_6c952402\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_roles_user_id_idx_6c952402\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.user_tokens.user_tokens_user_id_idx_6c952402",
+    "label": "Create index \"user_tokens_user_id_idx_6c952402\" on \"user_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "index",
+        "name": "user_tokens_user_id_idx_6c952402",
+        "table": "user_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"user_tokens_user_id_idx_6c952402\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_tokens_user_id_idx_6c952402\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"user_tokens_user_id_idx_6c952402\"",
+        "sql": "CREATE INDEX \"user_tokens_user_id_idx_6c952402\" ON \"identity\".\"user_tokens\" (\"user_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"user_tokens_user_id_idx_6c952402\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"identity\".\"user_tokens_user_id_idx_6c952402\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.audit_log.audit_log_user_id_fkey",
+    "label": "Add foreign key \"audit_log_user_id_fkey\" on \"audit_log\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "foreignKey",
+        "name": "audit_log_user_id_fkey",
+        "table": "audit_log"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"audit_log_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audit_log_user_id_fkey",
+          "identity",
+          "\"identity\".\"audit_log\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"audit_log_user_id_fkey\"",
+        "sql": "ALTER TABLE \"identity\".\"audit_log\"\nADD CONSTRAINT \"audit_log_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"identity\".\"users\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"audit_log_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "audit_log_user_id_fkey",
+          "identity",
+          "\"identity\".\"audit_log\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.password_reset_tokens.password_reset_tokens_user_id_fkey",
+    "label": "Add foreign key \"password_reset_tokens_user_id_fkey\" on \"password_reset_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "foreignKey",
+        "name": "password_reset_tokens_user_id_fkey",
+        "table": "password_reset_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"password_reset_tokens_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "password_reset_tokens_user_id_fkey",
+          "identity",
+          "\"identity\".\"password_reset_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"password_reset_tokens_user_id_fkey\"",
+        "sql": "ALTER TABLE \"identity\".\"password_reset_tokens\"\nADD CONSTRAINT \"password_reset_tokens_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"identity\".\"users\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"password_reset_tokens_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "password_reset_tokens_user_id_fkey",
+          "identity",
+          "\"identity\".\"password_reset_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.refresh_tokens.refresh_tokens_user_id_fkey",
+    "label": "Add foreign key \"refresh_tokens_user_id_fkey\" on \"refresh_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "foreignKey",
+        "name": "refresh_tokens_user_id_fkey",
+        "table": "refresh_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"refresh_tokens_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refresh_tokens_user_id_fkey",
+          "identity",
+          "\"identity\".\"refresh_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"refresh_tokens_user_id_fkey\"",
+        "sql": "ALTER TABLE \"identity\".\"refresh_tokens\"\nADD CONSTRAINT \"refresh_tokens_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"identity\".\"users\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"refresh_tokens_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "refresh_tokens_user_id_fkey",
+          "identity",
+          "\"identity\".\"refresh_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.role_claims.role_claims_role_id_fkey",
+    "label": "Add foreign key \"role_claims_role_id_fkey\" on \"role_claims\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "foreignKey",
+        "name": "role_claims_role_id_fkey",
+        "table": "role_claims"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"role_claims_role_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "role_claims_role_id_fkey",
+          "identity",
+          "\"identity\".\"role_claims\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"role_claims_role_id_fkey\"",
+        "sql": "ALTER TABLE \"identity\".\"role_claims\"\nADD CONSTRAINT \"role_claims_role_id_fkey\"\nFOREIGN KEY (\"role_id\")\nREFERENCES \"identity\".\"roles\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"role_claims_role_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "role_claims_role_id_fkey",
+          "identity",
+          "\"identity\".\"role_claims\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_claims.user_claims_user_id_fkey",
+    "label": "Add foreign key \"user_claims_user_id_fkey\" on \"user_claims\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "foreignKey",
+        "name": "user_claims_user_id_fkey",
+        "table": "user_claims"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_claims_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_claims_user_id_fkey",
+          "identity",
+          "\"identity\".\"user_claims\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_claims_user_id_fkey\"",
+        "sql": "ALTER TABLE \"identity\".\"user_claims\"\nADD CONSTRAINT \"user_claims_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"identity\".\"users\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_claims_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_claims_user_id_fkey",
+          "identity",
+          "\"identity\".\"user_claims\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_logins.user_logins_user_id_fkey",
+    "label": "Add foreign key \"user_logins_user_id_fkey\" on \"user_logins\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "foreignKey",
+        "name": "user_logins_user_id_fkey",
+        "table": "user_logins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_logins_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_logins_user_id_fkey",
+          "identity",
+          "\"identity\".\"user_logins\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_logins_user_id_fkey\"",
+        "sql": "ALTER TABLE \"identity\".\"user_logins\"\nADD CONSTRAINT \"user_logins_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"identity\".\"users\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_logins_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_logins_user_id_fkey",
+          "identity",
+          "\"identity\".\"user_logins\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_roles.user_roles_user_id_fkey",
+    "label": "Add foreign key \"user_roles_user_id_fkey\" on \"user_roles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "foreignKey",
+        "name": "user_roles_user_id_fkey",
+        "table": "user_roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_roles_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_roles_user_id_fkey",
+          "identity",
+          "\"identity\".\"user_roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_roles_user_id_fkey\"",
+        "sql": "ALTER TABLE \"identity\".\"user_roles\"\nADD CONSTRAINT \"user_roles_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"identity\".\"users\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_roles_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_roles_user_id_fkey",
+          "identity",
+          "\"identity\".\"user_roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_roles.user_roles_role_id_fkey",
+    "label": "Add foreign key \"user_roles_role_id_fkey\" on \"user_roles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "foreignKey",
+        "name": "user_roles_role_id_fkey",
+        "table": "user_roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_roles_role_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_roles_role_id_fkey",
+          "identity",
+          "\"identity\".\"user_roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_roles_role_id_fkey\"",
+        "sql": "ALTER TABLE \"identity\".\"user_roles\"\nADD CONSTRAINT \"user_roles_role_id_fkey\"\nFOREIGN KEY (\"role_id\")\nREFERENCES \"identity\".\"roles\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_roles_role_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_roles_role_id_fkey",
+          "identity",
+          "\"identity\".\"user_roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.user_tokens.user_tokens_user_id_fkey",
+    "label": "Add foreign key \"user_tokens_user_id_fkey\" on \"user_tokens\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "identity",
+        "objectType": "foreignKey",
+        "name": "user_tokens_user_id_fkey",
+        "table": "user_tokens"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"user_tokens_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_tokens_user_id_fkey",
+          "identity",
+          "\"identity\".\"user_tokens\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"user_tokens_user_id_fkey\"",
+        "sql": "ALTER TABLE \"identity\".\"user_tokens\"\nADD CONSTRAINT \"user_tokens_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"identity\".\"users\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"user_tokens_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_tokens_user_id_fkey",
+          "identity",
+          "\"identity\".\"user_tokens\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.admins.admins_user_id_fkey",
+    "label": "Add foreign key \"admins_user_id_fkey\" on \"admins\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "admins_user_id_fkey",
+        "table": "admins"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"admins_user_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admins_user_id_fkey",
+          "public",
+          "\"public\".\"admins\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"admins_user_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"admins\"\nADD CONSTRAINT \"admins_user_id_fkey\"\nFOREIGN KEY (\"user_id\")\nREFERENCES \"identity\".\"users\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"admins_user_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admins_user_id_fkey",
+          "public",
+          "\"public\".\"admins\""
+        ]
+      }
+    ]
+  }
+]

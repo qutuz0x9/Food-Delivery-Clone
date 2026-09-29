@@ -1,0 +1,204 @@
+// use prisma-8
+
+// Identity tables — see docs/dbdesign/Food-Delivery-System-sqldiagram.sql (source of truth)
+// for exact columns/constraints. Scope: users, roles and their auth/audit tables. Actor
+// profile tables (admins, customers, restaurants, drivers) reference User but are modeled
+// separately, since a user_id FK to `users` is all they need — no relation to the rest of
+// the identity/auth machinery.
+//
+// Grouped under the `identity` Postgres schema (namespace). The canonical DDL has no schema
+// split today (everything is implicitly `public`) — this namespace is new structure, not a
+// reflection of the source-of-truth SQL. A model outside this namespace can reference `User`
+// by its bare name with no prefix — `namespace { }` blocks only control physical table
+// placement, not name resolution, within a single contract.prisma file. The `<space>:<ns>.
+// <Model>` prefix syntax is for a genuinely different contract space (e.g. Supabase's managed
+// `auth` schema via `@internal/extension-supabase`), which this project isn't using — Supabase
+// is planned only as a hosted Postgres target, with this hand-rolled schema as the source of
+// truth (decided 2026-09-28).
+
+// Enums are global to the contract — Prisma 8's PSL provider rejects an `enum` block
+// declared inside a `namespace { ... }` (PSL_ENUM_NAMESPACE_NOT_SUPPORTED), so this stays
+// top-level even though every model that uses it lives in the `identity` namespace below.
+enum account_status {
+  @@type("pg/text@1")
+  active    = "active"
+  inactive  = "inactive"
+  locked    = "locked"
+  suspended = "suspended"
+}
+
+namespace identity {
+  model User {
+    id              Uuid                @id @default(uuid())
+    email           String              @unique
+    normalizedEmail String              @unique @map("normalized_email")
+    passwordHash    String              @map("password_hash")
+    phoneNumber     String              @unique @map("phone_number")
+    emailVerifiedAt TimestampString(6)? @map("email_verified_at")
+    phoneVerifiedAt TimestampString(6)? @map("phone_verified_at")
+    accountStatus   account_status      @default(active) @map("account_status")
+    createdAt       TimestampString(6)  @default(now()) @map("created_at")
+    updatedAt       TimestampString(6)? @map("updated_at")
+    deletedAt       TimestampString(6)? @map("deleted_at")
+
+    @@map("users")
+  }
+
+  model UserClaim {
+    id         Uuid               @id
+    userId     Uuid               @map("user_id")
+    claimType  String             @map("claim_type")
+    claimValue String             @map("claim_value")
+    createdAt  TimestampString(6) @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+    @@index([userId])
+    @@map("user_claims")
+  }
+
+  model UserLogin {
+    userId        Uuid                @map("user_id")
+    loginProvider String              @map("login_provider")
+    name          String?
+    value         String
+    expiresAt     TimestampString(6)? @map("expires_at")
+    createdAt     TimestampString(6)  @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+    @@id([loginProvider, value])
+    @@index([userId])
+    @@map("user_logins")
+  }
+
+  model UserToken {
+    userId        Uuid                @map("user_id")
+    loginProvider String              @map("login_provider")
+    tokenName     String              @map("token_name")
+    value         String
+    expiresAt     TimestampString(6)? @map("expires_at")
+    createdAt     TimestampString(6)  @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+    @@id([userId, loginProvider, tokenName])
+    @@map("user_tokens")
+  }
+
+  model Role {
+    id             Uuid                @id @default(uuid())
+    name           String              @unique
+    normalizedName String              @unique @map("normalized_name")
+    description    String?
+    createdAt      TimestampString(6)  @default(now()) @map("created_at")
+    updatedAt      TimestampString(6)? @map("updated_at")
+    deletedAt      TimestampString(6)? @map("deleted_at")
+
+    @@map("roles")
+  }
+
+  model UserRole {
+    userId Uuid @map("user_id")
+    roleId Uuid @map("role_id")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+    role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+    @@id([userId, roleId])
+    @@index([roleId])
+    @@map("user_roles")
+  }
+
+  model RoleClaim {
+    id         Uuid               @id @default(uuid())
+    roleId     Uuid?              @map("role_id")
+    claimType  String             @map("claim_type")
+    claimValue String             @map("claim_value")
+    createdAt  TimestampString(6) @default(now()) @map("created_at")
+
+    role Role? @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+    @@index([roleId])
+    @@map("role_claims")
+  }
+
+  model RefreshToken {
+    id              Uuid                @id @default(uuid())
+    userId          Uuid                @map("user_id")
+    tokenHash       String              @unique @map("token_hash")
+    expiresAt       TimestampString(6)  @map("expires_at")
+    createdAt       TimestampString(6)  @default(now()) @map("created_at")
+    revokedAt       TimestampString(6)? @map("revoked_at")
+    replacedByToken Uuid?               @map("replaced_by_token")
+    revokedReason   String?             @map("revoked_reason")
+    deviceId        String?             @map("device_id")
+    ipAddress       Inet?               @map("ip_address")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+    @@index([userId])
+    @@map("refresh_tokens")
+  }
+
+  model PasswordResetToken {
+    id        Uuid                @id @default(uuid())
+    userId    Uuid                @map("user_id")
+    tokenHash String              @unique @map("token_hash")
+    expiresAt TimestampString(6)  @map("expires_at")
+    usedAt    TimestampString(6)? @map("used_at")
+    createdAt TimestampString(6)  @default(now()) @map("created_at")
+    ipAddress Inet?               @map("ip_address")
+    deviceId  String?             @map("device_id")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+    @@index([userId])
+    @@map("password_reset_tokens")
+  }
+
+  // actorEmail is a point-in-time snapshot of the acting user's email, captured at write time —
+  // not kept in sync with User.email. It exists so a later email change (or the account being
+  // soft-deleted) can't retroactively alter what a historical audit entry says about who acted.
+  // userId stays for referential integrity and to look up the account's current state if needed.
+  model AuditLog {
+    id         Uuid               @id @default(uuid())
+    userId     Uuid               @map("user_id")
+    actorEmail String             @map("actor_email")
+    action     String
+    entityName String             @map("entity_name")
+    entityId   Uuid?              @map("entity_id")
+    oldValue   Jsonb?             @map("old_value")
+    newValue   Jsonb?             @map("new_value")
+    ipAddress  Inet               @map("ip_address")
+    requestId  String?            @map("request_id")
+    userAgent  String             @map("user_agent")
+    status     String?
+    createdAt  TimestampString(6) @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+    @@index([userId])
+    @@index([entityName, entityId])
+    @@index([createdAt])
+    @@map("audit_log")
+  }
+}
+
+// Administrator profile — see docs/dbdesign/Food-Delivery-System-sqldiagram.sql `admins` table.
+// Backs FR-ADM-001 (login, via the linked User) and FR-ADM-004 (view/update profile, change
+// password — password lives on User, nothing admin-specific to add). Mirrors `customers`'
+// shape minus date_of_birth/gender, which are customer-specific and not implied by FR-ADM-004.
+model Admin {
+  id              Uuid                @id @default(uuid())
+  userId          Uuid                @unique @map("user_id")
+  firstName       String              @map("first_name")
+  lastName        String              @map("last_name")
+  profileImageUrl String?             @map("profile_image_url")
+  createdAt       TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt       TimestampString(6)? @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("admins")
+}
