@@ -249,7 +249,7 @@ CREATE TABLE "admins" (
 
 CREATE TABLE "customers" (
   "id" uuid PRIMARY KEY NOT NULL,
-  "user_id" uuid NOT NULL,
+  "user_id" uuid UNIQUE NOT NULL,
   "first_name" varchar NOT NULL,
   "last_name" varchar NOT NULL,
   "profile_image_url" varchar,
@@ -278,7 +278,7 @@ CREATE TABLE "delivery_addresses" (
 
 CREATE TABLE "shopping_cart" (
   "id" uuid PRIMARY KEY NOT NULL,
-  "customer_id" uuid NOT NULL,
+  "customer_id" uuid UNIQUE NOT NULL,
   "restaurant_id" uuid NOT NULL,
   "subtotal" decimal NOT NULL,
   "created_at" timestamp NOT NULL DEFAULT (now()),
@@ -309,8 +309,11 @@ CREATE TABLE "orders" (
   "customer_note" text,
   "placed_at" timestamp NOT NULL,
   "accepted_at" timestamp,
+  "rejected_at" timestamp,
   "prepared_at" timestamp,
+  "ready_for_pickup_at" timestamp,
   "picked_up_at" timestamp,
+  "out_for_delivery_at" timestamp,
   "delivered_at" timestamp,
   "cancelled_at" timestamp,
   "created_at" timestamp NOT NULL DEFAULT (now()),
@@ -390,7 +393,7 @@ CREATE TABLE "delivery_address" (
 
 CREATE TABLE "restaurants" (
   "id" uuid PRIMARY KEY NOT NULL,
-  "user_id" uuid NOT NULL,
+  "user_id" uuid UNIQUE NOT NULL,
   "name" varchar(150) NOT NULL,
   "description" text,
   "phone_number" varchar,
@@ -436,9 +439,9 @@ CREATE TABLE "restaurant_categories" (
   "id" uuid PRIMARY KEY NOT NULL,
   "restaurant_id" uuid NOT NULL,
   "name" varchar(150) NOT NULL,
-  "isActive" boolean NOT NULL DEFAULT false,
+  "is_active" boolean NOT NULL DEFAULT false,
   "created_at" timestamp DEFAULT (now()),
-  "update_at" timestamp
+  "updated_at" timestamp
 );
 
 CREATE TABLE "menu_categories" (
@@ -501,7 +504,7 @@ CREATE TABLE "restaurant_promotions" (
 
 CREATE TABLE "drivers" (
   "id" uuid PRIMARY KEY NOT NULL,
-  "user_id" uuid NOT NULL,
+  "user_id" uuid UNIQUE NOT NULL,
   "first_name" varchar(100) NOT NULL,
   "last_name" varchar(100) NOT NULL,
   "date_of_birth" date NOT NULL,
@@ -644,6 +647,8 @@ CREATE UNIQUE INDEX ON "menu_item_option_values" ("option_group_id", "name");
 
 CREATE UNIQUE INDEX "driver_assignments_active_order_unique" ON "driver_assignments" ("order_id") WHERE "status" IN ('pending', 'accepted');
 
+CREATE UNIQUE INDEX "delivery_addresses_one_default_per_customer" ON "delivery_addresses" ("customer_id") WHERE "is_default" = true;
+
 CREATE INDEX ON "user_claims" ("user_id");
 
 CREATE INDEX ON "user_logins" ("user_id");
@@ -662,15 +667,62 @@ CREATE INDEX ON "audit_log" ("entity_name", "entity_id");
 
 CREATE INDEX ON "audit_log" ("created_at");
 
+CREATE INDEX ON "shopping_cart" ("restaurant_id");
+
+CREATE INDEX ON "shopping_cart_items" ("menu_item_id");
+
+CREATE INDEX ON "orders" ("customer_id");
+
+CREATE INDEX ON "orders" ("restaurant_id");
+
+CREATE INDEX ON "orders" ("delivery_address_id");
+
+CREATE INDEX ON "order_status_history" ("order_id");
+
+CREATE INDEX ON "order_status_history" ("changed_by_user_id");
+
+CREATE INDEX ON "order_items" ("order_id");
+
+CREATE INDEX ON "order_items" ("menu_item_id");
+
+CREATE INDEX ON "order_item_options" ("order_item_id");
+
+CREATE INDEX ON "order_item_options" ("option_group_id");
+
+CREATE INDEX ON "order_item_options" ("option_value_id");
+
+CREATE INDEX ON "payments" ("order_id");
+
+CREATE INDEX ON "payment_refunds" ("payment_id");
+
 COMMENT ON COLUMN "orders"."accepted_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
+COMMENT ON COLUMN "orders"."rejected_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
 COMMENT ON COLUMN "orders"."prepared_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
+COMMENT ON COLUMN "orders"."ready_for_pickup_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
 COMMENT ON COLUMN "orders"."picked_up_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
+COMMENT ON COLUMN "orders"."out_for_delivery_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
 COMMENT ON COLUMN "orders"."delivered_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
 COMMENT ON COLUMN "orders"."cancelled_at" IS 'Denormalized cache of the latest matching order_status_history entry, kept for fast reads; order_status_history remains the source of truth for the full audit trail.';
 
 COMMENT ON COLUMN "customers"."user_id" IS 'This for Identity Table';
 
 COMMENT ON COLUMN "audit_log"."actor_email" IS 'Point-in-time snapshot of the acting user''s email, captured at write time — not kept in sync with users.email. Preserves who acted even if the account''s email later changes or the account is soft-deleted.';
+
+ALTER TABLE "orders" ADD CONSTRAINT "order_amounts_non_negative"
+  CHECK ("subtotal" >= 0 AND "delivery_fee" >= 0 AND "tax_amount" >= 0 AND "discount_amount" >= 0 AND "total_amount" >= 0);
+
+ALTER TABLE "orders" ADD CONSTRAINT "order_total_matches_components"
+  CHECK ("total_amount" = "subtotal" + "delivery_fee" + "tax_amount" - "discount_amount");
+
+ALTER TABLE "order_items" ADD CONSTRAINT "order_item_amounts_valid"
+  CHECK ("quantity" > 0 AND "unit_price" >= 0 AND "total_price" >= 0);
+
+ALTER TABLE "shopping_cart_items" ADD CONSTRAINT "shopping_cart_item_amounts_valid"
+  CHECK ("quantity" > 0 AND "unit_price" >= 0 AND "total_price" >= 0);
+
+ALTER TABLE "payments" ADD CONSTRAINT "payment_amount_non_negative" CHECK ("amount" >= 0);
+
+ALTER TABLE "payment_refunds" ADD CONSTRAINT "payment_refund_amount_non_negative" CHECK ("amount" >= 0);
 
 ALTER TABLE "user_claims" ADD CONSTRAINT "user_claims_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
