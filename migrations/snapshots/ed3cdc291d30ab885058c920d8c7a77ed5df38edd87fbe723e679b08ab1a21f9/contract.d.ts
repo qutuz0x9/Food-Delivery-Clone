@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'a98b30a8e34766794f71cd8c4353f09dbe6385274a89cf6b674b66bc09e7d3a5'>;
+  StorageHashBase<'ed3cdc291d30ab885058c920d8c7a77ed5df38edd87fbe723e679b08ab1a21f9'>;
 export type ExecutionHash =
   ExecutionHashBase<'c7383a38623f75c4ebb17fbaf4c5c055cbf27ab16d0c8f4e4148ba4f057850ed'>;
 export type ProfileHash =
@@ -613,7 +613,7 @@ export type FieldOutputTypes = {
         'pending' | 'processing' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
       readonly transactionReference: CodecTypes['pg/text@1']['output'] | null;
       readonly amount: CodecTypes['pg/numeric@1']['output'];
-      readonly currency: Char<3>;
+      readonly currency: CodecTypes['sql/char@1']['output'];
       readonly paidAt: TimestampString<6> | null;
       readonly failureReason: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: TimestampString<6>;
@@ -1608,7 +1608,7 @@ export type StorageColumnTypes = {
     readonly payments: {
       readonly amount: CodecTypes['pg/numeric@1']['output'];
       readonly created_at: TimestampString<6>;
-      readonly currency: Char<3>;
+      readonly currency: CodecTypes['sql/char@1']['output'];
       readonly failure_reason: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly order_id: CodecTypes['pg/uuid@1']['output'];
@@ -2576,7 +2576,7 @@ export namespace Models {
     status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
     transactionReference: CodecTypes['pg/text@1']['output'] | null;
     amount: CodecTypes['pg/numeric@1']['output'];
-    currency: Char<3>;
+    currency: CodecTypes['sql/char@1']['output'];
     paidAt: TimestampString<6> | null;
     failureReason: CodecTypes['pg/text@1']['output'] | null;
     createdAt: TimestampString<6>;
@@ -4490,8 +4490,8 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/numeric@1';
                   readonly nullable: true;
                   readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: "'0'::numeric(3,2)";
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/numeric@1', '0'>;
                   };
                   readonly typeParams: { readonly precision: 3; readonly scale: 2 };
                 };
@@ -4579,8 +4579,8 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/numeric@1';
                   readonly nullable: false;
                   readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: "'0'::numeric(10,2)";
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/numeric@1', '0'>;
                   };
                   readonly typeParams: { readonly precision: 10; readonly scale: 2 };
                 };
@@ -4589,8 +4589,8 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/numeric@1';
                   readonly nullable: false;
                   readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: "'0'::numeric(10,2)";
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/numeric@1', '0'>;
                   };
                   readonly typeParams: { readonly precision: 10; readonly scale: 2 };
                 };
@@ -4599,8 +4599,8 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/numeric@1';
                   readonly nullable: false;
                   readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: "'0'::numeric(10,2)";
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/numeric@1', '0'>;
                   };
                   readonly typeParams: { readonly precision: 10; readonly scale: 2 };
                 };
@@ -5654,7 +5654,6 @@ type ContractBase = Omit<
                   readonly nativeType: 'character';
                   readonly codecId: 'sql/char@1';
                   readonly nullable: false;
-                  readonly typeParams: { readonly length: 3 };
                 };
                 readonly paid_at: {
                   readonly nativeType: 'timestamp';
@@ -6356,8 +6355,8 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/numeric@1';
                   readonly nullable: true;
                   readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: "'0'::numeric(10,2)";
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/numeric@1', '0'>;
                   };
                   readonly typeParams: { readonly precision: 10; readonly scale: 2 };
                 };
@@ -6366,8 +6365,8 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/numeric@1';
                   readonly nullable: true;
                   readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: "'0'::numeric(10,2)";
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/numeric@1', '0'>;
                   };
                   readonly typeParams: { readonly precision: 10; readonly scale: 2 };
                 };
@@ -6381,8 +6380,8 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/numeric@1';
                   readonly nullable: true;
                   readonly default: {
-                    readonly kind: 'function';
-                    readonly expression: "'0'::numeric(3,2)";
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/numeric@1', '0'>;
                   };
                   readonly typeParams: { readonly precision: 3; readonly scale: 2 };
                 };
@@ -9444,11 +9443,7 @@ type ContractBase = Omit<
               };
               readonly currency: {
                 readonly nullable: false;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'sql/char@1';
-                  readonly typeParams: { readonly length: 3 };
-                };
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'sql/char@1' };
               };
               readonly paidAt: {
                 readonly nullable: true;

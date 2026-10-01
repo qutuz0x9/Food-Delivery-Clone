@@ -1,31 +1,29 @@
 // use prisma-8
 
-// Identity tables — see docs/dbdesign/Food-Delivery-System-sqldiagram.sql (source of truth)
-// for exact columns/constraints. Scope: users, roles and their auth/audit tables. Actor
-// profile tables (admins, customers, restaurants, drivers) reference User but are modeled
-// separately, since a user_id FK to `users` is all they need — no relation to the rest of
-// the identity/auth machinery.
+// Identity tables. Scope: users, roles and their auth/audit tables. Actor profile tables
+// (admins, customers, restaurants, drivers) reference User but are modeled separately, since a
+// user_id FK to `users` is all they need — no relation to the rest of the identity/auth
+// machinery.
 //
-// Grouped under the `identity` Postgres schema (namespace). The canonical DDL has no schema
-// split today (everything is implicitly `public`) — this namespace is new structure, not a
-// reflection of the source-of-truth SQL. A model outside this namespace can reference `User`
-// by its bare name with no prefix — `namespace { }` blocks only control physical table
-// placement, not name resolution, within a single contract.prisma file. The `<space>:<ns>.
-// <Model>` prefix syntax is for a genuinely different contract space (e.g. Supabase's managed
-// `auth` schema via `@internal/extension-supabase`), which this project isn't using — Supabase
-// is planned only as a hosted Postgres target, with this hand-rolled schema as the source of
-// truth (decided 2026-09-28).
-
-// Enums are global to the contract — Prisma 8's PSL provider rejects an `enum` block
-// declared inside a `namespace { ... }` (PSL_ENUM_NAMESPACE_NOT_SUPPORTED), so this stays
-// top-level even though every model that uses it lives in the `identity` namespace below.
-enum account_status {
-  @@type("pg/text@1")
-  active    = "active"
-  inactive  = "inactive"
-  locked    = "locked"
-  suspended = "suspended"
-}
+// This file is the sole source of truth for the database schema (decided 2026-09-29).
+// docs/dbdesign/Food-Delivery-System-sqldiagram.sql was the original first-pass design used to
+// bootstrap this contract — it's a historical reference only, not kept in sync going forward.
+// Comments below that cite a line in that file are explaining where a pattern originated, not
+// asserting the DDL is still canonical.
+//
+// Grouped under the `identity` Postgres schema (namespace) — new structure introduced here, not
+// a reflection of the original DDL sketch, which had no schema split. A model outside this
+// namespace can reference `User` by its bare name with no prefix — `namespace { }` blocks only
+// control physical table placement, not name resolution, within a single contract.prisma file.
+// The `<space>:<ns>.<Model>` prefix syntax is for a genuinely different contract space (e.g.
+// Supabase's managed `auth` schema via `@internal/extension-supabase`), which this project isn't
+// using — Supabase is planned only as a hosted Postgres target, with this hand-rolled schema as
+// the source of truth (decided 2026-09-28, reaffirmed 2026-09-29).
+//
+// Layout: every model first, grouped by domain (Identity, Admin, Restaurant/menu, Customer/
+// cart/order/payment, Driver, Reviews); every enum last, in one block at the end of the file.
+// PSL doesn't care about declaration order — a field can reference an enum or another model
+// declared later in the file — so this grouping is purely for readability, not a requirement.
 
 namespace identity {
   model User {
@@ -201,4 +199,852 @@ model Admin {
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@map("admins")
+}
+
+// Minimal Restaurant profile — only what shopping_cart/orders/menu need to FK into. status and
+// availability_status are nullable and created_at has no default because the DDL declares them
+// that way (sqldiagram.sql:391-409) — not something introduced here.
+model Restaurant {
+  id                     Uuid                    @id
+  userId                 Uuid                    @unique @map("user_id")
+  name                   VarChar(150)
+  description            String?
+  phoneNumber            String?                 @map("phone_number")
+  email                  String?
+  logoUrl                String?                 @map("logo_url")
+  coverImageUrl          String?                 @map("cover_image_url")
+  status                 restaurant_status?
+  availabilityStatus     restaurant_availability? @map("availability_status")
+  minimumOrderAmount     Numeric(10, 2)?          @default(dbgenerated("'0'::numeric(10,2)")) @map("minimum_order_amount")
+  deliveryFee            Numeric(10, 2)?          @default(dbgenerated("'0'::numeric(10,2)")) @map("delivery_fee")
+  estimatedDeliveryTime  Int?                     @map("estimated_delivery_time")
+  ratingAverage          Numeric(3, 2)?           @default(dbgenerated("'0'::numeric(3,2)")) @map("rating_average")
+  ratingCount            Int?                     @default(0) @map("rating_count")
+  createdAt              TimestampString(6)       @default(now()) @map("created_at")
+  updatedAt              TimestampString(6)?      @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "minimum_order_amount >= 0 AND delivery_fee >= 0", name: "restaurants_amounts_non_negative")
+  @@check(expression: "rating_average BETWEEN 0 AND 5 AND rating_count >= 0", name: "restaurants_rating_cache_valid")
+  @@check(expression: "estimated_delivery_time >= 0", name: "restaurants_delivery_time_non_negative")
+  @@map("restaurants")
+}
+
+model MenuCategory {
+  id            Uuid                @id
+  restaurantId  Uuid                @map("restaurant_id")
+  name          VarChar(100)
+  displayOrder  Int?                @map("display_order")
+  isActive      Boolean             @default(true) @map("is_active")
+  createdAt     TimestampString(6)  @default(now()) @map("created_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+
+  // (id, restaurantId) is the target of MenuItem's composite FK, so an item can only point at a
+  // category of its own restaurant. The name is unique only among ACTIVE categories, so a
+  // deactivated category no longer blocks reusing its name.
+  @@unique([id, restaurantId])
+  @@index([restaurantId])
+  @@index([restaurantId, name], unique: true, where: "is_active = true", name: "menu_categories_active_name_unique")
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id               Uuid                @id
+  restaurantId     Uuid                @map("restaurant_id")
+  categoryId       Uuid                @map("category_id")
+  name             VarChar(150)
+  description      String?
+  basePrice        Numeric(10, 2)      @map("base_price")
+  isAvailable      Boolean             @default(true) @map("is_available")
+  isActive         Boolean             @default(true) @map("is_active")
+  preparationTime  Int?                @map("preparation_time")
+  createdAt        TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt        TimestampString(6)  @default(now()) @map("updated_at")
+
+  restaurant Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  category   MenuCategory @relation(fields: [categoryId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+
+  @@check(expression: "base_price >= 0", name: "menu_items_base_price_non_negative")
+  @@check(expression: "preparation_time >= 0", name: "menu_items_preparation_time_non_negative")
+  @@index([restaurantId])
+  @@index([categoryId, restaurantId])
+  @@index([restaurantId, name], unique: true, where: "is_active = true", name: "menu_items_active_name_unique")
+  @@map("menu_items")
+}
+
+model MenuItemOptionGroup {
+  id           Uuid    @id
+  menuItemId   Uuid    @map("menu_item_id")
+  name         String
+  minSelection Int     @default(0) @map("min_selection")
+  maxSelection Int     @default(1) @map("max_selection")
+  isRequired   Boolean @default(false) @map("is_required")
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "min_selection >= 0 AND max_selection >= 1 AND max_selection >= min_selection", name: "menu_item_option_groups_selection_range_valid")
+  @@check(expression: "NOT is_required OR min_selection >= 1", name: "menu_item_option_groups_required_implies_min")
+  @@unique([menuItemId, name])
+  @@map("menu_item_option_groups")
+}
+
+model MenuItemOptionValue {
+  id              Uuid    @id
+  optionGroupId   Uuid    @map("option_group_id")
+  name            String
+  priceAdjustment Decimal @default("0") @map("price_adjustment")
+  displayOrder    Int?    @default(0) @map("display_order")
+
+  optionGroup MenuItemOptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Restrict)
+
+  @@unique([optionGroupId, name])
+  @@map("menu_item_option_values")
+}
+
+model Customer {
+  id              Uuid                @id
+  userId          Uuid                @unique @map("user_id")
+  firstName       String              @map("first_name")
+  lastName        String              @map("last_name")
+  profileImageUrl String?             @map("profile_image_url")
+  dateOfBirth     DateString?         @map("date_of_birth")
+  gender          gender?
+  createdAt       TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt       TimestampString(6)? @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("customers")
+}
+
+// Customer's saved/mutable addresses. Compare DeliveryAddressSnapshot below — kept separate so
+// editing/deleting a saved address can't corrupt what a past order says it shipped to.
+model DeliveryAddress {
+  id             Uuid                @id
+  customerId     Uuid                @map("customer_id")
+  label          String
+  recipientName  String              @map("recipient_name")
+  phoneNumber    String              @map("phone_number")
+  streetAddress  String              @map("street_address")
+  city           String
+  state          String?
+  postalCode     String?             @map("postal_code")
+  latitude       Decimal?
+  longitude      Decimal?
+  isDefault      Boolean             @default(false) @map("is_default")
+  createdAt      TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt      TimestampString(6)? @map("updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  @@index([customerId])
+  @@index([customerId], unique: true, where: "is_default = true", name: "delivery_addresses_one_default_per_customer")
+  @@map("delivery_addresses")
+}
+
+// Immutable snapshot of a delivery address at the moment an order is placed — referenced by
+// Order.deliveryAddressId. customerId is a plain scalar with no @relation, matching the DDL
+// exactly: sqldiagram.sql declares no FK constraint from delivery_address.customer_id to
+// customers, unlike delivery_addresses (see DeliveryAddress above).
+model DeliveryAddressSnapshot {
+  id             Uuid                @id
+  customerId     Uuid                @map("customer_id")
+  label          String
+  recipientName  String              @map("recipient_name")
+  phoneNumber    String              @map("phone_number")
+  streetAddress  String              @map("street_address")
+  city           String
+  state          String?
+  postalCode     String?             @map("postal_code")
+  latitude       Decimal?
+  longitude      Decimal?
+  isDefault      Boolean             @default(false) @map("is_default")
+  createdAt      TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt      TimestampString(6)? @map("updated_at")
+
+  @@map("delivery_address")
+}
+
+model ShoppingCart {
+  id           Uuid                @id
+  customerId   Uuid                @map("customer_id")
+  restaurantId Uuid                @map("restaurant_id")
+  subtotal     Decimal
+  createdAt    TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt    TimestampString(6)? @map("updated_at")
+
+  customer   Customer   @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+
+  // At most one cart per customer, ever — a cart becomes an Order (and is deleted) at checkout,
+  // so "the customer's cart" is never ambiguous. Starting a cart at a different restaurant means
+  // clearing/replacing this one, not creating a second row. Decided 2026-09-29.
+  @@unique([customerId])
+  @@index([restaurantId])
+  @@map("shopping_cart")
+}
+
+model ShoppingCartItem {
+  id             Uuid    @id
+  shoppingCartId Uuid    @map("shopping_cart_id")
+  menuItemId     Uuid    @map("menu_item_id")
+  quantity       Int
+  unitPrice      Decimal @map("unit_price")
+  totalPrice     Decimal @map("total_price")
+
+  shoppingCart ShoppingCart @relation(fields: [shoppingCartId], references: [id], onDelete: Restrict)
+  menuItem     MenuItem     @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "quantity > 0 AND unit_price >= 0 AND total_price >= 0", name: "shopping_cart_item_amounts_valid")
+  @@unique([shoppingCartId, menuItemId])
+  @@index([menuItemId])
+  @@map("shopping_cart_items")
+}
+
+// updatedAt has no @default, matching the DDL exactly (sqldiagram.sql:317 declares it NOT NULL
+// with no DEFAULT) — the application must always supply it on insert, unlike createdAt.
+model Order {
+  id                 Uuid                @id
+  orderNumber        String              @unique @map("order_number")
+  customerId         Uuid                @map("customer_id")
+  restaurantId       Uuid                @map("restaurant_id")
+  deliveryAddressId  Uuid                @map("delivery_address_id")
+  status             order_status
+  subtotal           Decimal
+  deliveryFee        Decimal             @map("delivery_fee")
+  taxAmount          Decimal             @map("tax_amount")
+  discountAmount     Decimal             @default("0") @map("discount_amount")
+  totalAmount        Decimal             @map("total_amount")
+  customerNote       String?             @map("customer_note")
+  placedAt           TimestampString(6)  @map("placed_at")
+  acceptedAt         TimestampString(6)? @map("accepted_at")
+  rejectedAt         TimestampString(6)? @map("rejected_at")
+  preparedAt         TimestampString(6)? @map("prepared_at")
+  readyForPickupAt   TimestampString(6)? @map("ready_for_pickup_at")
+  pickedUpAt         TimestampString(6)? @map("picked_up_at")
+  outForDeliveryAt   TimestampString(6)? @map("out_for_delivery_at")
+  deliveredAt        TimestampString(6)? @map("delivered_at")
+  cancelledAt        TimestampString(6)? @map("cancelled_at")
+  createdAt          TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt          TimestampString(6)  @map("updated_at")
+
+  customer         Customer                @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  restaurant       Restaurant              @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  deliveryAddress  DeliveryAddressSnapshot @relation(fields: [deliveryAddressId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "subtotal >= 0 AND delivery_fee >= 0 AND tax_amount >= 0 AND discount_amount >= 0 AND total_amount >= 0", name: "order_amounts_non_negative")
+  @@check(expression: "total_amount = subtotal + delivery_fee + tax_amount - discount_amount", name: "order_total_matches_components")
+  // (id, customerId, restaurantId) is the target of RestaurantReview's composite FK.
+  @@unique([id, customerId, restaurantId])
+  @@index([customerId])
+  @@index([restaurantId])
+  @@index([deliveryAddressId])
+  @@map("orders")
+}
+
+// changedByUserId reaches into the identity namespace's User model — same pattern as Admin and
+// AuditLog above, verified to compile with a plain unprefixed reference.
+model OrderStatusHistory {
+  id               Uuid               @id
+  orderId          Uuid               @map("order_id")
+  status           order_status
+  changedByUserId  Uuid               @map("changed_by_user_id")
+  changedAt        TimestampString(6) @default(now()) @map("changed_at")
+  note             String?
+
+  order          Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  changedByUser  User  @relation(fields: [changedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([changedByUserId])
+  @@map("order_status_history")
+}
+
+model OrderItem {
+  id                   Uuid    @id
+  orderId              Uuid    @map("order_id")
+  menuItemId           Uuid    @map("menu_item_id")
+  quantity             Int
+  unitPrice            Decimal @map("unit_price")
+  totalPrice           Decimal @map("total_price")
+  specialInstructions  String? @map("special_instructions")
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "quantity > 0 AND unit_price >= 0 AND total_price >= 0", name: "order_item_amounts_valid")
+  @@index([orderId])
+  @@index([menuItemId])
+  @@map("order_items")
+}
+
+// optionGroupName/optionValueName are point-in-time snapshots of the option's display name at
+// order time — same rationale as AuditLog.actorEmail: a later rename of the menu option
+// shouldn't retroactively change what a historical order says the customer picked.
+model OrderItemOption {
+  id                Uuid               @id
+  orderItemId       Uuid               @map("order_item_id")
+  optionGroupId     Uuid               @map("option_group_id")
+  optionValueId     Uuid               @map("option_value_id")
+  optionGroupName   String             @map("option_group_name")
+  optionValueName   String             @map("option_value_name")
+  priceAdjustment   Decimal            @default("0") @map("price_adjustment")
+  createdAt         TimestampString(6) @default(now()) @map("created_at")
+
+  orderItem    OrderItem            @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  optionGroup  MenuItemOptionGroup  @relation(fields: [optionGroupId], references: [id], onDelete: Restrict)
+  optionValue  MenuItemOptionValue  @relation(fields: [optionValueId], references: [id], onDelete: Restrict)
+
+  @@index([orderItemId])
+  @@index([optionGroupId])
+  @@index([optionValueId])
+  @@map("order_item_options")
+}
+
+// currency's bare Char type mirrors the DDL's bare "char" (sqldiagram.sql:357), which Postgres
+// defaults to character(1) — too short for a real currency code (e.g. "USD"). Flagging as a
+// likely DDL bug, not fixing it here without confirmation.
+model Payment {
+  id                    Uuid                @id
+  orderId               Uuid                @map("order_id")
+  paymentMethod         payment_method      @map("payment_method")
+  status                payment_status
+  transactionReference  String?             @unique @map("transaction_reference")
+  amount                Decimal
+  currency              Char(3)
+  paidAt                TimestampString(6)? @map("paid_at")
+  failureReason         String?             @map("failure_reason")
+  createdAt             TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt             TimestampString(6)? @map("updated_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "amount >= 0", name: "payment_amount_non_negative")
+  @@index([orderId])
+  @@map("payments")
+}
+
+model PaymentRefund {
+  id           Uuid                @id
+  paymentId    Uuid                @map("payment_id")
+  amount       Decimal
+  reason       String?
+  status       refund_status
+  processedAt  TimestampString(6)? @map("processed_at")
+  createdAt    TimestampString(6)  @default(now()) @map("created_at")
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "amount >= 0", name: "payment_refund_amount_non_negative")
+  @@index([paymentId])
+  @@map("payment_refunds")
+}
+
+// Remaining Restaurant-domain tables (addresses, hours, cuisine tags, promotions, extra menu
+// images) — completes the Restaurant module started above.
+model RestaurantAddress {
+  id           Uuid                @id
+  restaurantId Uuid                @map("restaurant_id")
+  country      String
+  city         String
+  street       String
+  building     String?
+  latitude     Numeric(9, 6)
+  longitude    Numeric(9, 6)
+  createdAt    TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt    TimestampString(6)? @map("updated_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180", name: "restaurant_addresses_coordinates_valid")
+  @@index([restaurantId])
+  @@map("restaurant_addresses")
+}
+
+// @@unique([restaurantId, dayOfWeek]) makes this an upsert-safe key, matching FR-RES-006.3's
+// "update its operating schedule" — without it, nothing would stop two rows for the same
+// restaurant's same day of week from coexisting.
+model RestaurantOperatingHour {
+  id           Uuid                @id
+  restaurantId Uuid                @map("restaurant_id")
+  dayOfWeek    Int                 @map("day_of_week")
+  opensAt      TimeString(6)?      @map("opens_at")
+  closesAt     TimeString(6)?      @map("closes_at")
+  isClosed     Boolean             @default(false) @map("is_closed")
+  createdAt    TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt    TimestampString(6)? @map("updated_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+
+  // dayOfWeek is 0-6 (0 = Sunday). An open day must have both opening and closing times.
+  @@check(expression: "day_of_week BETWEEN 0 AND 6", name: "restaurant_operating_hours_day_of_week_valid")
+  @@check(expression: "is_closed OR (opens_at IS NOT NULL AND closes_at IS NOT NULL)", name: "restaurant_operating_hours_open_day_has_hours")
+  @@unique([restaurantId, dayOfWeek])
+  @@map("restaurant_operating_hours")
+}
+
+model RestaurantCategory {
+  id           Uuid                @id
+  restaurantId Uuid                @map("restaurant_id")
+  name         VarChar(150)
+  isActive     Boolean             @default(true) @map("is_active")
+  createdAt    TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt    TimestampString(6)? @map("updated_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+
+  @@unique([restaurantId, name])
+  @@map("restaurant_categories")
+}
+
+model MenuItemImage {
+  id           Uuid   @id
+  menuItemId   Uuid   @map("menu_item_id")
+  imageUrl     String @map("image_url")
+  displayOrder Int?   @default(0) @map("display_order")
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  @@index([menuItemId])
+  @@map("menu_item_images")
+}
+
+model RestaurantPromotion {
+  id            Uuid               @id
+  restaurantId  Uuid               @map("restaurant_id")
+  title         String
+  discountType  discount_type      @map("discount_type")
+  discountValue Decimal            @map("discount_value")
+  startsAt      TimestampString(6) @map("starts_at")
+  endsAt        TimestampString(6) @map("ends_at")
+  isActive      Boolean             @default(true) @map("is_active")
+  createdAt     TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt     TimestampString(6)? @map("updated_at")
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "discount_value >= 0", name: "restaurant_promotions_discount_value_non_negative")
+  @@check(expression: "starts_at < ends_at", name: "restaurant_promotions_date_range_valid")
+  @@check(expression: "discount_type <> 'percentage' OR discount_value <= 100", name: "restaurant_promotions_percentage_max_100")
+  @@index([restaurantId])
+  @@map("restaurant_promotions")
+}
+
+// Driver domain — profile, vehicle, documents, earnings/payouts, live location, and
+// order-assignment lifecycle.
+//
+// rating and totalDeliveries are denormalized caches, not sources of truth: rating aggregates
+// DriverReview.rating, totalDeliveries counts completed DriverAssignment rows (FR-DRV-017.1). The
+// service must update them in the same transaction as the change that affects them.
+model Driver {
+  id                 Uuid                       @id
+  userId             Uuid                       @unique @map("user_id")
+  firstName          VarChar(100)                @map("first_name")
+  lastName           VarChar(100)                @map("last_name")
+  dateOfBirth        DateString                  @map("date_of_birth")
+  profileImageUrl    String?                     @map("profile_image_url")
+  nationalId         VarChar(30)                 @unique @map("national_id")
+  licenseNumber      VarChar(50)                 @unique @map("license_number")
+  licenseExpiryDate  DateString                  @map("license_expiry_date")
+  status             driver_status
+  availabilityStatus driver_availability_status  @map("availability_status")
+  rating             Numeric(3, 2)?              @default(dbgenerated("'0'::numeric(3,2)"))
+  totalDeliveries    Int?                        @default(0) @map("total_deliveries")
+  createdAt          TimestampString(6)          @default(now()) @map("created_at")
+  updatedAt          TimestampString(6)          @default(now()) @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "rating BETWEEN 0 AND 5 AND total_deliveries >= 0", name: "drivers_rating_cache_valid")
+  @@map("drivers")
+}
+
+model DriverVehicle {
+  id                  Uuid                @id
+  driverId            Uuid                @map("driver_id")
+  vehicleType         vehicle_type        @map("vehicle_type")
+  brand               VarChar(100)
+  model               VarChar(100)
+  color               VarChar(50)?
+  plateNumber         VarChar(30)?        @unique @map("plate_number")
+  manufactureYear     Int?                @map("manufacture_year")
+  insuranceExpiryDate DateString?         @map("insurance_expiry_date")
+  isActive            Boolean             @default(true) @map("is_active")
+  createdAt           TimestampString(6)  @default(now()) @map("created_at")
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  // At most one active vehicle per driver (partial unique index); inactive vehicles are history.
+  @@index([driverId])
+  @@index([driverId], unique: true, where: "is_active = true", name: "driver_vehicles_one_active_per_driver")
+  @@map("driver_vehicles")
+}
+
+model DriverDocument {
+  id           Uuid                 @id
+  driverId     Uuid                 @map("driver_id")
+  documentType driver_document_type @map("document_type")
+  fileUrl      String               @map("file_url")
+  status       document_status
+  expiryDate   DateString?          @map("expiry_date")
+  verifiedAt   TimestampString(6)?  @map("verified_at")
+  createdAt    TimestampString(6)   @default(now()) @map("created_at")
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  @@index([driverId])
+  @@map("driver_documents")
+}
+
+model Earning {
+  id                  Uuid               @id
+  driverId            Uuid               @map("driver_id")
+  orderId             Uuid               @map("order_id")
+  driverAssignmentId  Uuid?              @unique @map("driver_assignment_id")
+  driverPayoutId      Uuid?              @map("driver_payout_id")
+  baseFee             Numeric(10, 2)     @map("base_fee")
+  bonus               Numeric(10, 2)     @default(dbgenerated("'0'::numeric(10,2)"))
+  tip                 Numeric(10, 2)     @default(dbgenerated("'0'::numeric(10,2)"))
+  deduction           Numeric(10, 2)     @default(dbgenerated("'0'::numeric(10,2)"))
+  netAmount           Numeric(10, 2)     @map("net_amount")
+  status              payout_status
+  createdAt           TimestampString(6) @default(now()) @map("created_at")
+
+  driver           Driver           @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  order            Order            @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  // Composite FK: the assignment must be for this same order and this same driver. Optional, so it
+  // is only checked when driverAssignmentId is set (Postgres skips a composite FK with a NULL part).
+  driverAssignment DriverAssignment? @relation(fields: [driverAssignmentId, orderId, driverId], references: [id, orderId, driverId], onDelete: Restrict)
+  // Set when a payout settles this earning; null while it is still unpaid. Gives a durable record
+  // of exactly which earnings each DriverPayout covered. Composite FK: the payout must belong to
+  // this same driver.
+  driverPayout     DriverPayout?     @relation(fields: [driverPayoutId, driverId], references: [id, driverId], onDelete: Restrict)
+
+  @@check(expression: "base_fee >= 0 AND bonus >= 0 AND tip >= 0 AND deduction >= 0", name: "earnings_amounts_non_negative")
+  @@check(expression: "net_amount = base_fee + bonus + tip - deduction", name: "earnings_net_amount_matches_components")
+  @@index([driverId])
+  @@index([orderId])
+  @@index([driverPayoutId])
+  @@map("earnings")
+}
+
+model DriverLocation {
+  driverId   Uuid               @map("driver_id")
+  latitude   Numeric(9, 6)
+  longitude  Numeric(9, 6)
+  heading    Int?
+  speed      Numeric(5, 2)?
+  recordedAt TimestampString(6) @map("recorded_at")
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180", name: "driver_locations_coordinates_valid")
+  @@check(expression: "heading BETWEEN 0 AND 359 AND speed >= 0", name: "driver_locations_heading_speed_valid")
+  @@id([driverId, recordedAt])
+  @@map("driver_locations")
+}
+
+// The partial unique index allows only one pending, accepted or completed assignment per order, so
+// a delivered order can't be assigned a second time (which would double-count the driver's
+// deliveries and create a second Earning). Rejected and cancelled assignments don't count, so an
+// order can be re-offered to another driver. Uses name:, not map: — this is a fresh authoring of
+// the index, and name: lets Prisma manage the physical name instead of doing a byte-for-byte
+// comparison against hand-written SQL text (see the PN_EXACT_NAME_BODY_COMPARISON warning that
+// fired when this was first authored with map:).
+model DriverAssignment {
+  id          Uuid                       @id
+  orderId     Uuid                       @map("order_id")
+  driverId    Uuid                       @map("driver_id")
+  status      driver_assignments_status
+  assignedAt  TimestampString(6)         @default(now()) @map("assigned_at")
+  acceptedAt  TimestampString(6)?        @map("accepted_at")
+  rejectedAt  TimestampString(6)?        @map("rejected_at")
+  completedAt TimestampString(6)?        @map("completed_at")
+
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  // (id, orderId, driverId) is the target of Earning's composite FK. An accepted, rejected or
+  // completed assignment must carry its matching timestamp.
+  @@check(expression: "status <> 'accepted' OR accepted_at IS NOT NULL", name: "driver_assignments_accepted_has_timestamp")
+  @@check(expression: "status <> 'rejected' OR rejected_at IS NOT NULL", name: "driver_assignments_rejected_has_timestamp")
+  @@check(expression: "status <> 'completed' OR completed_at IS NOT NULL", name: "driver_assignments_completed_has_timestamp")
+  @@unique([id, orderId, driverId])
+  @@index([driverId])
+  @@index([orderId])
+  @@index([orderId], unique: true, where: "status IN ('pending', 'accepted', 'completed')", name: "driver_assignments_active_order_unique")
+  @@map("driver_assignments")
+}
+
+model DriverPayout {
+  id          Uuid                @id
+  driverId    Uuid                @map("driver_id")
+  periodStart DateString          @map("period_start")
+  periodEnd   DateString          @map("period_end")
+  amount      Numeric(10, 2)
+  status      payout_status
+  paidAt      TimestampString(6)? @map("paid_at")
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  // (id, driverId) is the target of Earning's composite FK.
+  @@check(expression: "amount >= 0", name: "driver_payouts_amount_non_negative")
+  @@check(expression: "period_start <= period_end", name: "driver_payouts_period_valid")
+  @@check(expression: "status <> 'completed' OR paid_at IS NOT NULL", name: "driver_payouts_completed_has_paid_at")
+  @@unique([id, driverId])
+  @@index([driverId])
+  @@map("driver_payouts")
+}
+
+// Reviews domain — restaurant and driver reviews, both scoped to a completed order
+// (FR-CUS-024/025/026). Shared review_status enum for moderation (FR-ADM-013).
+// orderId is @unique — FR-CUS-024/025 frame rating/reviewing as something done once "after a
+// completed order," so one review per order. Without this, a retried/duplicated submission
+// would double-count into Restaurant.ratingAverage/ratingCount.
+model RestaurantReview {
+  id           Uuid                @id
+  customerId   Uuid                @map("customer_id")
+  restaurantId Uuid                @map("restaurant_id")
+  orderId      Uuid                @unique @map("order_id")
+  rating       Int
+  title        String?
+  comment      String?
+  status       review_status       @default(pending)
+  isEdited     Boolean             @default(false) @map("is_edited")
+  createdAt    TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt    TimestampString(6)  @default(now()) @map("updated_at")
+  publishedAt  TimestampString(6)? @map("published_at")
+
+  customer   Customer   @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  // Composite FK: a review's customer and restaurant must match those of the order it reviews.
+  order      Order      @relation(fields: [orderId, customerId, restaurantId], references: [id, customerId, restaurantId], onDelete: Restrict)
+
+  @@check(expression: "rating BETWEEN 1 AND 5", name: "restaurant_reviews_rating_range")
+  @@unique([id, restaurantId])
+  @@index([customerId])
+  @@index([restaurantId])
+  @@map("restaurant_reviews")
+}
+
+model RestaurantReviewImage {
+  id         Uuid               @id
+  reviewId   Uuid               @map("review_id")
+  imageUrl   String             @map("image_url")
+  sortOrder  Int?               @default(0) @map("sort_order")
+  uploadedAt TimestampString(6) @default(now()) @map("uploaded_at")
+
+  review RestaurantReview @relation(fields: [reviewId], references: [id], onDelete: Restrict)
+
+  @@index([reviewId])
+  @@map("restaurant_review_images")
+}
+
+// reviewId is @unique — one owner reply per review (decided 2026-10-01), matching the
+// Uber Eats/Talabat pattern. Editing a reply updates this row rather than adding a second.
+model RestaurantReviewReply {
+  id           Uuid               @id
+  reviewId     Uuid               @unique @map("review_id")
+  restaurantId Uuid               @map("restaurant_id")
+  reply        String
+  createdAt    TimestampString(6) @default(now()) @map("created_at")
+  updatedAt    TimestampString(6) @default(now()) @map("updated_at")
+
+  // Composite FK: a reply's restaurant must be the restaurant the review is about.
+  review     RestaurantReview @relation(fields: [reviewId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  restaurant Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+
+  @@index([restaurantId])
+  @@map("restaurant_review_replies")
+}
+
+model DriverReview {
+  id          Uuid                @id
+  customerId  Uuid                @map("customer_id")
+  driverId    Uuid                @map("driver_id")
+  orderId     Uuid                @unique @map("order_id")
+  rating      Int
+  title       String?
+  comment     String?
+  status      review_status       @default(pending)
+  isEdited    Boolean             @default(false) @map("is_edited")
+  createdAt   TimestampString(6)  @default(now()) @map("created_at")
+  updatedAt   TimestampString(6)  @default(now()) @map("updated_at")
+  publishedAt TimestampString(6)? @map("published_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  driver   Driver   @relation(fields: [driverId], references: [id], onDelete: Restrict)
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  // orderId is @unique: one driver review per order (an order has one customer and one delivering
+  // driver), same rule as RestaurantReview.
+  @@check(expression: "rating BETWEEN 1 AND 5", name: "driver_reviews_rating_range")
+  @@index([customerId])
+  @@index([driverId])
+  @@map("driver_reviews")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Enums — grouped here, after every model, purely for readability. Every enum below is
+// referenced by type name from a model above; PSL resolves that regardless of declaration
+// order. All must stay top-level (outside any `namespace { }` block): Prisma 8's PSL provider
+// rejects an `enum` declared inside a namespace (PSL_ENUM_NAMESPACE_NOT_SUPPORTED) — that's why
+// account_status can't move inside `namespace identity { ... }` above even though User is its
+// only consumer.
+// ---------------------------------------------------------------------------------------------
+
+// Identity
+enum account_status {
+  @@type("pg/text@1")
+  active    = "active"
+  inactive  = "inactive"
+  locked    = "locked"
+  suspended = "suspended"
+}
+
+// Customer / Restaurant / order / payment domain
+enum gender {
+  @@type("pg/text@1")
+  male   = "male"
+  female = "female"
+}
+
+enum restaurant_status {
+  @@type("pg/text@1")
+  pending  = "pending"
+  approved = "approved"
+  rejected = "rejected"
+}
+
+enum restaurant_availability {
+  @@type("pg/text@1")
+  open   = "open"
+  closed = "closed"
+  busy   = "busy"
+}
+
+enum order_status {
+  @@type("pg/text@1")
+  pending          = "pending"
+  accepted         = "accepted"
+  rejected         = "rejected"
+  preparing        = "preparing"
+  ready_for_pickup = "ready_for_pickup"
+  picked_up        = "picked_up"
+  out_for_delivery = "out_for_delivery"
+  delivered        = "delivered"
+  cancelled        = "cancelled"
+}
+
+enum payment_method {
+  @@type("pg/text@1")
+  cash        = "cash"
+  credit_card = "credit_card"
+  debit_card  = "debit_card"
+  apple_pay   = "apple_pay"
+  google_pay  = "google_pay"
+  wallet      = "wallet"
+}
+
+enum payment_status {
+  @@type("pg/text@1")
+  pending            = "pending"
+  processing         = "processing"
+  paid               = "paid"
+  failed             = "failed"
+  refunded           = "refunded"
+  partially_refunded = "partially_refunded"
+}
+
+enum refund_status {
+  @@type("pg/text@1")
+  pending   = "pending"
+  completed = "completed"
+  failed    = "failed"
+  cancelled = "cancelled"
+}
+
+enum discount_type {
+  @@type("pg/text@1")
+  percentage      = "percentage"
+  fixed           = "fixed"
+  free_shipping   = "free_shipping"
+  buy_one_get_one = "buy_one_get_one"
+}
+
+// Driver domain
+enum driver_status {
+  @@type("pg/text@1")
+  active   = "active"
+  inactive = "inactive"
+  pending  = "pending"
+}
+
+enum driver_availability_status {
+  @@type("pg/text@1")
+  available = "available"
+  busy      = "busy"
+  offline   = "offline"
+  on_break  = "on_break"
+}
+
+enum vehicle_type {
+  @@type("pg/text@1")
+  car        = "car"
+  motorcycle = "motorcycle"
+  scooter    = "scooter"
+  bicycle    = "bicycle"
+  van        = "van"
+  truck      = "truck"
+}
+
+enum driver_document_type {
+  @@type("pg/text@1")
+  driver_license       = "driver_license"
+  national_id          = "national_id"
+  passport             = "passport"
+  insurance            = "insurance"
+  vehicle_registration = "vehicle_registration"
+  background_check     = "background_check"
+  medical_certificate  = "medical_certificate"
+  other                = "other"
+}
+
+enum document_status {
+  @@type("pg/text@1")
+  pending   = "pending"
+  submitted = "submitted"
+  verified  = "verified"
+  rejected  = "rejected"
+  expired   = "expired"
+}
+
+enum payout_status {
+  @@type("pg/text@1")
+  pending    = "pending"
+  processing = "processing"
+  completed  = "completed"
+  failed     = "failed"
+  on_hold    = "on_hold"
+  cancelled  = "cancelled"
+}
+
+enum driver_assignments_status {
+  @@type("pg/text@1")
+  pending   = "pending"
+  accepted  = "accepted"
+  rejected  = "rejected"
+  completed = "completed"
+  cancelled = "cancelled"
+}
+
+// Reviews domain
+enum review_status {
+  @@type("pg/text@1")
+  pending   = "pending"
+  published = "published"
+  hidden    = "hidden"
+  deleted   = "deleted"
 }
