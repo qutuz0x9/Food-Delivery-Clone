@@ -14,9 +14,15 @@ UI. Most work right now is on the OpenAPI spec (`docs/api/`) and the DB schema (
 
 ## Source of Truth
 
-- `docs/dbdesign/Food-Delivery-System-sqldiagram.sql` — canonical, always-up-to-date DDL (tables, columns, types,
-  constraints, FKs). Read this file directly for exact field-level details; don't rely on summaries, which drift.
-  `Food-Delivery-System-dbdesign.pdf` in the same folder is the visual ERD companion (not editable from here).
+- `src/prisma/contract.prisma` — canonical, always-up-to-date data model (tables, columns, types, constraints, FKs,
+  enums) for the Prisma 8 data contract. Read this file directly for exact field-level details; don't rely on
+  summaries, which drift. This is the **only** source of truth for the database schema (decided 2026-09-29).
+- `docs/dbdesign/Food-Delivery-System-sqldiagram.sql` — the original first-pass DB design, used to bootstrap the
+  contract. It is **not** kept in sync with `contract.prisma` going forward and must not be treated as canonical —
+  it's a historical/reference sketch, not ground truth. Where the two disagree, `contract.prisma` wins, and no
+  change is needed to make the DDL match; don't edit this file when the contract changes.
+  `Food-Delivery-System-dbdesign.pdf` in the same folder is the visual ERD companion for that original design
+  (also not kept up to date).
 - `docs/requirements/Functional-Requirements.md` — the functional requirements that define scope and behavior: parents
   (`FR-CUS-###`, `FR-RES-###`, `FR-DRV-###`, `FR-ADM-###`) with numbered children (`FR-CUS-002.1`, ...). Each actor's
   summary table sits at the end of its section, and the rows are the source of truth if a count drifts. Cite the ID in
@@ -25,8 +31,8 @@ UI. Most work right now is on the OpenAPI spec (`docs/api/`) and the DB schema (
   no Administrator section yet (none of the `FR-ADM-*` requirements have endpoints), so don't invent admin routes; ask.
 - `docs/api/openapi.yaml` — API surface documentation (WIP).
 
-Always cross-check new features against the Functional Requirements doc and the DB design SQL before implementing.
-When a requirement or field is ambiguous, ask before inventing new behavior.
+Always cross-check new features against the Functional Requirements doc and `src/prisma/contract.prisma` before
+implementing. When a requirement or field is ambiguous, ask before inventing new behavior.
 
 The endpoint index is a planning draft and is not consistent with itself or with the spec. It mixes `:param` and
 `{param}`, has `/api/v1` on the Restaurant and Driver rows but not the Customer rows, and uses different shapes for
@@ -38,7 +44,8 @@ would otherwise match `/restaurants/me/orders/:orderId` and `/driver/deliveries/
 
 ### Requirements the schema doesn't back yet
 
-These FRs have no table or column in the DB design. Raise it and ask before implementing, and don't add tables on your own:
+These FRs have no table or column in `src/prisma/contract.prisma`. Raise it and ask before implementing, and don't
+add tables on your own:
 
 - **Notifications** (`FR-CUS-027`, `FR-RES-022`, `FR-DRV-018`, `FR-ADM-016`): no notifications table.
 - **System settings** (`FR-ADM-017`: delivery fees, commission rates, payment method toggles; also the
