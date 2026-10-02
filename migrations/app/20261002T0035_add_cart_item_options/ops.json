@@ -1,0 +1,410 @@
+[
+  {
+    "id": "dropConstraint.shopping_cart_items.shopping_cart_items_shopping_cart_id_menu_item_id_key",
+    "label": "Drop constraint \"shopping_cart_items_shopping_cart_id_menu_item_id_key\" on \"shopping_cart_items\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "shopping_cart_items_shopping_cart_id_menu_item_id_key",
+        "table": "shopping_cart_items"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"shopping_cart_items_shopping_cart_id_menu_item_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_items_shopping_cart_id_menu_item_id_key",
+          "public",
+          "\"public\".\"shopping_cart_items\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop constraint \"shopping_cart_items_shopping_cart_id_menu_item_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"shopping_cart_items\" DROP CONSTRAINT \"shopping_cart_items_shopping_cart_id_menu_item_id_key\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"shopping_cart_items_shopping_cart_id_menu_item_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_items_shopping_cart_id_menu_item_id_key",
+          "public",
+          "\"public\".\"shopping_cart_items\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.shopping_cart_item_options",
+    "label": "Create table \"shopping_cart_item_options\"",
+    "summary": "Creates table \"shopping_cart_item_options\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "shopping_cart_item_options"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"shopping_cart_item_options\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"shopping_cart_item_options\"",
+        "sql": "CREATE TABLE \"public\".\"shopping_cart_item_options\" (\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"option_group_id\" uuid NOT NULL,\n  \"option_value_id\" uuid NOT NULL,\n  \"shopping_cart_item_id\" uuid NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"shopping_cart_item_options\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.shopping_cart_items.special_instructions",
+    "label": "Add column \"special_instructions\" to \"shopping_cart_items\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "special_instructions",
+        "table": "shopping_cart_items"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"special_instructions\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "shopping_cart_items",
+          "special_instructions"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"special_instructions\"",
+        "sql": "ALTER TABLE \"public\".\"shopping_cart_items\" ADD COLUMN \"special_instructions\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"special_instructions\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "shopping_cart_items",
+          "special_instructions"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.shopping_cart_item_options.shopping_cart_item_options_shopping_cart_item_id_option_value_id_key",
+    "label": "Add unique constraint on \"shopping_cart_item_options\" (shopping_cart_item_id, option_value_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "shopping_cart_item_options_shopping_cart_item_id_option_value_id_key",
+        "table": "shopping_cart_item_options"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"shopping_cart_item_options_shopping_cart_item_id_option_value_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_item_options_shopping_cart_item_id_option_value_id_key",
+          "public",
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"shopping_cart_item_options_shopping_cart_item_id_option_value_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"shopping_cart_item_options\" ADD CONSTRAINT \"shopping_cart_item_options_shopping_cart_item_id_option_value_id_key\" UNIQUE (\"shopping_cart_item_id\", \"option_value_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"shopping_cart_item_options_shopping_cart_item_id_option_value_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_item_options_shopping_cart_item_id_option_value_id_key",
+          "public",
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.shopping_cart_item_options.shopping_cart_item_options_option_group_id_idx_28929bf2",
+    "label": "Create index \"shopping_cart_item_options_option_group_id_idx_28929bf2\" on \"shopping_cart_item_options\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "shopping_cart_item_options_option_group_id_idx_28929bf2",
+        "table": "shopping_cart_item_options"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"shopping_cart_item_options_option_group_id_idx_28929bf2\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shopping_cart_item_options_option_group_id_idx_28929bf2\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"shopping_cart_item_options_option_group_id_idx_28929bf2\"",
+        "sql": "CREATE INDEX \"shopping_cart_item_options_option_group_id_idx_28929bf2\" ON \"public\".\"shopping_cart_item_options\" (\"option_group_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"shopping_cart_item_options_option_group_id_idx_28929bf2\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shopping_cart_item_options_option_group_id_idx_28929bf2\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.shopping_cart_item_options.shopping_cart_item_options_option_value_id_idx_46da301b",
+    "label": "Create index \"shopping_cart_item_options_option_value_id_idx_46da301b\" on \"shopping_cart_item_options\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "shopping_cart_item_options_option_value_id_idx_46da301b",
+        "table": "shopping_cart_item_options"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"shopping_cart_item_options_option_value_id_idx_46da301b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shopping_cart_item_options_option_value_id_idx_46da301b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"shopping_cart_item_options_option_value_id_idx_46da301b\"",
+        "sql": "CREATE INDEX \"shopping_cart_item_options_option_value_id_idx_46da301b\" ON \"public\".\"shopping_cart_item_options\" (\"option_value_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"shopping_cart_item_options_option_value_id_idx_46da301b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shopping_cart_item_options_option_value_id_idx_46da301b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.shopping_cart_item_options.shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5",
+    "label": "Create index \"shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5\" on \"shopping_cart_item_options\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5",
+        "table": "shopping_cart_item_options"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5\"",
+        "sql": "CREATE INDEX \"shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5\" ON \"public\".\"shopping_cart_item_options\" (\"shopping_cart_item_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.shopping_cart_item_options.shopping_cart_item_options_shopping_cart_item_id_fkey",
+    "label": "Add foreign key \"shopping_cart_item_options_shopping_cart_item_id_fkey\" on \"shopping_cart_item_options\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "shopping_cart_item_options_shopping_cart_item_id_fkey",
+        "table": "shopping_cart_item_options"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"shopping_cart_item_options_shopping_cart_item_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_item_options_shopping_cart_item_id_fkey",
+          "public",
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"shopping_cart_item_options_shopping_cart_item_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"shopping_cart_item_options\"\nADD CONSTRAINT \"shopping_cart_item_options_shopping_cart_item_id_fkey\"\nFOREIGN KEY (\"shopping_cart_item_id\")\nREFERENCES \"public\".\"shopping_cart_items\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"shopping_cart_item_options_shopping_cart_item_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_item_options_shopping_cart_item_id_fkey",
+          "public",
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.shopping_cart_item_options.shopping_cart_item_options_option_group_id_fkey",
+    "label": "Add foreign key \"shopping_cart_item_options_option_group_id_fkey\" on \"shopping_cart_item_options\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "shopping_cart_item_options_option_group_id_fkey",
+        "table": "shopping_cart_item_options"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"shopping_cart_item_options_option_group_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_item_options_option_group_id_fkey",
+          "public",
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"shopping_cart_item_options_option_group_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"shopping_cart_item_options\"\nADD CONSTRAINT \"shopping_cart_item_options_option_group_id_fkey\"\nFOREIGN KEY (\"option_group_id\")\nREFERENCES \"public\".\"menu_item_option_groups\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"shopping_cart_item_options_option_group_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_item_options_option_group_id_fkey",
+          "public",
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.shopping_cart_item_options.shopping_cart_item_options_option_value_id_fkey",
+    "label": "Add foreign key \"shopping_cart_item_options_option_value_id_fkey\" on \"shopping_cart_item_options\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "shopping_cart_item_options_option_value_id_fkey",
+        "table": "shopping_cart_item_options"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"shopping_cart_item_options_option_value_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_item_options_option_value_id_fkey",
+          "public",
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"shopping_cart_item_options_option_value_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"shopping_cart_item_options\"\nADD CONSTRAINT \"shopping_cart_item_options_option_value_id_fkey\"\nFOREIGN KEY (\"option_value_id\")\nREFERENCES \"public\".\"menu_item_option_values\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"shopping_cart_item_options_option_value_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "shopping_cart_item_options_option_value_id_fkey",
+          "public",
+          "\"public\".\"shopping_cart_item_options\""
+        ]
+      }
+    ]
+  }
+]

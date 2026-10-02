@@ -415,21 +415,48 @@ model ShoppingCart {
   @@map("shopping_cart")
 }
 
+// One line of the cart: a menu item with the options and note the customer chose for it. The same menu item can
+// appear on several lines when the choices differ (a Large and a Regular), so there is no unique key on
+// (cart, menu item); the service merges a new line into an existing one only when the item, the options and the note
+// are all identical. unitPrice is the price of one configured unit - the item's base price plus the price adjustment of
+// every chosen option - and totalPrice is unitPrice times quantity. Decided 2026-10-02.
 model ShoppingCartItem {
-  id             Uuid    @id
-  shoppingCartId Uuid    @map("shopping_cart_id")
-  menuItemId     Uuid    @map("menu_item_id")
-  quantity       Int
-  unitPrice      Decimal @map("unit_price")
-  totalPrice     Decimal @map("total_price")
+  id                  Uuid    @id
+  shoppingCartId      Uuid    @map("shopping_cart_id")
+  menuItemId          Uuid    @map("menu_item_id")
+  quantity            Int
+  unitPrice           Decimal @map("unit_price")
+  totalPrice          Decimal @map("total_price")
+  specialInstructions String? @map("special_instructions")
 
   shoppingCart ShoppingCart @relation(fields: [shoppingCartId], references: [id], onDelete: Restrict)
   menuItem     MenuItem     @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
 
   @@check(expression: "quantity > 0 AND unit_price >= 0 AND total_price >= 0", name: "shopping_cart_item_amounts_valid")
-  @@unique([shoppingCartId, menuItemId])
+  @@index([shoppingCartId])
   @@index([menuItemId])
   @@map("shopping_cart_items")
+}
+
+// The options chosen for one cart line, such as Size = Large. At checkout each row is copied into OrderItemOption together
+// with the names and price adjustment as they are at that moment. Whether a value belongs to its group, and the group to
+// the menu item, and the group's min/max/required rules, are checked by the service when the line is saved; this table
+// only guarantees that a value is chosen at most once per line.
+model ShoppingCartItemOption {
+  id                 Uuid               @id
+  shoppingCartItemId Uuid               @map("shopping_cart_item_id")
+  optionGroupId      Uuid               @map("option_group_id")
+  optionValueId      Uuid               @map("option_value_id")
+  createdAt          TimestampString(6) @default(now()) @map("created_at")
+
+  shoppingCartItem ShoppingCartItem    @relation(fields: [shoppingCartItemId], references: [id], onDelete: Restrict)
+  optionGroup      MenuItemOptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Restrict)
+  optionValue      MenuItemOptionValue @relation(fields: [optionValueId], references: [id], onDelete: Restrict)
+
+  @@unique([shoppingCartItemId, optionValueId])
+  @@index([optionGroupId])
+  @@index([optionValueId])
+  @@map("shopping_cart_item_options")
 }
 
 // updatedAt has no @default, matching the DDL exactly (sqldiagram.sql:317 declares it NOT NULL

@@ -160,6 +160,10 @@
       "model": "ShoppingCart",
       "namespace": "public"
     },
+    "shopping_cart_item_options": {
+      "model": "ShoppingCartItemOption",
+      "namespace": "public"
+    },
     "shopping_cart_items": {
       "model": "ShoppingCartItem",
       "namespace": "public"
@@ -6578,6 +6582,13 @@
                   "kind": "scalar"
                 }
               },
+              "specialInstructions": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "totalPrice": {
                 "nullable": false,
                 "type": {
@@ -6641,6 +6652,9 @@
                 "shoppingCartId": {
                   "column": "shopping_cart_id"
                 },
+                "specialInstructions": {
+                  "column": "special_instructions"
+                },
                 "totalPrice": {
                   "column": "total_price"
                 },
@@ -6650,6 +6664,119 @@
               },
               "namespaceId": "public",
               "table": "shopping_cart_items"
+            }
+          },
+          "ShoppingCartItemOption": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamp-string@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 6
+                  }
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "optionGroupId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "optionValueId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "shoppingCartItemId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "optionGroup": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "optionGroupId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "MenuItemOptionGroup",
+                  "namespace": "public"
+                }
+              },
+              "optionValue": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "optionValueId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "MenuItemOptionValue",
+                  "namespace": "public"
+                }
+              },
+              "shoppingCartItem": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "shoppingCartItemId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "ShoppingCartItem",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "created_at"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "optionGroupId": {
+                  "column": "option_group_id"
+                },
+                "optionValueId": {
+                  "column": "option_value_id"
+                },
+                "shoppingCartItemId": {
+                  "column": "shopping_cart_item_id"
+                }
+              },
+              "namespaceId": "public",
+              "table": "shopping_cart_item_options"
             }
           }
         }
@@ -12216,6 +12343,134 @@
                 }
               ]
             },
+            "shopping_cart_item_options": {
+              "columns": {
+                "created_at": {
+                  "codecId": "pg/timestamp-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamp",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 6
+                  }
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "option_group_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "option_value_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "shopping_cart_item_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "shopping_cart_item_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "shopping_cart_item_options"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "shopping_cart_items"
+                  }
+                },
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "option_group_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "shopping_cart_item_options"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "menu_item_option_groups"
+                  }
+                },
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "option_value_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "shopping_cart_item_options"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "menu_item_option_values"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "option_group_id"
+                  ],
+                  "name": "shopping_cart_item_options_option_group_id_idx_28929bf2",
+                  "prefix": "shopping_cart_item_options_option_group_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "option_value_id"
+                  ],
+                  "name": "shopping_cart_item_options_option_value_id_idx_46da301b",
+                  "prefix": "shopping_cart_item_options_option_value_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "shopping_cart_item_id"
+                  ],
+                  "name": "shopping_cart_item_options_shopping_cart_item_id_idx_1c134ee5",
+                  "prefix": "shopping_cart_item_options_shopping_cart_item_id_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "shopping_cart_item_id",
+                    "option_value_id"
+                  ]
+                }
+              ]
+            },
             "shopping_cart_items": {
               "checks": [
                 {
@@ -12244,6 +12499,11 @@
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
                   "nullable": false
+                },
+                "special_instructions": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "total_price": {
                   "codecId": "pg/numeric@1",
@@ -12315,14 +12575,7 @@
                   "id"
                 ]
               },
-              "uniques": [
-                {
-                  "columns": [
-                    "shopping_cart_id",
-                    "menu_item_id"
-                  ]
-                }
-              ]
+              "uniques": []
             }
           },
           "valueSet": {
@@ -12509,7 +12762,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "501087c1758dd8de5456a39323546d09ad38317508442062f7836c56e1f3d83f"
+    "storageHash": "c0f7632f4e179314a360fcf417f5370eb6b0987b5edd22ec8787df585a9aa3d9"
   },
   "execution": {
     "executionHash": "c7383a38623f75c4ebb17fbaf4c5c055cbf27ab16d0c8f4e4148ba4f057850ed",
