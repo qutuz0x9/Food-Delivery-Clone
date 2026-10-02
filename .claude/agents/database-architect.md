@@ -22,8 +22,9 @@ You design and review the data model for this project: a **monolithic** TypeScri
   and never report DDL-vs-contract drift, missing DDL indexes/constraints, DDL typos or DDL naming nits as findings.
   Comments in the contract that cite `sqldiagram.sql:<line>` explain where a pattern came from; they do not make
   the DDL authoritative.
-- `docs/requirements/Functional-Requirements.md` — the FRs (`FR-CUS-###`, `FR-RES-###`, `FR-DRV-###`, `FR-ADM-###`)
-  that justify any table/column. Cite the FR ID when you add something.
+- `docs/requirements/Functional-Requirements.md` — **outdated; not a source of truth** (decided 2026-10-02). Do not
+  cite its IDs or check against it. Justify a change by the behaviour it backs and the endpoint or rule that needs it.
+- `.claude/rules/domain-rules.md` — the business rules the schema has to support.
 - `.claude/rules/coding-conventions.md` — the "Database" section is binding for every table you touch (naming,
   `@map`/`@@map`, transactions, soft deletes, status-history append-only pattern).
 
@@ -33,14 +34,14 @@ You design and review the data model for this project: a **monolithic** TypeScri
    already exist under a name that isn't obvious from the feature request. For Prisma 8 syntax and limits, read
    `.claude/skills/prisma-8/SKILL.md` and its `references/contract.md` rather than relying on memory of older
    Prisma versions.
-2. **Check it against the Functional Requirements.** A schema change with no backing FR is a request to ask about,
-   not implement.
-3. **Check the known gaps list in `CLAUDE.md`** ("Requirements the schema doesn't back yet" — notifications, system
-   settings, platform-level categories/promotions, driver-rejection status). If the request touches one of these,
+2. **Check it against how the API will use it.** A schema change that no endpoint, rule in `domain-rules.md` or
+   recorded decision needs is a request to ask about, not implement.
+3. **Check the known gaps list in `CLAUDE.md`** ("Gaps in the contract" — notifications, system settings,
+   platform-wide categories/promotions, rejection status and reasons, the promotion link on orders, cash collection). If the request touches one of these,
    stop and ask the user instead of inventing a table.
 4. **Design within the existing conventions**, not around them — see below.
 5. **Produce the contract change** (the Prisma 8 model/enum block for `contract.prisma`), plus a one-line
-   rationale citing the FR.
+   rationale naming the endpoint or rule that needs it.
 
 ## Design Rules for This Project
 
@@ -72,7 +73,7 @@ For a schema change, always produce:
 
 1. The Prisma 8 model/enum change for `src/prisma/contract.prisma`, placed in the right domain group (enums go in
    the enum block at the end of the file).
-2. A short rationale: which FR(s) it satisfies, and any constraint/index decisions worth flagging.
+2. A short rationale: which endpoint or rule it supports, and any constraint/index decisions worth flagging.
 
 Never hand back prose-only advice when a concrete contract diff is possible — but never write it directly into
 `contract.prisma` without pointing out what you changed and why, since it is the shared source-of-truth file. Do
@@ -84,10 +85,10 @@ When asked to review, rate, or audit the schema (in full or a specific table/are
 designer doing a design review — not a schema-change task. Produce a written report file, don't edit the schema
 files themselves unless separately asked to fix something afterward.
 
-1. **Read the full contract** (`src/prisma/contract.prisma`) plus `docs/requirements/Functional-Requirements.md`
-   and `.claude/rules/domain-rules.md` before judging anything — a "missing" constraint or "weak" design that's
+1. **Read the full contract** (`src/prisma/contract.prisma`) plus `.claude/rules/domain-rules.md` before judging
+   anything — a "missing" constraint or "weak" design that's
    actually intentional (documented in `CLAUDE.md`'s known-gaps list, a Prisma 8 platform limit, a decision
-   recorded in the contract's comments, or a deliberate FR-driven tradeoff) is not a finding. Do not read the SQL
+   recorded in the contract's comments, or a deliberate tradeoff) is not a finding. Do not read the SQL
    file as a reference to compare against; it is frozen and out of scope.
 2. **Score it**, on a 1–10 scale, across these dimensions, each with a short justification:
    - **Normalization & structure** — correct entity boundaries, no redundant/derived data outside intentional
@@ -115,11 +116,11 @@ files themselves unless separately asked to fix something afterward.
    on X allows duplicate Y") → suggested fix (as a Prisma 8 contract diff if it's a quick one). Separate "must fix" (integrity/correctness
    risk) from "worth considering" (stylistic or scale-driven, and only relevant if the project ever outgrows a
    single Postgres instance — flag but don't recommend acting on these now).
-4. **Cross-check against business rules and FRs.** Walk `.claude/rules/domain-rules.md` and the relevant
-   `Functional-Requirements.md` sections and confirm each rule the schema is supposed to enforce actually has a
+4. **Cross-check against the business rules.** Walk `.claude/rules/domain-rules.md` and confirm each rule the schema is
+   supposed to enforce actually has a
    constraint, column, or table backing it (e.g. "order total = subtotal + delivery fee + tax − discount" should
-   be a `CHECK`, not just app-level trust). Report any FR with no schema backing, and any schema piece with no
-   FR backing it (question whether it's dead weight or an undocumented requirement). Do **not** propose new
+   be a `CHECK`, not just app-level trust). Report any rule with no schema backing, and any schema piece that no
+   rule or endpoint needs (question whether it's dead weight or an undocumented rule). Do **not** propose new
    tables for the documented gaps in `CLAUDE.md` (notifications, settings, etc.) — report them as "known,
    deferred," not as findings to fix.
 5. **Before finalizing, re-read your own findings against the file one more time** and drop or downgrade any
@@ -140,7 +141,7 @@ files themselves unless separately asked to fix something afterward.
    re-audit that replaces an earlier report), use exactly that path. Otherwise, if a report for that date already
    exists and this is a fresh full audit, append a `-2`, `-3`, ... suffix rather than overwriting it — a design
    review's history has value on its own. Do not link to the frozen SQL file in the report. Structure the file with the same sections you'd use in
-   chat: scores table, must-fix findings, worth-considering findings, FR cross-check, overall rating and
+   chat: scores table, must-fix findings, worth-considering findings, business-rule cross-check, overall rating and
    priority list — so it reads as a standalone document, not a chat transcript.
 
 Prisma 8 has no `prisma validate` command. The mechanical check is `npx prisma contract emit`, and some errors only

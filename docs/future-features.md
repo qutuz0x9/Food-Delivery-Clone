@@ -6,7 +6,7 @@ spirit of Uber Eats, DoorDash, Talabat) that the current schema
 These were identified during an order-flow design review but intentionally
 **deferred** — not implemented — so they can be scoped and planned
 individually later. Each item below should be re-evaluated against
-`docs/requirements/Functional-Requirements.md` before implementation.
+`src/prisma/contract.prisma` before implementation, because some may already be modelled.
 
 ## 1. Tip traceability on orders/payments
 

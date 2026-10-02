@@ -103,11 +103,32 @@ docs/api/
   `responses/` files in the same change — do not let `docs/api/` drift from the implemented routes.
 - New domains get a new `paths/<domain>.yaml` and `schemas/<domain>.yaml` file; don't add unrelated
   endpoints to an existing domain file.
-- Cite the functional requirement ID (e.g. `FR-CUS-012`) in an operation's description, and check
-  `src/prisma/contract.prisma` (the only source of truth for the database) for exact field names, types and enum
-  values before writing a schema. Expose the `@map` camelCase name, not the `snake_case` column.
-- To add endpoints from `docs/requirements/APIs-Endpoints.md`, use the `/openapi-generator` skill. It merges into
-  the existing spec and does not regenerate it.
+- Check `src/prisma/contract.prisma` (the only source of truth for the database) for exact field names, types, limits
+  and enum values before writing a schema, and state in the operation's description the rule that decides its
+  behaviour (the status, constraint or field behind it). Do not cite requirement IDs: the requirements document is
+  outdated and no longer a source. Expose the `@map` camelCase name, not the `snake_case` column.
+- Keep `docs/requirements/APIs-Endpoints.md` in step: add, rename or remove its row in the same change as the route.
+  To document a new domain use the `/openapi-generator` skill, which derives the routes from the contract and merges
+  into the existing spec without regenerating it.
+
+## Status Codes and Shared Responses
+
+- `400` the request is invalid (body, query or path value); `401` missing, expired or wrong credentials or token; `403`
+  the caller's role or account status does not allow it; `404` it does not exist or is not the caller's own (do not
+  reveal which); `409` it conflicts with the current state (a duplicate unique value, the wrong status for the action,
+  already taken); `422` only for an invalid or expired one-time code (a password-reset token or a verification code);
+  `500` always.
+- Every protected operation declares `401` and `403`, and every operation with a path parameter declares `404`.
+- Shared error responses live in `responses/common.yaml` and carry named `examples`. For a new error case add another
+  named example to the closest response before creating a new response.
+- Tokens: the access token travels in the response body, and the refresh token only ever in an `HttpOnly`
+  `refreshToken` cookie. Document it with a `Set-Cookie` response header, and with a cookie parameter on logout and
+  refresh.
+- A nullable reference is written `type: object`, `nullable: true`, `allOf: [$ref]`. Validators reject a literal `null`
+  example against it, so leave the optional property out of the example instead of showing `null`.
+- Operations that upload files use `multipart/form-data` with the fields described in the schema and no `example`.
+- A public list that takes no input has nothing to reject, so Redocly's `operation-4xx-response` is ignored for it in
+  `.redocly.lint-ignore.yaml` (currently `GET /cities` and `GET /cuisines`).
 
 ## Validating Changes
 

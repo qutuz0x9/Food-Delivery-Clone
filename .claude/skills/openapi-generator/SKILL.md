@@ -1,14 +1,14 @@
 ---
 name: openapi-generator
-description: Read the project's markdown endpoint index and add the missing endpoints to the split OpenAPI 3.0.3 spec under docs/api/. Use when the user wants to generate or extend OpenAPI docs from the API endpoint list.
-argument-hint: "[domain-or-section] [markdown-file]"
+description: Document missing API endpoints in the split OpenAPI 3.0.3 spec under docs/api/, deriving them from src/prisma/contract.prisma. Use when the user wants to add or extend OpenAPI docs for a domain or feature.
+argument-hint: "[domain-or-feature]"
 allowed-tools: Read, Edit, Write, Grep, Glob, Bash(npm run lint:api)
 ---
 
 # OpenAPI Generator Skill
 
-Turn the endpoint list in `docs/requirements/APIs-Endpoints.md` into the split OpenAPI spec under `docs/api/`. The
-spec already exists and is partly written, so this skill **extends and merges**. It never regenerates or overwrites.
+Derive the endpoints a domain needs from `src/prisma/contract.prisma` and document them in the split OpenAPI spec under
+`docs/api/`. The spec already exists, so this skill **extends and merges**. It never regenerates or overwrites.
 
 The conventions live in `.claude/rules/open-api-rules.md` and `CLAUDE.md` ("OpenAPI Spec (`docs/api/`)"). Read the rules
 file first and follow it exactly. This skill only describes the workflow.
@@ -17,31 +17,29 @@ file first and follow it exactly. This skill only describes the workflow.
 
 ```
 /openapi-generator
-/openapi-generator <domain>                    # e.g. orders, payments, drivers, admin
-/openapi-generator <domain> <markdown-file>    # override the default source
+/openapi-generator <domain-or-feature>    # e.g. identity verification, dispatch monitoring
 ```
 
 ## Behavior
 
-1. **Locate the source and the current spec**
-   - Source: the given markdown file, otherwise `docs/requirements/APIs-Endpoints.md`. If neither exists, ask.
+1. **Read the current spec**
    - Read `docs/api/openapi.yaml`, list `docs/api/paths/`, `schemas/`, `responses/`, and read the shared
      `schemas/common.yaml` and `responses/common.yaml`.
-   - Read a finished domain (e.g. `paths/customer.yaml`) and copy its style.
+   - Read a finished domain (e.g. `paths/driver.yaml`) and copy its style.
 
-2. **Diff endpoints against the spec**
-   - Parse each endpoint row (method, path, purpose) from the markdown. Convert `:param` to `{param}`.
-   - Skip endpoints that are already in the root `paths`. Report them as existing and don't touch them.
-   - If a domain is given, only process that section of the markdown.
-   - Endpoints such as `GET /restaurants?filters...` are query variants of an existing path. Document them as query
-     parameters on that operation rather than as a new path.
+2. **Work out what is missing**
+   - From the contract models for the domain and the actor that owns them, list the routes they need: reading,
+     creating, changing and deactivating records, plus the state changes the enums and CHECK constraints imply.
+   - Compare with the routes already in the root `paths` and with `docs/requirements/APIs-Endpoints.md`. Skip what is
+     already documented and report it as existing.
+   - Variants of an existing list (filters, search, sorting) are query parameters on that operation, not new paths.
 
-3. **Cross-check requirements and the DB**
-   - Find the matching `FR-*` IDs in `docs/requirements/Functional-Requirements.md`.
-   - Read `src/prisma/contract.prisma` (the only source of truth for the database) for exact field names, types,
-     constraints and enum values. Never use `docs/dbdesign/`; it is a frozen historical sketch.
-   - If a field or behaviour is ambiguous, ask the user. Do not invent it. Keep `delivery_addresses` vs.
-     `delivery_address` and `restaurant_categories` vs. `menu_categories` separate.
+3. **Check the contract**
+   - Read `src/prisma/contract.prisma` (the only source of truth) for exact field names, types, limits, constraints
+     and enum values. Never use `docs/dbdesign/` or `docs/requirements/Functional-Requirements.md`; both are outdated.
+   - If a field or behaviour is not in the contract, ask the user. Do not invent it, and list it under "Gaps in the
+     contract" in `CLAUDE.md` if it is a real gap. Keep `delivery_addresses` vs. `delivery_address` and
+     `restaurant_categories` vs. `menu_categories` separate.
 
 4. **Write the spec files** (the layout is in the rules file)
    - `paths/<domain>.yaml`: one Path Item per URL, keyed by an internal name. All methods on a URL go in one item,
@@ -51,12 +49,13 @@ file first and follow it exactly. This skill only describes the workflow.
    - `responses/common.yaml`: add a new shared response only when a new error shape is needed.
    - `openapi.yaml`: add the URL `$ref` under `paths`, and mirror every new schema and response under
      `components`. Add a tag if the domain is new. Keep the root a `$ref` index only.
+   - `docs/requirements/APIs-Endpoints.md`: add a row for every new route, in the same change.
    - Every operation needs: a `camelCase` `operationId` matching the controller action, a root-defined tag, a
      `summary`, and `examples` in `requestBody` and in each response.
    - Security: protected endpoints inherit the global `bearerAuth`. Public endpoints (browsing, register, login,
      password reset) set `security: []` explicitly.
    - Responses use the envelope schemas from `schemas/common.yaml`. Error statuses reference
-     `responses/common.yaml` and are never inlined.
+     `responses/common.yaml` and are never inlined; use the status codes in the rules file.
    - List and search endpoints take `page` (default 1) and `limit` (default 20, max 100) and return
      `PaginationMeta` under `data.pagination`.
 
@@ -67,7 +66,7 @@ file first and follow it exactly. This skill only describes the workflow.
 6. **Report**
    - Print a table of the endpoints added (method, path, operationId) and the endpoints skipped as already present.
    - List the files changed.
-   - List any assumptions or ambiguities, with the `FR-*` IDs they relate to.
+   - List any assumptions, and any gaps in the contract you ran into.
 
 ## Output Example
 
@@ -105,22 +104,22 @@ loginCustomer:
                 expiresIn: 3600
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
-      "422":
+      "400":
         $ref: "../responses/common.yaml#/ValidationError"
 ```
 
 ```yaml
 # docs/api/openapi.yaml (root: $ref index only)
 paths:
-  /auth/login:
+  /auth/login/customer:
     $ref: "./paths/customer.yaml#/loginCustomer"
 ```
 
 ## Rules & Quality Standards
 
 - Never overwrite or regenerate existing spec files. Merge new content only.
-- Only document endpoints that are listed in the markdown. Never invent endpoints.
+- Only document endpoints that follow from the contract. Never invent behaviour the contract does not support; ask.
 - Output is valid OpenAPI 3.0.3 with no undefined `$ref` targets. Lint must pass before reporting done.
 - `openapi.yaml` never becomes a monolith. Group by domain, not by HTTP method.
 - Follow `.claude/rules/open-api-rules.md`. If this skill and the rules file disagree, the rules file wins.
-- If the source is ambiguous, ask or make the most reasonable assumption and state it in the report.
+- If the contract is ambiguous, ask or make the most reasonable assumption and state it in the report.

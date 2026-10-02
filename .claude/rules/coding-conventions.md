@@ -32,11 +32,11 @@ code.
 
 - Prisma models are PascalCase singular, mapped to the existing snake_case tables/columns via `@map`/`@@map` —
   never rename the underlying DB schema.
-- Use `prisma.$transaction` for any multi-table write (e.g. placing an order: cart -> order -> order_items ->
-  order_status_history -> payment).
+- Use `db.transaction(async (tx) => { ... })` for any multi-table write (e.g. placing an order: cart -> order ->
+  order_items -> order_status_history -> payment), and query through `tx.orm` / `tx.sql` inside the callback.
 - Respect soft deletes: filter `deleted_at: null` by default. Only `users` and `roles` have `deleted_at` in the
-  schema. "Delete customer/restaurant/driver account" (`FR-ADM-005.6`, `006.7`, `007.7`) is a soft delete of the
-  linked `users` row, not a hard delete of the profile row.
+  schema. Deleting a customer, restaurant or driver account is a soft delete of the linked `users` row, not a hard
+  delete of the profile row.
 - Every order status change appends to `order_status_history` (with `changed_by_user_id`) — never overwrite status in
   place. The `orders.accepted_at/prepared_at/picked_up_at/delivered_at/cancelled_at` columns are denormalized caches of
   the history, and the history is the source of truth. Financial operations (refunds, payouts) must be auditable and

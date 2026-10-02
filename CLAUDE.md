@@ -5,12 +5,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 Food Delivery Clone — a backend platform (Uber Eats / Talabat style) for four actors: **Customers**, **Restaurants**,
-**Delivery Drivers**, and **Administrators**. Stack: TypeScript, Node.js/Express, Prisma (PostgreSQL, planned), REST
+**Delivery Drivers**, and **Administrators**. Stack: TypeScript, Node.js/Express, Prisma 8 (PostgreSQL), REST
 API versioned under `/api/v1`.
 
-**Current status: design/documentation phase.** No business logic, database layer, or `src/modules/` structure
-exists yet — only a minimal Express scaffold (`src/app.ts`, `src/index.ts`) that serves the OpenAPI spec via Swagger
-UI. Most work right now is on the OpenAPI spec (`docs/api/`) and the data contract (`src/prisma/contract.prisma`).
+**Current status: design/documentation phase.** The data contract (`src/prisma/contract.prisma`) and its migrations
+exist and are applied to the local dev database, and the OpenAPI spec (`docs/api/`) documents all four actors. There is
+no business logic or `src/modules/` structure yet — only a minimal Express scaffold (`src/app.ts`, `src/index.ts`) that
+serves the OpenAPI spec via Swagger UI. Most work right now is on the spec and the contract.
 
 ## Source of Truth
 
@@ -23,38 +24,49 @@ UI. Most work right now is on the OpenAPI spec (`docs/api/`) and the data contra
   change is needed to make the DDL match; don't edit this file when the contract changes.
   `Food-Delivery-System-dbdesign.pdf` in the same folder is the visual ERD companion for that original design
   (also not kept up to date).
-- `docs/requirements/Functional-Requirements.md` — the functional requirements that define scope and behavior: parents
-  (`FR-CUS-###`, `FR-RES-###`, `FR-DRV-###`, `FR-ADM-###`) with numbered children (`FR-CUS-002.1`, ...). Each actor's
-  summary table sits at the end of its section, and the rows are the source of truth if a count drifts. Cite the ID in
-  spec descriptions and code comments.
-- `docs/requirements/APIs-Endpoints.md` — REST endpoint index for **Customer, Restaurant and Driver only**. There is
-  no Administrator section yet (none of the `FR-ADM-*` requirements have endpoints), so don't invent admin routes; ask.
-- `docs/api/openapi.yaml` — API surface documentation (WIP).
+- `docs/api/openapi.yaml` (with `docs/api/paths/`, `schemas/` and `responses/`) — the API surface, documented for all four
+  actors and derived from the contract. Where the spec and the contract disagree, the contract wins.
+- `docs/requirements/APIs-Endpoints.md` — a table of every route in the spec, for all four actors. It is derived from
+  `docs/api/`, so the spec wins if they disagree; update it in the same change as any route you add or rename.
+- `docs/requirements/Functional-Requirements.md` — **outdated and incomplete; not a source of truth** (decided
+  2026-10-02). Don't cite its IDs, don't check new work against it, and don't treat anything in it as a requirement.
+  It is kept only as history.
 
-Always cross-check new features against the Functional Requirements doc and `src/prisma/contract.prisma` before
-implementing. When a requirement or field is ambiguous, ask before inventing new behavior.
+Derive every endpoint and rule from `src/prisma/contract.prisma`: the models say which actor owns what, the enums say
+which states exist, and the CHECK and unique constraints say what the rules are. Always check a new feature against the
+contract before implementing it. When something isn't modelled there, ask before inventing it, and if the contract has
+to change, propose the change first (see "Gaps in the contract").
 
-The endpoint index is a planning draft and is not consistent with itself or with the spec. It mixes `:param` and
-`{param}`, has `/api/v1` on the Restaurant and Driver rows but not the Customer rows, and uses different shapes for
-the same thing (customer `/auth/login` vs. restaurant `/restaurants/auth/login`; driver reuses `/auth/login`). The spec
-already differs in places (`/auth/login/customer`, `/customers/me/change-password`). When documenting or building a
-route, follow the spec's conventions, and flag any conflict with the index instead of silently picking one. Static
-segments must be registered before parameter routes (`/restaurants/me/orders/active` and `/driver/deliveries/history`
-would otherwise match `/restaurants/me/orders/:orderId` and `/driver/deliveries/:assignmentId`).
+Route conventions (follow them, the index is derived from them):
 
-### Requirements the schema doesn't back yet
+- Auth: customers, drivers and admins use `/auth/<action>/<actor>` (`/auth/login/driver`); restaurants use
+  `/restaurants/auth/<action>`. Actions are register, login, logout, refresh, forgot-password and reset-password
+  (restaurants: `password-reset/request` and `password-reset/confirm`).
+- Account verification is the one exception: `/auth/verify-email/...` and `/auth/verify-phone/...` serve every kind of
+  user, because the email and phone belong to the `User`.
+- Own data lives under `/customers/me`, `/restaurants/me`, `/driver` and `/admin`. Public browsing sits at the root
+  (`/restaurants`, `/menu-items`, `/cities`, `/cuisines`, `/payment-methods`).
+- Static segments must be registered before parameter routes: `/restaurants/me/orders/active` and
+  `/restaurants/me/orders/history` before `/restaurants/me/orders/:orderId`, and `/driver/deliveries/history` before
+  `/driver/deliveries/:assignmentId`. Delivery requests live under `/driver/delivery-requests` so they cannot collide
+  with `/driver/deliveries/:assignmentId/...`.
 
-These FRs have no table or column in `src/prisma/contract.prisma`. Raise it and ask before implementing, and don't
-add tables on your own:
+### Gaps in the contract
 
-- **Notifications** (`FR-CUS-027`, `FR-RES-022`, `FR-DRV-018`, `FR-ADM-016`): no notifications table.
-- **System settings** (`FR-ADM-017`: delivery fees, commission rates, payment method toggles; also the
-  `GET /payment-methods` endpoint): no settings table.
-- **Platform-level food categories** (`FR-ADM-008`) and **platform promotions** (`FR-ADM-012`): `restaurant_categories`
-  and `restaurant_promotions` both require a `restaurant_id`, so there is nothing platform-wide.
-- **Rejecting a driver registration** (`FR-ADM-007.3`): `driver_status` is `pending` / `active` / `inactive`,
-  with no `rejected` value (`restaurant_status` has one). Neither `driver_status` nor `restaurant_status` has a
-  `suspended` value — suspension for every actor routes through `users.account_status` instead.
+Things the product needs that `src/prisma/contract.prisma` does not model. Raise it and ask before working around them,
+and don't add tables on your own:
+
+- **Notifications:** there is no notifications table. Driver delivery offers (`delivery_offers`) are the only in-app
+  inbox.
+- **System settings:** nowhere to store the tax rate, commission rates or which payment methods are enabled. The
+  delivery fee and minimum order are per restaurant, and `GET /payment-methods` just returns the enum.
+- **Platform-wide categories and promotions:** `menu_categories`, `restaurant_categories` and `restaurant_promotions`
+  all require a `restaurant_id`, so there is nothing an admin can create for every restaurant.
+- **Rejections:** `driver_status` is `pending` / `active` / `inactive` with no `rejected` value, and neither a restaurant
+  nor a driver registration can store a rejection reason. Neither status enum has `suspended` either: suspension for
+  every actor routes through `users.account_status`.
+- **Which promotion applied:** `orders.discount_amount` is a plain number with no link to a promotion.
+- **Driver delay reports:** nowhere to store them.
 
 Two easily-confused pairs in the schema — don't merge or cross-wire them:
 
@@ -63,10 +75,10 @@ Two easily-confused pairs in the schema — don't merge or cross-wire them:
 - `restaurant_categories` (a restaurant's own cuisine/category tags, many-per-restaurant, e.g. Dessert/Burger) vs.
   `menu_categories` (per-restaurant menu sections, e.g. Starters/Mains, referenced by `menu_items.category_id`) —
   there is no relation between `menu_items` and `restaurant_categories`.
-  The restaurant's "food categories" requirement (`FR-RES-008`) and `/restaurants/me/categories` map to
-  **`menu_categories`**, not `restaurant_categories`.
+  A restaurant's menu sections are served at `/restaurants/me/categories` (**`menu_categories`**) and its cuisine tags
+  at `/restaurants/me/cuisines` (**`restaurant_categories`**).
 
-Business rules taken from the requirements (registration, approvals, order totals, cancellation, reviews) are in
+Business rules (accounts and approvals, cities and branches, cart and orders, dispatch, payments, reviews) are in
 `.claude/rules/domain-rules.md`. It loads when you work on `src/**` or `docs/api/**`.
 
 ## Commands
@@ -78,12 +90,16 @@ npm start       # run compiled dist/index.js
 npm run lint    # oxlint with type-aware rules (config: .oxlintrc.json)
 npm run lint:fix  # same, applying safe auto-fixes
 npm run lint:api  # Redocly lint of docs/api/openapi.yaml (config: redocly.yaml)
+npm run contract:emit  # regenerate src/prisma/contract.json and contract.d.ts after editing contract.prisma
+npm run migration:plan -- <name>  # plan a migration for a contract change; review it, then apply it
+npm run db:migrate  # apply planned migrations to the local database
+npm run db:seed  # insert the reference cities (safe to run again)
 ```
 
 Run `npm run lint` and `npm run build` after code changes and fix new findings. Oxlint is used instead of ESLint
 because typescript-eslint can't load TypeScript 7 (no JS compiler API). Two rules enforce conventions from
 `.claude/rules/coding-conventions.md`: `no-restricted-imports` bans `@prisma/client` outside `*.repository.ts` and
-`src/config/`, and `promise/prefer-await-to-then` bans `.then()` chains.
+`src/config/`, and `promise/prefer-await-to-then` bans `.then()` chains. Oxlint skips the generated `migrations/` folder.
 
 CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run lint`, `npm run lint:api` and `npm run build` on pushes to `main` and on PRs. Pin
 any new action to a full commit SHA with a version comment, as the existing steps do.
@@ -127,9 +143,9 @@ src/
   prisma/contract.prisma   # Prisma 8 data contract (exists today), plus generated contract.json / contract.d.ts
 ```
 
-The requirements also imply features outside this module list: cart (`shopping_cart*`), reviews, promotions,
-notifications, and dashboards/reports (`FR-RES-021`, `FR-DRV-016/017`, `FR-ADM-014/015`). Decide where each one lives
-(its own module or inside an existing one) before implementing it.
+The contract also implies features outside this module list: cart (`shopping_cart*`), reviews, promotions, cities and
+branches, delivery dispatch (`delivery_offers`, `driver_assignments`), payouts, and dashboards/reports. Decide where each
+one lives (its own module or inside an existing one) before implementing it.
 
 Coding conventions (async/await and error handling, zod validation, DTOs, Prisma mapping, transactions, soft deletes,
 order status history, role guards, `audit_log`) are in `.claude/rules/coding-conventions.md`. It loads automatically

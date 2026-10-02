@@ -11,19 +11,19 @@ A backend platform for a food delivery service (similar to Uber Eats / Talabat),
 
 The system covers the full order lifecycle (cart → order → payment → delivery → status history), JWT-based authentication with role-based access control, and a REST API versioned under `/api/v1`.
 
-Project scope and behavior are defined in [Functional-Requirements.md](docs/requirements/Functional-Requirements.md), the full REST endpoint index in [APIs-Endpoints.md](docs/requirements/APIs-Endpoints.md), the data model in [contract.prisma](src/prisma/contract.prisma) (the only source of truth for the database; `docs/dbdesign/` holds the original first-draft sketch, kept for history), and the API surface (work in progress) in [openapi.yaml](docs/api/openapi.yaml).
+Project scope and behavior follow from the data model in [contract.prisma](src/prisma/contract.prisma), which is the only source of truth (`docs/dbdesign/` and `docs/requirements/Functional-Requirements.md` are older drafts kept for history). The API surface is documented in [openapi.yaml](docs/api/openapi.yaml), and every route is listed in [APIs-Endpoints.md](docs/requirements/APIs-Endpoints.md).
 
 ## Current Status
 
-This project is in the design/documentation phase — no business logic or database layer has been implemented yet.
+This project is in the design/documentation phase — the data model and API documentation are complete enough to build against, but no business logic has been implemented yet.
 
 - **App scaffold**: a minimal Express + TypeScript app (`src/app.ts`, `src/index.ts`) that serves the bundled OpenAPI spec via Swagger UI at `/api-docs`.
-- **Database design**: the full relational schema is defined in the Prisma 8 data contract `src/prisma/contract.prisma`, covering identity/auth, customers, restaurants, menus, orders, payments, drivers, and audit logging.
-- **OpenAPI documentation**: split into `docs/api/paths/`, `docs/api/schemas/`, and `docs/api/responses/` per domain, following the conventions in `.claude/rules/open-api-rules.md`. Documented so far, tagged by resource domain (`Auth`, `Customers`, `Restaurants`, `Menu`):
-  - **Auth** — customer and restaurant registration, login, logout, and password recovery.
-  - **Customers** — profile management and delivery address CRUD.
-  - **Restaurants** — public browsing/search/filtering, restaurant self-service profile, logo upload, operating hours, and availability status.
-  - **Menu** — public menu/menu-item browsing and search, plus restaurant-side menu category management.
-  - Still to document: menu item CRUD (images, options), restaurant order management, promotions, reviews, dashboard, driver API, and admin API.
+- **Database**: the full relational schema is defined in the Prisma 8 data contract `src/prisma/contract.prisma` (identity/auth, customers, restaurants and branches, menus, cities, carts, orders, payments, drivers and dispatch, reviews, audit logging). Its migrations are in `migrations/`, and `npm run db:seed` inserts the reference cities.
+- **OpenAPI documentation**: split into `docs/api/paths/`, `docs/api/schemas/`, and `docs/api/responses/` per domain, following the conventions in `.claude/rules/open-api-rules.md`. It covers all four actors:
+  - **Customers** — registration and login, email and phone verification, profile, delivery addresses, cart, orders and tracking, payments, and reviews, plus public browsing of restaurants, menus, cities, cuisines and reviews.
+  - **Restaurants** — registration and profile, branches with their own hours and availability, menu categories, items, images and options, incoming orders, promotions, cuisine tags, review replies, and a dashboard.
+  - **Drivers** — registration with a working city, vehicles and documents, availability and location, delivery requests, deliveries including cash confirmation, earnings, payouts, statistics, and reviews.
+  - **Administrators** — account management for administrators, cities, customers, restaurants and drivers, orders and dispatch monitoring (with manual assignment), payments and refunds, driver payouts, review moderation, an audit log, a dashboard, and reports.
+  - Still to document: roles and claims, session management, a live map of driver positions, and a few administrator oversight views (promotions, menu items, platform-wide earnings).
 
 Run `npm run dev` and open `http://localhost:3000/api-docs` to browse the current API documentation interactively.
