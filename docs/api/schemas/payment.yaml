@@ -134,7 +134,7 @@ PaymentSummary:
       format: double
       minimum: 0
       description: Amount charged.
-      example: 350
+      example: 396
 
     currency:
       type: string

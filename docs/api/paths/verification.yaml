@@ -1,0 +1,205 @@
+verifyEmailRequest:
+  post:
+    tags:
+      - Auth
+
+    summary: Send an email verification code
+
+    description: |
+      Sends a 6-digit code to the logged-in user's email address. It works for every kind of account -
+      customer, restaurant, driver or administrator - because the email belongs to the user account.
+      The code is stored hashed, with its expiry, as a `user_tokens` row (provider `verification`,
+      name `email`), so requesting a new code replaces the previous one.\n\nRejected with `409` if the
+      email address is already verified. Verification does not block logging in.
+
+    operationId: requestEmailVerification
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Code sent
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/verification.yaml#/RequestVerificationResponse"
+            example:
+              success: true
+              message: A verification code has been sent
+              data:
+                sentTo: j***@example.com
+                expiresAt: "2024-10-05T18:45:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+verifyEmailConfirm:
+  post:
+    tags:
+      - Auth
+
+    summary: Confirm an email verification code
+
+    description: |
+      Confirms the code that was emailed to the user. On success `emailVerifiedAt` is set on the user
+      account. A wrong, expired or already-used code is rejected with `422`, and the email address is
+      already verified -> `409`. Changing the email address later clears `emailVerifiedAt`, so the new
+      one has to be verified again.
+
+    operationId: confirmEmailVerification
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/verification.yaml#/ConfirmVerificationRequest"
+          example:
+            code: "482913"
+
+    responses:
+      "200":
+        description: Email verified successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/verification.yaml#/ConfirmEmailVerificationResponse"
+            example:
+              success: true
+              message: Email verified successfully
+              data:
+                emailVerifiedAt: "2024-10-05T18:36:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "422":
+        $ref: "../responses/common.yaml#/InvalidVerificationCode"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+verifyPhoneRequest:
+  post:
+    tags:
+      - Auth
+
+    summary: Send a phone verification code
+
+    description: |
+      Sends a 6-digit code to the logged-in user's phone number. It works for every kind of account -
+      customer, restaurant, driver or administrator - because the phone belongs to the user account.
+      The code is stored hashed, with its expiry, as a `user_tokens` row (provider `verification`,
+      name `phone`), so requesting a new code replaces the previous one.\n\nRejected with `409` if the
+      phone number is already verified. Verification does not block logging in.
+
+    operationId: requestPhoneVerification
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Code sent
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/verification.yaml#/RequestVerificationResponse"
+            example:
+              success: true
+              message: A verification code has been sent
+              data:
+                sentTo: +20*******890
+                expiresAt: "2024-10-05T18:45:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+verifyPhoneConfirm:
+  post:
+    tags:
+      - Auth
+
+    summary: Confirm a phone verification code
+
+    description: |
+      Confirms the code that was sent by SMS to the user. On success `phoneVerifiedAt` is set on the
+      user account. A wrong, expired or already-used code is rejected with `422`, and the phone number
+      is already verified -> `409`. Changing the phone number later clears `phoneVerifiedAt`, so the
+      new one has to be verified again.
+
+    operationId: confirmPhoneVerification
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/verification.yaml#/ConfirmVerificationRequest"
+          example:
+            code: "482913"
+
+    responses:
+      "200":
+        description: Phone verified successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/verification.yaml#/ConfirmPhoneVerificationResponse"
+            example:
+              success: true
+              message: Phone number verified successfully
+              data:
+                phoneVerifiedAt: "2024-10-05T18:36:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "422":
+        $ref: "../responses/common.yaml#/InvalidVerificationCode"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

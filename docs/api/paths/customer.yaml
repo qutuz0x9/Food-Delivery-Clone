@@ -5,12 +5,11 @@ registerCustomer:
 
     summary: Register a customer
     description: |
-      Creates a new customer account (FR-CUS-002).
+      Creates a new customer account.
 
-      The registration process validates the supplied information
-      (FR-CUS-002.2), verifies email uniqueness (FR-CUS-002.3, `409`
-      if the email is taken), creates the user identity, and creates
-      the associated customer profile (FR-CUS-002.4).
+      The registration process validates the supplied information,
+      verifies email uniqueness (`409` if the email is taken), creates
+      the user identity, and creates the associated customer profile.
 
     operationId: registerCustomer
 
@@ -63,8 +62,7 @@ loginCustomer:
 
     summary: Log in a customer
     description: |
-      Authenticates a customer using their email and password
-      (FR-CUS-003.2, FR-CUS-003.3, FR-CUS-003.4).
+      Authenticates a customer using their email and password.
 
       On success, the system validates the credentials and grants
       access by issuing a JWT access token in the response body and a
@@ -138,7 +136,7 @@ refreshCustomer:
     description: |
       Issues a new JWT access token for a customer whose access token has
       expired, using the `refreshToken` cookie set at login. Supports
-      the session started by FR-CUS-003.
+      the session started at login.
 
       The refresh token is rotated on every call: the presented token
       is revoked, a new one is issued in a fresh `HttpOnly` cookie
@@ -205,7 +203,7 @@ forgotPasswordCustomer:
     summary: Request a customer password reset
     description: |
       Initiates the password recovery flow for a customer who has
-      forgotten their password (FR-CUS-005.1).
+      forgotten their password.
 
       If the supplied email matches a registered customer account, a
       password reset token is generated and emailed to the customer.
@@ -253,7 +251,7 @@ resetPasswordCustomer:
     description: |
       Completes the password recovery flow for a customer, verifying
       the customer's identity via the reset token before setting the
-      new password (FR-CUS-005.2).
+      new password.
 
       The token must match an unused, unexpired password reset token
       previously issued via the forgot-password request. On success,
@@ -304,7 +302,7 @@ logoutCustomer:
     summary: Log out a customer
     description: |
       Logs out the currently authenticated customer by revoking the
-      refresh token, ending the session securely (FR-CUS-004).
+      refresh token, ending the session securely.
 
       The refresh token is read from the `refreshToken` HttpOnly cookie
       set during login — it is not accepted in the request body or as
@@ -360,7 +358,7 @@ customerProfile:
     summary: View customer profile
     description: |
       Returns the profile information of the currently authenticated
-      customer (FR-CUS-006.1).
+      customer.
 
     operationId: getCustomerProfile
 
@@ -406,7 +404,7 @@ customerProfile:
     summary: Update customer profile
     description: |
       Updates the profile information of the currently authenticated
-      customer (FR-CUS-006.2). Only the supplied fields are updated;
+      customer. Only the supplied fields are updated;
       omitted fields remain unchanged.
 
     operationId: updateCustomerProfile
@@ -472,8 +470,7 @@ changePasswordCustomer:
 
     summary: Change customer password
     description: |
-      Changes the password of the currently authenticated customer
-      (FR-CUS-006.3). Requires the customer's current password for
+      Changes the password of the currently authenticated customer. Requires the customer's current password for
       verification. On success, all existing refresh tokens for the
       account are revoked, requiring the customer to log in again.
 
@@ -525,7 +522,7 @@ deliveryAddresses:
     summary: List delivery addresses
     description: |
       Returns all delivery addresses saved by the currently
-      authenticated customer (FR-CUS-007).
+      authenticated customer.
 
     operationId: listDeliveryAddresses
 
@@ -593,7 +590,7 @@ deliveryAddresses:
     summary: Add a new delivery address
     description: |
       Creates a new delivery address for the currently authenticated
-      customer (FR-CUS-007.1).
+      customer.
 
       A customer has at most one default address. Sending
       `isDefault: true` makes this address the default and, in the
@@ -682,7 +679,7 @@ deliveryAddress:
     summary: Get one delivery address
     description: |
       Returns a single delivery address belonging to the currently
-      authenticated customer, identified by `addressId` (FR-CUS-007).
+      authenticated customer, identified by `addressId`.
 
     operationId: getDeliveryAddress
 
@@ -737,7 +734,7 @@ deliveryAddress:
     summary: Update one delivery address
     description: |
       Updates a single delivery address belonging to the currently
-      authenticated customer, identified by `addressId` (FR-CUS-007.2).
+      authenticated customer, identified by `addressId`.
       Only the supplied fields are updated; omitted fields remain
       unchanged.
 
@@ -820,7 +817,7 @@ deliveryAddress:
     summary: Delete one delivery address
     description: |
       Deletes a single delivery address belonging to the currently
-      authenticated customer, identified by `addressId` (FR-CUS-007.3).
+      authenticated customer, identified by `addressId`.
 
       Previously placed orders retain their own immutable delivery
       address snapshot (`delivery_address` table) and are unaffected

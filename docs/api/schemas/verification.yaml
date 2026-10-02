@@ -1,0 +1,94 @@
+RequestVerificationResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: A verification code has been sent
+
+    data:
+      type: object
+      required:
+        - sentTo
+        - expiresAt
+      properties:
+        sentTo:
+          type: string
+          description: Where the code was sent, partly hidden.
+          example: j***@example.com
+
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the code stops being valid.
+          example: "2024-10-05T18:45:00.000Z"
+
+ConfirmVerificationRequest:
+  type: object
+  required:
+    - code
+  properties:
+    code:
+      type: string
+      pattern: ^[0-9]{6}$
+      description: The 6-digit code that was sent.
+      example: "482913"
+
+ConfirmEmailVerificationResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Email verified successfully
+
+    data:
+      type: object
+      required:
+        - emailVerifiedAt
+      properties:
+        emailVerifiedAt:
+          type: string
+          format: date-time
+          description: When the email was verified.
+          example: "2024-10-05T18:36:00.000Z"
+
+ConfirmPhoneVerificationResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Phone number verified successfully
+
+    data:
+      type: object
+      required:
+        - phoneVerifiedAt
+      properties:
+        phoneVerifiedAt:
+          type: string
+          format: date-time
+          description: When the phone number was verified.
+          example: "2024-10-05T18:36:00.000Z"

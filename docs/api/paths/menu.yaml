@@ -6,8 +6,7 @@ getMenuItem:
     summary: View food item details
     description: |
       Returns detailed information for a single menu item, identified
-      by `menuItemId`, including images and customizable option groups
-      (FR-CUS-013). Only active items of `approved` restaurants are
+      by `menuItemId`, including images and customizable option groups. Only active items of `approved` restaurants are
       visible; otherwise the response is `404`.
 
       Publicly accessible; no authentication required.
@@ -77,8 +76,7 @@ searchMenuItems:
     summary: Search food items
     description: |
       Returns a paginated list of food items across restaurants,
-      matching the supplied search term and optional filters
-      (FR-CUS-014).
+      matching the supplied search term and optional filters.
 
       Only available (`isAvailable: true`) and active (`isActive: true`)
       items belonging to approved restaurants are returned. Publicly
@@ -1014,8 +1012,8 @@ restaurantMenuItemOption:
     summary: Delete an option group
 
     description: |
-      Deletes a group and its options. A group whose options appear in past orders cannot be deleted
-      (`409`).
+      Deletes a group and its options. A group whose options appear in past orders or in a customer's
+      cart cannot be deleted (`409`).
 
     operationId: deleteOptionGroup
 
@@ -1219,7 +1217,9 @@ restaurantMenuItemOptionValue:
 
     summary: Delete an option
 
-    description: Deletes an option. One that appears in past orders cannot be deleted (`409`).
+    description: |
+      Deletes an option. One that appears in past orders or in a customer's cart cannot be deleted
+      (`409`).
 
     operationId: deleteOptionValue
 

@@ -110,7 +110,7 @@ orderPayment:
                   paymentMethod: credit_card
                   status: paid
                   transactionReference: txn_9f8e7d6c
-                  amount: 350
+                  amount: 396
                   currency: EGP
                   paidAt: "2024-10-05T18:31:00.000Z"
                   failureReason: null
@@ -168,7 +168,7 @@ orderPayment:
                   paymentMethod: credit_card
                   status: paid
                   transactionReference: txn_9f8e7d6c
-                  amount: 350
+                  amount: 396
                   currency: EGP
                   paidAt: "2024-10-05T18:31:00.000Z"
                   failureReason: null

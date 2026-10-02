@@ -1,5 +1,63 @@
+CartItemOption:
+  type: object
+  required:
+    - optionGroupId
+    - optionGroupName
+    - optionValueId
+    - optionValueName
+    - priceAdjustment
+  properties:
+    optionGroupId:
+      type: string
+      format: uuid
+      description: The option group.
+      example: 56658202-efc2-556c-97f7-bd7b0ad03a99
+
+    optionGroupName:
+      type: string
+      description: Current name of the group.
+      example: Size
+
+    optionValueId:
+      type: string
+      format: uuid
+      description: The chosen option.
+      example: 205313e7-080a-56ba-ae8f-17b29d6058cb
+
+    optionValueName:
+      type: string
+      description: Current name of the option.
+      example: Large
+
+    priceAdjustment:
+      type: number
+      format: double
+      description: Price change this option adds to one unit.
+      example: 20
+
+CartItemOptionInput:
+  type: object
+  required:
+    - optionGroupId
+    - optionValueId
+  properties:
+    optionGroupId:
+      type: string
+      format: uuid
+      description: An option group of the menu item.
+      example: 56658202-efc2-556c-97f7-bd7b0ad03a99
+
+    optionValueId:
+      type: string
+      format: uuid
+      description: The chosen option in that group.
+      example: 205313e7-080a-56ba-ae8f-17b29d6058cb
+
 CartItem:
   type: object
+  description: |
+    One line of the cart. The same menu item can appear on several lines when the options or the
+    note differ.
   required:
     - id
     - menuItemId
@@ -8,12 +66,14 @@ CartItem:
     - quantity
     - unitPrice
     - totalPrice
+    - specialInstructions
+    - options
     - isAvailable
   properties:
     id:
       type: string
       format: uuid
-      description: Unique cart item identifier.
+      description: Unique cart line identifier.
       example: 502199a9-304a-553b-ad69-1bf2baa4391e
 
     menuItemId:
@@ -37,22 +97,36 @@ CartItem:
     quantity:
       type: integer
       minimum: 1
-      description: Quantity in the cart.
+      description: Quantity on this line.
       example: 2
 
     unitPrice:
       type: number
       format: double
       minimum: 0
-      description: Price of one unit when it was added.
-      example: 150
+      description: |
+        Price of one configured unit: the item's base price plus the price adjustment of every chosen
+        option.
+      example: 170
 
     totalPrice:
       type: number
       format: double
       minimum: 0
       description: Unit price multiplied by quantity.
-      example: 300
+      example: 340
+
+    specialInstructions:
+      type: string
+      nullable: true
+      description: Note for this line.
+      example: No onions
+
+    options:
+      type: array
+      description: The options chosen for this line.
+      items:
+        $ref: "#/CartItemOption"
 
     isAvailable:
       type: boolean
@@ -107,8 +181,8 @@ Cart:
       type: number
       format: double
       minimum: 0
-      description: Sum of the item totals.
-      example: 300
+      description: Sum of the line totals.
+      example: 340
 
     updatedAt:
       type: string
@@ -162,6 +236,18 @@ AddCartItemRequest:
       description: How many to add.
       example: 2
 
+    specialInstructions:
+      type: string
+      nullable: true
+      description: Note for this line, such as "No onions".
+      example: No onions
+
+    options:
+      type: array
+      description: Chosen options. Each group's minimum, maximum and required rules must be met.
+      items:
+        $ref: "#/CartItemOptionInput"
+
     replaceCart:
       type: boolean
       default: false
@@ -193,14 +279,25 @@ AddCartItemResponse:
 
 UpdateCartItemRequest:
   type: object
-  required:
-    - quantity
+  minProperties: 1
   properties:
     quantity:
       type: integer
       minimum: 1
       description: New quantity.
       example: 3
+
+    specialInstructions:
+      type: string
+      nullable: true
+      description: New note for the line.
+      example: Extra spicy
+
+    options:
+      type: array
+      description: The complete new set of options. It replaces the line's current options.
+      items:
+        $ref: "#/CartItemOptionInput"
 
 UpdateCartItemResponse:
   type: object

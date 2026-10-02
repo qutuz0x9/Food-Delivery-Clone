@@ -6,12 +6,12 @@ listRestaurants:
     summary: Browse, search, and filter restaurants
     description: |
       Returns a paginated list of restaurants available to the
-      customer (FR-CUS-008: Browse Restaurants).
+      customer.
 
       Supports free-text search by restaurant name via the `search`
-      parameter (FR-CUS-009: Search Restaurants), and filtering by
+      parameter, and filtering by
       city, branch availability, minimum rating, and maximum delivery
-      fee, along with sorting (FR-CUS-010: Filter Restaurants).
+      fee, along with sorting.
 
       A restaurant is returned once, even if it has several branches.
       It is included when at least one of its active branches matches
@@ -176,8 +176,7 @@ getRestaurant:
     description: |
       Returns detailed information for a single restaurant, identified
       by `restaurantId`, including its active branches (each with its
-      address and operating hours) and currently active promotions
-      (FR-CUS-011).
+      address and operating hours) and currently active promotions.
 
       Only restaurants with `approved` status are visible; any other
       restaurant is reported as `404`.
@@ -264,7 +263,7 @@ getRestaurantMenu:
     summary: Browse a restaurant's menu
     description: |
       Returns the menu of a single restaurant, identified by
-      `restaurantId`, grouped by category (FR-CUS-012). Only active
+      `restaurantId`, grouped by category. Only active
       categories and active menu items are included. The restaurant
       must have `approved` status; otherwise the response is `404`.
 
@@ -324,7 +323,7 @@ registerRestaurant:
 
     summary: Register a restaurant
     description: |
-      Creates a new restaurant account (FR-RES-001).
+      Creates a new restaurant account.
 
       Validates the supplied information, verifies email uniqueness,
       creates the underlying user identity, and creates the restaurant
@@ -407,7 +406,7 @@ loginRestaurant:
 
     summary: Log in a restaurant
     description: |
-      Authenticates a restaurant using its email and password (FR-RES-002).
+      Authenticates a restaurant using its email and password.
 
       On success, issues a JWT access token in the response body and a
       refresh token in an `HttpOnly` cookie (`Set-Cookie`); the refresh
@@ -508,7 +507,7 @@ logoutRestaurant:
     summary: Log out a restaurant
     description: |
       Logs out the currently authenticated restaurant by revoking the
-      refresh token, ending the session securely (FR-RES-003).
+      refresh token, ending the session securely.
 
       The refresh token is read from the `refreshToken` HttpOnly cookie
       set during login — it is not accepted in the request body or as
@@ -565,7 +564,7 @@ refreshRestaurant:
     description: |
       Issues a new JWT access token for a restaurant whose access token has
       expired, using the `refreshToken` cookie set at login. Supports
-      the session started by FR-RES-002.
+      the session started at login.
 
       The refresh token is rotated on every call: the presented token
       is revoked, a new one is issued in a fresh `HttpOnly` cookie
@@ -632,7 +631,7 @@ forgotPasswordRestaurant:
     summary: Request a restaurant password reset
     description: |
       Initiates the password recovery flow for a restaurant that has
-      forgotten its password (FR-RES-004.1).
+      forgotten its password.
 
       If the supplied email matches a registered restaurant account, a
       password reset token is generated and emailed to the restaurant.
@@ -680,7 +679,7 @@ resetPasswordRestaurant:
     description: |
       Completes the password recovery flow for a restaurant, verifying
       the restaurant's identity via the reset token before setting the
-      new password (FR-RES-004.2, FR-RES-004.3).
+      new password.
 
       The token must match an unused, unexpired password reset token
       previously issued via the forgot-password request. On success,
@@ -731,7 +730,7 @@ restaurantProfile:
     summary: View own restaurant profile
     description: |
       Returns the profile information of the currently authenticated
-      restaurant (FR-RES-005.1).
+      restaurant.
 
     operationId: getRestaurantProfile
 
@@ -797,7 +796,7 @@ restaurantProfile:
     summary: Update own restaurant profile
     description: |
       Updates the profile information of the currently authenticated
-      restaurant (FR-RES-005.2). Only the supplied fields are updated;
+      restaurant. Only the supplied fields are updated;
       omitted fields remain unchanged. Addresses belong to branches,
       so they are changed with the branch endpoints, not here.
 
@@ -891,7 +890,7 @@ uploadRestaurantLogo:
     summary: Upload or update restaurant logo
     description: |
       Uploads a new logo image for the currently authenticated
-      restaurant, replacing any existing logo (FR-RES-005.3).
+      restaurant, replacing any existing logo.
 
     operationId: uploadRestaurantLogo
 
@@ -948,7 +947,7 @@ restaurantBranches:
       including inactive ones. A restaurant trades through its branches:
       each has its own address, opening hours and availability. No
       requirement names branches directly; they extend the restaurant
-      profile (FR-RES-005.1).
+      profile.
 
     operationId: listBranches
 
@@ -997,8 +996,7 @@ restaurantBranches:
 
     summary: Add a branch
     description: |
-      Adds a branch to the currently authenticated restaurant
-      (FR-RES-005.2). A branch is an address in one city, with its own
+      Adds a branch to the currently authenticated restaurant. A branch is an address in one city, with its own
       opening hours and availability. It is created active and `closed`,
       so it takes no orders until the restaurant opens it and sets its
       hours.
@@ -1087,7 +1085,7 @@ restaurantBranch:
     summary: View one own branch
     description: |
       Returns a single branch of the currently authenticated
-      restaurant, identified by `branchId` (FR-RES-005.1).
+      restaurant, identified by `branchId`.
 
     operationId: getBranch
 
@@ -1140,7 +1138,7 @@ restaurantBranch:
     summary: Update or deactivate a branch
     description: |
       Updates a single branch of the currently authenticated
-      restaurant (FR-RES-005.2). Only the supplied fields are updated;
+      restaurant. Only the supplied fields are updated;
       omitted fields remain unchanged. Opening hours and availability
       have their own endpoints.
 
@@ -1230,7 +1228,7 @@ restaurantOperatingHours:
     summary: View operating hours
     description: |
       Returns the weekly operating hours schedule of one branch of the
-      currently authenticated restaurant (FR-RES-006). Hours are set
+      currently authenticated restaurant. Hours are set
       per branch.
 
     operationId: listBranchOperatingHours
@@ -1281,7 +1279,7 @@ restaurantOperatingHours:
     description: |
       Replaces the entire weekly operating hours schedule of one branch
       of the currently authenticated restaurant with the supplied
-      entries, one per day of the week (FR-RES-006.1, FR-RES-006.2, FR-RES-006.3).
+      entries, one per day of the week.
 
       The request must contain exactly one entry for each `dayOfWeek`
       (0-6, no duplicates). Every entry with `isClosed: false` must
@@ -1395,7 +1393,7 @@ restaurantOperatingHour:
     description: |
       Updates the operating hours for a single day, identified by
       `operatingHourId`, belonging to a branch of the currently
-      authenticated restaurant (FR-RES-006.3). Only the supplied fields are updated;
+      authenticated restaurant. Only the supplied fields are updated;
       omitted fields remain unchanged.
 
       The day must still be valid after the update: if it ends up with
@@ -1469,7 +1467,7 @@ branchAvailability:
     summary: Change branch availability
     description: |
       Updates the real-time availability status of one branch of the
-      currently authenticated restaurant (FR-RES-007.1, FR-RES-007.2),
+      currently authenticated restaurant,
       used to mark the branch as `open`, `closed`, or temporarily `busy`
       independent of its scheduled operating hours. A new branch starts
       as `closed`.
@@ -1526,7 +1524,7 @@ restaurantMenuCategories:
     description: |
       Returns all menu categories (menu sections such as Starters,
       Mains, Drinks) defined by the currently authenticated
-      restaurant, including inactive ones (FR-RES-008).
+      restaurant, including inactive ones.
 
     operationId: listRestaurantMenuCategories
 
@@ -1572,8 +1570,8 @@ restaurantMenuCategories:
     summary: Create a menu category
     description: |
       Creates a new menu category for the currently authenticated
-      restaurant (FR-RES-008.1). Menu items are later assigned to this
-      category (FR-RES-009.6).
+      restaurant. Menu items are later assigned to this
+      category.
 
       Category names must be unique among the restaurant's active
       categories (`409` otherwise). An inactive category does not
@@ -1646,7 +1644,7 @@ restaurantMenuCategory:
     summary: Get one menu category
     description: |
       Returns a single menu category belonging to the currently
-      authenticated restaurant, identified by `categoryId` (FR-RES-008).
+      authenticated restaurant, identified by `categoryId`.
 
     operationId: getRestaurantMenuCategory
 
@@ -1690,8 +1688,7 @@ restaurantMenuCategory:
     summary: Update a menu category
     description: |
       Updates a single menu category belonging to the currently
-      authenticated restaurant, identified by `categoryId`
-      (FR-RES-008.2). Only the supplied fields are updated; omitted
+      authenticated restaurant, identified by `categoryId`. Only the supplied fields are updated; omitted
       fields remain unchanged.
 
       Category names must be unique among the restaurant's active
@@ -1759,8 +1756,7 @@ restaurantMenuCategory:
     summary: Delete a menu category
     description: |
       Deletes a single menu category belonging to the currently
-      authenticated restaurant, identified by `categoryId`
-      (FR-RES-008.3).
+      authenticated restaurant, identified by `categoryId`.
 
       A category that still has menu items assigned to it cannot be
       deleted; the items must be reassigned or removed first.

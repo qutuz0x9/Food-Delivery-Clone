@@ -139,6 +139,18 @@ Forbidden:
             error:
               code: FORBIDDEN
 
+InvalidVerificationCode:
+  description: The verification code is wrong, has expired, or was already used. Request a new code and try again.
+  content:
+    application/json:
+      schema:
+        $ref: "../schemas/common.yaml#/ErrorResponse"
+      example:
+        success: false
+        message: This verification code is invalid or has expired
+        error:
+          code: INVALID_VERIFICATION_CODE
+
 InvalidRefreshToken:
   description: |
     The refresh token is missing, unknown, expired, revoked, or was already rotated. A reused token also revokes the

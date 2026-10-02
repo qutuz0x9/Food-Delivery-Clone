@@ -175,7 +175,7 @@ OrderItemOption:
       type: number
       format: double
       description: Price change this option added to the item.
-      example: 0
+      example: 20
 
 OrderItem:
   type: object
@@ -216,15 +216,17 @@ OrderItem:
       type: number
       format: double
       minimum: 0
-      description: Price of one unit when the order was placed.
-      example: 150
+      description: |
+        Price of one unit when the order was placed, including the price adjustment of every chosen
+        option.
+      example: 170
 
     totalPrice:
       type: number
       format: double
       minimum: 0
       description: Unit price multiplied by quantity.
-      example: 300
+      example: 340
 
     specialInstructions:
       type: string
@@ -281,7 +283,7 @@ OrderTotals:
       format: double
       minimum: 0
       description: Sum of the item totals.
-      example: 300
+      example: 340
 
     deliveryFee:
       type: number
@@ -295,7 +297,7 @@ OrderTotals:
       format: double
       minimum: 0
       description: Tax.
-      example: 45
+      example: 51
 
     discountAmount:
       type: number
@@ -309,7 +311,7 @@ OrderTotals:
       format: double
       minimum: 0
       description: Subtotal + delivery fee + tax − discount, always calculated by the server.
-      example: 350
+      example: 396
 
 OrderSummary:
   type: object
@@ -385,7 +387,7 @@ OrderSummary:
       format: double
       minimum: 0
       description: Order total.
-      example: 350
+      example: 396
 
     placedAt:
       type: string
@@ -587,44 +589,6 @@ OrderDetail:
                 - cancelled
               example: completed
 
-PlaceOrderItemChoice:
-  type: object
-  required:
-    - cartItemId
-  properties:
-    cartItemId:
-      type: string
-      format: uuid
-      description: The cart item these choices belong to.
-      example: 502199a9-304a-553b-ad69-1bf2baa4391e
-
-    specialInstructions:
-      type: string
-      nullable: true
-      description: Note for this item.
-      example: No onions
-
-    options:
-      type: array
-      description: Chosen options. Each group's minimum, maximum and required rules must be met.
-      items:
-        type: object
-        required:
-          - optionGroupId
-          - optionValueId
-        properties:
-          optionGroupId:
-            type: string
-            format: uuid
-            description: Option group of the menu item.
-            example: 56658202-efc2-556c-97f7-bd7b0ad03a99
-
-          optionValueId:
-            type: string
-            format: uuid
-            description: Chosen value in that group.
-            example: 205313e7-080a-56ba-ae8f-17b29d6058cb
-
 PlaceOrderRequest:
   type: object
   required:
@@ -645,12 +609,6 @@ PlaceOrderRequest:
       nullable: true
       description: Note for the whole order.
       example: Please ring the bell
-
-    items:
-      type: array
-      description: Options and instructions per cart item. Cart items that are not listed are ordered plain.
-      items:
-        $ref: "#/PlaceOrderItemChoice"
 
 PlaceOrderResponse:
   type: object

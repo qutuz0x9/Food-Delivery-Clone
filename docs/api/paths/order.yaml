@@ -10,9 +10,9 @@ orders:
 
       The server chooses the fulfilling branch: the nearest active, open branch of the restaurant, among those in the delivery address's city, measured from the address coordinates. If no branch is open there the call is rejected with `409`. It is also rejected with `409` when the cart is empty, an item is no longer available, the restaurant is not approved, or the subtotal is below the restaurant's minimum order amount.
 
-      Options and special instructions are supplied per cart item in `items`. Every option group's minimum, maximum and required rules must be met (`400` otherwise). The delivery fee comes from the restaurant, and the subtotal, tax, discount and total are always calculated by the server (total = subtotal + delivery fee + tax − discount).
+      The order is built entirely from the cart: each line, with its options and note, becomes an order item. Prices are read from the menu at this moment, not from the cart. The delivery fee comes from the restaurant, and the subtotal, tax, discount and total are always calculated by the server (total = subtotal + delivery fee + tax − discount).
 
-      In one step the order is created as `pending` with a unique order number, a copy of the delivery address and of the chosen options is stored with it, the first entry is added to the status history, a payment is created for `paymentMethod`, and the cart is deleted.
+      In one step the order is created as `pending` with a unique order number, a copy of the delivery address and of the chosen options (with their names and price adjustments as they are now) is stored with it, the first entry is added to the status history, a payment is created for `paymentMethod`, and the cart is deleted.
 
     operationId: placeOrder
 
@@ -29,12 +29,6 @@ orders:
             deliveryAddressId: deebf84a-2ed2-579a-80d7-b820d7e655c4
             paymentMethod: credit_card
             customerNote: Please ring the bell
-            items:
-              - cartItemId: 502199a9-304a-553b-ad69-1bf2baa4391e
-                specialInstructions: No onions
-                options:
-                  - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
-                    optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
 
     responses:
       "201":
@@ -58,7 +52,7 @@ orders:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   customer:
                     id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
@@ -96,19 +90,19 @@ orders:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: null
                   rejectedAt: null
@@ -132,7 +126,7 @@ orders:
                     paymentMethod: credit_card
                     status: pending
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: null
                     failureReason: null
@@ -237,7 +231,7 @@ orders:
                     branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                     branchLabel: Ramses Branch
                     itemCount: 2
-                    totalAmount: 350
+                    totalAmount: 396
                     placedAt: "2024-10-05T18:30:00.000Z"
                 pagination:
                   page: 1
@@ -306,7 +300,7 @@ order:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   customer:
                     id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
@@ -344,19 +338,19 @@ order:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: "2024-10-05T18:32:00.000Z"
                   rejectedAt: null
@@ -388,7 +382,7 @@ order:
                     paymentMethod: credit_card
                     status: paid
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: "2024-10-05T18:31:00.000Z"
                     failureReason: null
@@ -615,7 +609,7 @@ orderCancellation:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   customer:
                     id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
@@ -653,19 +647,19 @@ orderCancellation:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: null
                   rejectedAt: null
@@ -693,7 +687,7 @@ orderCancellation:
                     paymentMethod: credit_card
                     status: pending
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: null
                     failureReason: null
@@ -809,7 +803,7 @@ restaurantOrders:
                     branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                     branchLabel: Ramses Branch
                     itemCount: 2
-                    totalAmount: 350
+                    totalAmount: 396
                     placedAt: "2024-10-05T18:30:00.000Z"
                 pagination:
                   page: 1
@@ -896,7 +890,7 @@ restaurantActiveOrders:
                     branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                     branchLabel: Ramses Branch
                     itemCount: 2
-                    totalAmount: 350
+                    totalAmount: 396
                     placedAt: "2024-10-05T18:30:00.000Z"
                 pagination:
                   page: 1
@@ -997,7 +991,7 @@ restaurantOrderHistory:
                     branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                     branchLabel: Ramses Branch
                     itemCount: 2
-                    totalAmount: 350
+                    totalAmount: 396
                     placedAt: "2024-10-05T18:30:00.000Z"
                 pagination:
                   page: 1
@@ -1066,7 +1060,7 @@ restaurantOrder:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   branch:
                     id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
@@ -1086,19 +1080,19 @@ restaurantOrder:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: "2024-10-05T18:32:00.000Z"
                   rejectedAt: null
@@ -1188,7 +1182,7 @@ acceptRestaurantOrder:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   branch:
                     id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
@@ -1208,19 +1202,19 @@ acceptRestaurantOrder:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: "2024-10-05T18:32:00.000Z"
                   rejectedAt: null
@@ -1321,7 +1315,7 @@ rejectRestaurantOrder:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   branch:
                     id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
@@ -1341,19 +1335,19 @@ rejectRestaurantOrder:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: "2024-10-05T18:32:00.000Z"
                   rejectedAt: null
@@ -1444,7 +1438,7 @@ prepareRestaurantOrder:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   branch:
                     id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
@@ -1464,19 +1458,19 @@ prepareRestaurantOrder:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: "2024-10-05T18:32:00.000Z"
                   rejectedAt: null
@@ -1567,7 +1561,7 @@ readyRestaurantOrder:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   branch:
                     id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
@@ -1587,19 +1581,19 @@ readyRestaurantOrder:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: "2024-10-05T18:32:00.000Z"
                   rejectedAt: null

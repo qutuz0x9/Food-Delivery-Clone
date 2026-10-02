@@ -1105,7 +1105,7 @@ UpdateBranchAvailabilityRequest:
         - open
         - closed
         - busy
-      description: New real-time availability status for the branch (FR-RES-007).
+      description: New real-time availability status for the branch.
       example: closed
 
 UpdateBranchAvailabilityResponse:

@@ -2233,7 +2233,7 @@ adminOrders:
                     branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                     branchLabel: Ramses Branch
                     itemCount: 2
-                    totalAmount: 350
+                    totalAmount: 396
                     placedAt: "2024-10-05T18:30:00.000Z"
                 pagination:
                   page: 1
@@ -2302,7 +2302,7 @@ adminOrder:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   customer:
                     id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
@@ -2340,19 +2340,19 @@ adminOrder:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: "2024-10-05T18:32:00.000Z"
                   rejectedAt: null
@@ -2384,7 +2384,7 @@ adminOrder:
                     paymentMethod: credit_card
                     status: paid
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: "2024-10-05T18:31:00.000Z"
                     failureReason: null
@@ -2467,7 +2467,7 @@ adminOrderStatus:
                   branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                   branchLabel: Ramses Branch
                   itemCount: 2
-                  totalAmount: 350
+                  totalAmount: 396
                   placedAt: "2024-10-05T18:30:00.000Z"
                   customer:
                     id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
@@ -2505,19 +2505,19 @@ adminOrderStatus:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   totals:
-                    subtotal: 300
+                    subtotal: 340
                     deliveryFee: 25
-                    taxAmount: 45
+                    taxAmount: 51
                     discountAmount: 20
-                    totalAmount: 350
+                    totalAmount: 396
                   customerNote: Please ring the bell
                   acceptedAt: "2024-10-05T18:32:00.000Z"
                   rejectedAt: null
@@ -2549,7 +2549,7 @@ adminOrderStatus:
                     paymentMethod: credit_card
                     status: paid
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: "2024-10-05T18:31:00.000Z"
                     failureReason: null
@@ -2670,7 +2670,7 @@ adminPayments:
                     paymentMethod: credit_card
                     status: paid
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: "2024-10-05T18:31:00.000Z"
                     failureReason: null
@@ -2738,7 +2738,7 @@ adminPayment:
                   paymentMethod: credit_card
                   status: paid
                   transactionReference: txn_9f8e7d6c
-                  amount: 350
+                  amount: 396
                   currency: EGP
                   paidAt: "2024-10-05T18:31:00.000Z"
                   failureReason: null
@@ -2829,7 +2829,7 @@ adminPaymentRefunds:
                   paymentMethod: credit_card
                   status: paid
                   transactionReference: txn_9f8e7d6c
-                  amount: 350
+                  amount: 396
                   currency: EGP
                   paidAt: "2024-10-05T18:31:00.000Z"
                   failureReason: null
@@ -2933,7 +2933,7 @@ adminPaymentRefund:
                   paymentMethod: credit_card
                   status: paid
                   transactionReference: txn_9f8e7d6c
-                  amount: 350
+                  amount: 396
                   currency: EGP
                   paidAt: "2024-10-05T18:31:00.000Z"
                   failureReason: null
@@ -4108,6 +4108,797 @@ adminSalesReport:
 
       "403":
         $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminAdmins:
+  get:
+    tags:
+      - Admin Management
+
+    summary: List administrators
+
+    description: |
+      Returns a paginated list of administrator accounts, newest first. Deleted accounts are not
+      listed.
+
+    operationId: listAdmins
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: search
+        in: query
+        required: false
+        description: Free-text search on name or email.
+        schema:
+          type: string
+        example: john
+      - name: accountStatus
+        in: query
+        required: false
+        description: Only accounts with this login state.
+        schema:
+          $ref: "../schemas/admin.yaml#/AccountStatus"
+        example: active
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Administrators retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminsResponse"
+            example:
+              success: true
+              message: Administrators retrieved successfully
+              data:
+                admins:
+                  - id: 383e47af-52e5-51be-b66f-057bcb14629c
+                    firstName: Sara
+                    lastName: Mostafa
+                    email: sara.mostafa@example.com
+                    phoneNumber: "+201112223334"
+                    profileImageUrl: null
+                    createdAt: "2024-01-02T08:00:00.000Z"
+                    updatedAt: null
+                    userId: 97cb9ca6-a304-5227-956d-e9b0bf0f83cc
+                    accountStatus: active
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Admin Management
+
+    summary: Create an administrator
+
+    description: |
+      Creates an administrator account: a user account with the administrator role and its profile. The email and phone number must be unique across all accounts (`409` otherwise). The initial password is chosen by the creator, who must hand it over securely; the new administrator can change it with `POST /admin/me/change-password`.
+
+      The change is recorded in the audit log.
+
+    operationId: createAdmin
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/CreateAdminRequest"
+          example:
+            email: omar.admin@example.com
+            password: TempPassw0rd!
+            phoneNumber: "+201555667788"
+            firstName: Omar
+            lastName: Khaled
+
+    responses:
+      "201":
+        description: Administrator created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/CreateAdminResponse"
+            example:
+              success: true
+              message: Administrator created successfully
+              data:
+                admin:
+                  id: 303c7ec7-3390-54a6-a0c7-78e6896e8b5a
+                  firstName: Omar
+                  lastName: Khaled
+                  email: omar.admin@example.com
+                  phoneNumber: "+201555667788"
+                  profileImageUrl: null
+                  createdAt: "2024-01-02T08:00:00.000Z"
+                  updatedAt: null
+                  userId: b8fda046-7a22-5495-b9a3-d8687f8b2823
+                  accountStatus: active
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminAdminAccount:
+  parameters:
+    - name: adminId
+      in: path
+      required: true
+      description: Unique identifier of the administrator.
+      schema:
+        type: string
+        format: uuid
+      example: 383e47af-52e5-51be-b66f-057bcb14629c
+
+  get:
+    tags:
+      - Admin Management
+
+    summary: View an administrator
+
+    description: Returns one administrator account with its login state.
+
+    operationId: getAdminAccount
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Administrator retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAdminAccountResponse"
+            example:
+              success: true
+              message: Administrator retrieved successfully
+              data:
+                admin:
+                  id: 383e47af-52e5-51be-b66f-057bcb14629c
+                  firstName: Sara
+                  lastName: Mostafa
+                  email: sara.mostafa@example.com
+                  phoneNumber: "+201112223334"
+                  profileImageUrl: null
+                  createdAt: "2024-01-02T08:00:00.000Z"
+                  updatedAt: null
+                  userId: 97cb9ca6-a304-5227-956d-e9b0bf0f83cc
+                  accountStatus: active
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Admin Management
+
+    summary: Delete an administrator
+
+    description: |
+      Soft-deletes another administrator: the user account is marked deleted and can no longer log in. An administrator cannot delete their own account, and the last active administrator cannot be deleted (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: deleteAdminAccount
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Administrator deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/DeleteAdminAccountResponse"
+            example:
+              success: true
+              message: Administrator deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminAdminAccountStatus:
+  parameters:
+    - name: adminId
+      in: path
+      required: true
+      description: Unique identifier of the administrator.
+      schema:
+        type: string
+        format: uuid
+      example: 383e47af-52e5-51be-b66f-057bcb14629c
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Change an administrator's account status
+
+    description: |
+      Sets the login state of another administrator's user account (`active`, `inactive`, `locked` or `suspended`). Only `active` accounts can log in. Moving an account out of `active` revokes its refresh tokens, so the user is signed out once their access token expires. An administrator cannot change their own status, and the last active administrator cannot be moved out of `active` (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: updateAdminAccountStatus
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateAccountStatusRequest"
+          example:
+            accountStatus: suspended
+
+    responses:
+      "200":
+        description: Account status updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateAdminAccountStatusResponse"
+            example:
+              success: true
+              message: Account status updated successfully
+              data:
+                admin:
+                  id: 383e47af-52e5-51be-b66f-057bcb14629c
+                  firstName: Sara
+                  lastName: Mostafa
+                  email: sara.mostafa@example.com
+                  phoneNumber: "+201112223334"
+                  profileImageUrl: null
+                  createdAt: "2024-01-02T08:00:00.000Z"
+                  updatedAt: null
+                  userId: 97cb9ca6-a304-5227-956d-e9b0bf0f83cc
+                  accountStatus: suspended
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminDeliveries:
+  get:
+    tags:
+      - Admin Operations
+
+    summary: List deliveries
+
+    description: |
+      Returns driver assignments across the platform, newest first, so an administrator can follow
+      deliveries in progress and find stuck ones.
+
+    operationId: listAdminDeliveries
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: Only assignments in this state.
+        schema:
+          type: string
+          enum:
+            - pending
+            - accepted
+            - rejected
+            - completed
+            - cancelled
+        example: accepted
+      - name: driverId
+        in: query
+        required: false
+        description: Only this driver's assignments.
+        schema:
+          type: string
+          format: uuid
+        example: e035c191-7d58-52be-9f78-c9a9351192dd
+      - name: orderId
+        in: query
+        required: false
+        description: Only this order's assignments.
+        schema:
+          type: string
+          format: uuid
+        example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+      - name: cityId
+        in: query
+        required: false
+        description: Only deliveries collected from a branch in this city.
+        schema:
+          type: string
+          format: uuid
+        example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+      - name: from
+        in: query
+        required: false
+        description: Only assignments created on or after this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Only assignments created on or before this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Deliveries retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminDeliveriesResponse"
+            example:
+              success: true
+              message: Deliveries retrieved successfully
+              data:
+                deliveries:
+                  - id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    orderStatus: ready_for_pickup
+                    status: accepted
+                    driver:
+                      id: e035c191-7d58-52be-9f78-c9a9351192dd
+                      name: Omar Hassan
+                    restaurantName: Nile Grill House
+                    branchLabel: Ramses Branch
+                    dropoffCity: Cairo
+                    assignedAt: "2024-10-05T18:33:00.000Z"
+                    acceptedAt: "2024-10-05T18:33:00.000Z"
+                    completedAt: null
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminOrderDispatch:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  get:
+    tags:
+      - Admin Operations
+
+    summary: View an order's dispatch
+
+    description: |
+      Shows how an order was offered to drivers: every offer with its state, and every assignment the
+      order has had. Use it to see why nobody accepted, for example when all offers expired or were
+      rejected.
+
+    operationId: getOrderDispatch
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Dispatch retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetOrderDispatchResponse"
+            example:
+              success: true
+              message: Dispatch retrieved successfully
+              data:
+                dispatch:
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  orderStatus: ready_for_pickup
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                  assignment:
+                    id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                    driver:
+                      id: e035c191-7d58-52be-9f78-c9a9351192dd
+                      name: Omar Hassan
+                    status: accepted
+                    assignedAt: "2024-10-05T18:33:00.000Z"
+                    acceptedAt: "2024-10-05T18:33:00.000Z"
+                    rejectedAt: null
+                    completedAt: null
+                  assignments:
+                    - id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                      driver:
+                        id: e035c191-7d58-52be-9f78-c9a9351192dd
+                        name: Omar Hassan
+                      status: accepted
+                      assignedAt: "2024-10-05T18:33:00.000Z"
+                      acceptedAt: "2024-10-05T18:33:00.000Z"
+                      rejectedAt: null
+                      completedAt: null
+                  offers:
+                    - id: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+                      driver:
+                        id: e035c191-7d58-52be-9f78-c9a9351192dd
+                        name: Omar Hassan
+                      status: accepted
+                      offeredAt: "2024-10-05T18:32:30.000Z"
+                      expiresAt: "2024-10-05T18:33:30.000Z"
+                      respondedAt: "2024-10-05T18:33:00.000Z"
+                    - id: 2216d705-a57c-5316-823d-b8bdcadaf75b
+                      driver:
+                        id: 15b965f5-c4bc-5db7-82bb-d96bda93bcab
+                        name: Karim Adel
+                      status: withdrawn
+                      offeredAt: "2024-10-05T18:32:30.000Z"
+                      expiresAt: "2024-10-05T18:33:30.000Z"
+                      respondedAt: null
+                    - id: 81d252d4-7bd3-52d4-bf55-8bf6e742650a
+                      driver:
+                        id: 28a7d6c9-3dcf-5da5-8373-74bc812450ac
+                        name: Youssef Samir
+                      status: expired
+                      offeredAt: "2024-10-05T18:32:30.000Z"
+                      expiresAt: "2024-10-05T18:33:30.000Z"
+                      respondedAt: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminOrderDispatchAssignment:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  put:
+    tags:
+      - Admin Operations
+
+    summary: Assign a driver to an order
+
+    description: |
+      Assigns a specific driver to an order, bypassing the offers. The order must be `accepted`, `preparing` or `ready_for_pickup`, and the driver must have `active` approval status, work in the branch's city and not be `busy` (`409` otherwise). All open offers for the order are withdrawn and the driver becomes `busy`.\n\nIf another driver already holds the order it is reassigned: that assignment is cancelled, its driver becomes `available` again, and the new assignment takes over. Once the order has been picked up it can no longer be reassigned (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: assignDriver
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/AssignDriverRequest"
+          example:
+            driverId: e035c191-7d58-52be-9f78-c9a9351192dd
+
+    responses:
+      "200":
+        description: Driver assigned successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/AssignDriverResponse"
+            example:
+              success: true
+              message: Driver assigned successfully
+              data:
+                dispatch:
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  orderStatus: ready_for_pickup
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                  assignment:
+                    id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                    driver:
+                      id: e035c191-7d58-52be-9f78-c9a9351192dd
+                      name: Omar Hassan
+                    status: accepted
+                    assignedAt: "2024-10-05T18:33:00.000Z"
+                    acceptedAt: "2024-10-05T18:33:00.000Z"
+                    rejectedAt: null
+                    completedAt: null
+                  assignments:
+                    - id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                      driver:
+                        id: e035c191-7d58-52be-9f78-c9a9351192dd
+                        name: Omar Hassan
+                      status: accepted
+                      assignedAt: "2024-10-05T18:33:00.000Z"
+                      acceptedAt: "2024-10-05T18:33:00.000Z"
+                      rejectedAt: null
+                      completedAt: null
+                  offers:
+                    - id: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+                      driver:
+                        id: e035c191-7d58-52be-9f78-c9a9351192dd
+                        name: Omar Hassan
+                      status: accepted
+                      offeredAt: "2024-10-05T18:32:30.000Z"
+                      expiresAt: "2024-10-05T18:33:30.000Z"
+                      respondedAt: "2024-10-05T18:33:00.000Z"
+                    - id: 2216d705-a57c-5316-823d-b8bdcadaf75b
+                      driver:
+                        id: 15b965f5-c4bc-5db7-82bb-d96bda93bcab
+                        name: Karim Adel
+                      status: withdrawn
+                      offeredAt: "2024-10-05T18:32:30.000Z"
+                      expiresAt: "2024-10-05T18:33:30.000Z"
+                      respondedAt: null
+                    - id: 81d252d4-7bd3-52d4-bf55-8bf6e742650a
+                      driver:
+                        id: 28a7d6c9-3dcf-5da5-8373-74bc812450ac
+                        name: Youssef Samir
+                      status: expired
+                      offeredAt: "2024-10-05T18:32:30.000Z"
+                      expiresAt: "2024-10-05T18:33:30.000Z"
+                      respondedAt: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminOrderDispatchOffers:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  post:
+    tags:
+      - Admin Operations
+
+    summary: Offer an order to drivers again
+
+    description: |
+      Sends the order to the eligible drivers once more, for example after every offer expired. New offers are made to available, `active` drivers in the branch's city, and any offer still open is left in place. Rejected if the order is not `accepted`, `preparing` or `ready_for_pickup`, or already has an active assignment (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: reofferOrder
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "201":
+        description: Order offered to drivers again
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ReofferOrderResponse"
+            example:
+              success: true
+              message: Order offered to drivers again
+              data:
+                dispatch:
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  orderStatus: ready_for_pickup
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                  assignments: []
+                  offers:
+                    - id: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+                      driver:
+                        id: e035c191-7d58-52be-9f78-c9a9351192dd
+                        name: Omar Hassan
+                      status: accepted
+                      offeredAt: "2024-10-05T18:32:30.000Z"
+                      expiresAt: "2024-10-05T18:33:30.000Z"
+                      respondedAt: "2024-10-05T18:33:00.000Z"
+                    - id: 2216d705-a57c-5316-823d-b8bdcadaf75b
+                      driver:
+                        id: 15b965f5-c4bc-5db7-82bb-d96bda93bcab
+                        name: Karim Adel
+                      status: withdrawn
+                      offeredAt: "2024-10-05T18:32:30.000Z"
+                      expiresAt: "2024-10-05T18:33:30.000Z"
+                      respondedAt: null
+                    - id: 81d252d4-7bd3-52d4-bf55-8bf6e742650a
+                      driver:
+                        id: 28a7d6c9-3dcf-5da5-8373-74bc812450ac
+                        name: Youssef Samir
+                      status: expired
+                      offeredAt: "2024-10-05T18:32:30.000Z"
+                      expiresAt: "2024-10-05T18:33:30.000Z"
+                      respondedAt: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"

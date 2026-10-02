@@ -2843,3 +2843,580 @@ GetSalesReportResponse:
       properties:
         report:
           $ref: "#/SalesReport"
+
+AdminAccount:
+  allOf:
+    - $ref: "#/AdminProfile"
+    - type: object
+      required:
+        - userId
+        - accountStatus
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: The administrator's user account.
+          example: 97cb9ca6-a304-5227-956d-e9b0bf0f83cc
+
+        accountStatus:
+          $ref: "#/AccountStatus"
+
+ListAdminsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Administrators retrieved successfully
+
+    data:
+      type: object
+      required:
+        - admins
+        - pagination
+      properties:
+        admins:
+          type: array
+          items:
+            $ref: "#/AdminAccount"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetAdminAccountResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Administrator retrieved successfully
+
+    data:
+      type: object
+      required:
+        - admin
+      properties:
+        admin:
+          $ref: "#/AdminAccount"
+
+CreateAdminRequest:
+  type: object
+  required:
+    - email
+    - password
+    - phoneNumber
+    - firstName
+    - lastName
+  properties:
+    email:
+      type: string
+      format: email
+      description: Login email. Must be unique across all accounts.
+      example: omar.admin@example.com
+
+    password:
+      type: string
+      format: password
+      minLength: 8
+      description: |
+        Initial password. Share it securely; the new administrator should change it after the first
+        login.
+      example: TempPassw0rd!
+
+    phoneNumber:
+      type: string
+      description: Phone number. Must be unique across all accounts.
+      example: "+201555667788"
+
+    firstName:
+      type: string
+      minLength: 1
+      description: First name.
+      example: Omar
+
+    lastName:
+      type: string
+      minLength: 1
+      description: Last name.
+      example: Khaled
+
+CreateAdminResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Administrator created successfully
+
+    data:
+      type: object
+      required:
+        - admin
+      properties:
+        admin:
+          $ref: "#/AdminAccount"
+
+UpdateAdminAccountStatusResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Account status updated successfully
+
+    data:
+      type: object
+      required:
+        - admin
+      properties:
+        admin:
+          $ref: "#/AdminAccount"
+
+DeleteAdminAccountResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Administrator deleted successfully
+
+    data:
+      type: object
+      nullable: true
+
+DispatchOffer:
+  type: object
+  required:
+    - id
+    - driver
+    - status
+    - offeredAt
+    - expiresAt
+    - respondedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Offer identifier.
+      example: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+
+    driver:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+        name:
+          type: string
+          example: Omar Hassan
+
+    status:
+      type: string
+      enum:
+        - offered
+        - accepted
+        - rejected
+        - expired
+        - withdrawn
+      description: State of the offer.
+      example: accepted
+
+    offeredAt:
+      type: string
+      format: date-time
+      description: When the offer was made.
+      example: "2024-10-05T18:32:30.000Z"
+
+    expiresAt:
+      type: string
+      format: date-time
+      description: When the offer stops being valid.
+      example: "2024-10-05T18:33:30.000Z"
+
+    respondedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the driver accepted or rejected it.
+      example: "2024-10-05T18:33:00.000Z"
+
+DispatchAssignment:
+  type: object
+  required:
+    - id
+    - driver
+    - status
+    - assignedAt
+    - acceptedAt
+    - rejectedAt
+    - completedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Assignment identifier.
+      example: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+
+    driver:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+        name:
+          type: string
+          example: Omar Hassan
+
+    status:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - rejected
+        - completed
+        - cancelled
+      description: State of the assignment.
+      example: accepted
+
+    assignedAt:
+      type: string
+      format: date-time
+      description: When the assignment was created.
+      example: "2024-10-05T18:33:00.000Z"
+
+    acceptedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the driver accepted.
+      example: "2024-10-05T18:33:00.000Z"
+
+    rejectedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the driver rejected.
+      example: null
+
+    completedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the delivery was completed.
+      example: null
+
+OrderDispatch:
+  type: object
+  required:
+    - orderId
+    - orderNumber
+    - orderStatus
+    - branch
+    - assignments
+    - offers
+  properties:
+    orderId:
+      type: string
+      format: uuid
+      description: The order.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Order number.
+      example: ORD-1001
+
+    orderStatus:
+      $ref: "./order.yaml#/OrderStatus"
+
+    branch:
+      type: object
+      description: |
+        The branch the order is collected from. Drivers whose working city is this branch's city are
+        offered the order.
+      required:
+        - id
+        - label
+        - city
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
+        label:
+          type: string
+          example: Ramses Branch
+
+        city:
+          $ref: "./city.yaml#/City"
+
+    assignment:
+      type: object
+      nullable: true
+      description: "The current assignment: pending, accepted or completed. Absent while no driver has the order."
+      allOf:
+        - $ref: "#/DispatchAssignment"
+
+    assignments:
+      type: array
+      description: Every assignment the order has had, oldest first, including cancelled ones.
+      items:
+        $ref: "#/DispatchAssignment"
+
+    offers:
+      type: array
+      description: Every offer made for the order, oldest first.
+      items:
+        $ref: "#/DispatchOffer"
+
+GetOrderDispatchResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Dispatch retrieved successfully
+
+    data:
+      type: object
+      required:
+        - dispatch
+      properties:
+        dispatch:
+          $ref: "#/OrderDispatch"
+
+AdminDeliverySummary:
+  type: object
+  required:
+    - id
+    - orderId
+    - orderNumber
+    - orderStatus
+    - status
+    - driver
+    - restaurantName
+    - branchLabel
+    - dropoffCity
+    - assignedAt
+    - acceptedAt
+    - completedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Assignment identifier.
+      example: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+
+    orderId:
+      type: string
+      format: uuid
+      description: The order.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Order number.
+      example: ORD-1001
+
+    orderStatus:
+      $ref: "./order.yaml#/OrderStatus"
+
+    status:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - rejected
+        - completed
+        - cancelled
+      description: State of the assignment.
+      example: accepted
+
+    driver:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+        name:
+          type: string
+          example: Omar Hassan
+
+    restaurantName:
+      type: string
+      description: Restaurant.
+      example: Nile Grill House
+
+    branchLabel:
+      type: string
+      description: Branch the order is collected from.
+      example: Ramses Branch
+
+    dropoffCity:
+      type: string
+      description: City the order is delivered to.
+      example: Cairo
+
+    assignedAt:
+      type: string
+      format: date-time
+      description: When the assignment was created.
+      example: "2024-10-05T18:33:00.000Z"
+
+    acceptedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the driver accepted.
+      example: "2024-10-05T18:33:00.000Z"
+
+    completedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the delivery was completed.
+      example: null
+
+ListAdminDeliveriesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Deliveries retrieved successfully
+
+    data:
+      type: object
+      required:
+        - deliveries
+        - pagination
+      properties:
+        deliveries:
+          type: array
+          items:
+            $ref: "#/AdminDeliverySummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+AssignDriverRequest:
+  type: object
+  required:
+    - driverId
+  properties:
+    driverId:
+      type: string
+      format: uuid
+      description: The driver who should deliver the order.
+      example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+AssignDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Driver assigned successfully
+
+    data:
+      type: object
+      required:
+        - dispatch
+      properties:
+        dispatch:
+          $ref: "#/OrderDispatch"
+
+ReofferOrderResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order offered to drivers again
+
+    data:
+      type: object
+      required:
+        - dispatch
+      properties:
+        dispatch:
+          $ref: "#/OrderDispatch"

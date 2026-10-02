@@ -6,7 +6,7 @@ listCities:
     summary: List the cities the platform operates in
     description: |
       Returns every active city. Customers pick one when saving a
-      delivery address (FR-CUS-007.1), restaurants pick one for each
+      delivery address, restaurants pick one for each
       branch, and drivers pick their working city. The ids returned
       here are what the API expects as `cityId`.
 

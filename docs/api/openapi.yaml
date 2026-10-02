@@ -349,6 +349,30 @@ paths:
     $ref: "./paths/restaurant.yaml#/restaurantSalesStats"
   /restaurants/me/dashboard/orders:
     $ref: "./paths/restaurant.yaml#/restaurantOrderStats"
+  /admin/admins:
+    $ref: "./paths/admin.yaml#/adminAdmins"
+  /admin/admins/{adminId}:
+    $ref: "./paths/admin.yaml#/adminAdminAccount"
+  /admin/admins/{adminId}/account-status:
+    $ref: "./paths/admin.yaml#/adminAdminAccountStatus"
+  /admin/deliveries:
+    $ref: "./paths/admin.yaml#/adminDeliveries"
+  /admin/orders/{orderId}/dispatch:
+    $ref: "./paths/admin.yaml#/adminOrderDispatch"
+  /admin/orders/{orderId}/dispatch/assignment:
+    $ref: "./paths/admin.yaml#/adminOrderDispatchAssignment"
+  /admin/orders/{orderId}/dispatch/offers:
+    $ref: "./paths/admin.yaml#/adminOrderDispatchOffers"
+  /driver/deliveries/{assignmentId}/cash-collection:
+    $ref: "./paths/driver.yaml#/confirmCashCollection"
+  /auth/verify-email/request:
+    $ref: "./paths/verification.yaml#/verifyEmailRequest"
+  /auth/verify-email/confirm:
+    $ref: "./paths/verification.yaml#/verifyEmailConfirm"
+  /auth/verify-phone/request:
+    $ref: "./paths/verification.yaml#/verifyPhoneRequest"
+  /auth/verify-phone/confirm:
+    $ref: "./paths/verification.yaml#/verifyPhoneConfirm"
 
 components:
   schemas:
@@ -858,8 +882,6 @@ components:
       $ref: "./schemas/cart.yaml#/RemoveCartItemResponse"
     ClearCartResponse:
       $ref: "./schemas/cart.yaml#/ClearCartResponse"
-    PlaceOrderItemChoice:
-      $ref: "./schemas/order.yaml#/PlaceOrderItemChoice"
     PlaceOrderRequest:
       $ref: "./schemas/order.yaml#/PlaceOrderRequest"
     PlaceOrderResponse:
@@ -1048,6 +1070,52 @@ components:
       $ref: "./schemas/restaurant.yaml#/RestaurantOrderStats"
     GetRestaurantOrderStatsResponse:
       $ref: "./schemas/restaurant.yaml#/GetRestaurantOrderStatsResponse"
+    CartItemOption:
+      $ref: "./schemas/cart.yaml#/CartItemOption"
+    CartItemOptionInput:
+      $ref: "./schemas/cart.yaml#/CartItemOptionInput"
+    AdminAccount:
+      $ref: "./schemas/admin.yaml#/AdminAccount"
+    ListAdminsResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminsResponse"
+    GetAdminAccountResponse:
+      $ref: "./schemas/admin.yaml#/GetAdminAccountResponse"
+    CreateAdminRequest:
+      $ref: "./schemas/admin.yaml#/CreateAdminRequest"
+    CreateAdminResponse:
+      $ref: "./schemas/admin.yaml#/CreateAdminResponse"
+    UpdateAdminAccountStatusResponse:
+      $ref: "./schemas/admin.yaml#/UpdateAdminAccountStatusResponse"
+    DeleteAdminAccountResponse:
+      $ref: "./schemas/admin.yaml#/DeleteAdminAccountResponse"
+    DispatchOffer:
+      $ref: "./schemas/admin.yaml#/DispatchOffer"
+    DispatchAssignment:
+      $ref: "./schemas/admin.yaml#/DispatchAssignment"
+    OrderDispatch:
+      $ref: "./schemas/admin.yaml#/OrderDispatch"
+    GetOrderDispatchResponse:
+      $ref: "./schemas/admin.yaml#/GetOrderDispatchResponse"
+    AdminDeliverySummary:
+      $ref: "./schemas/admin.yaml#/AdminDeliverySummary"
+    ListAdminDeliveriesResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminDeliveriesResponse"
+    AssignDriverRequest:
+      $ref: "./schemas/admin.yaml#/AssignDriverRequest"
+    AssignDriverResponse:
+      $ref: "./schemas/admin.yaml#/AssignDriverResponse"
+    ReofferOrderResponse:
+      $ref: "./schemas/admin.yaml#/ReofferOrderResponse"
+    ConfirmCashCollectionResponse:
+      $ref: "./schemas/driver.yaml#/ConfirmCashCollectionResponse"
+    RequestVerificationResponse:
+      $ref: "./schemas/verification.yaml#/RequestVerificationResponse"
+    ConfirmVerificationRequest:
+      $ref: "./schemas/verification.yaml#/ConfirmVerificationRequest"
+    ConfirmEmailVerificationResponse:
+      $ref: "./schemas/verification.yaml#/ConfirmEmailVerificationResponse"
+    ConfirmPhoneVerificationResponse:
+      $ref: "./schemas/verification.yaml#/ConfirmPhoneVerificationResponse"
 
   responses:
     ValidationError:
@@ -1062,6 +1130,8 @@ components:
       $ref: "./responses/common.yaml#/InvalidResetToken"
     InvalidRefreshToken:
       $ref: "./responses/common.yaml#/InvalidRefreshToken"
+    InvalidVerificationCode:
+      $ref: "./responses/common.yaml#/InvalidVerificationCode"
     NotFound:
       $ref: "./responses/common.yaml#/NotFound"
     InternalServerError:

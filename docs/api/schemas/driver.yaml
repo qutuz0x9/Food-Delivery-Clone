@@ -1610,6 +1610,29 @@ UpdateDeliveryResponse:
         delivery:
           $ref: "#/DeliveryDetail"
 
+ConfirmCashCollectionResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cash collection confirmed
+
+    data:
+      type: object
+      required:
+        - payment
+      properties:
+        payment:
+          $ref: "./payment.yaml#/PaymentSummary"
+
 Earning:
   type: object
   required:

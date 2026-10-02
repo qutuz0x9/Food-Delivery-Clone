@@ -474,7 +474,7 @@ CreateMenuCategoryRequest:
     name:
       type: string
       maxLength: 100
-      description: Category name (FR-RES-008.1).
+      description: Category name.
       example: Starters
 
     displayOrder:
@@ -541,7 +541,7 @@ UpdateMenuCategoryRequest:
     name:
       type: string
       maxLength: 100
-      description: Category name (FR-RES-008.2).
+      description: Category name.
       example: Starters & Salads
 
     displayOrder:

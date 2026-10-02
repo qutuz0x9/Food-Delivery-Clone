@@ -1438,13 +1438,13 @@ acceptDeliveryRequest:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   customerNote: Please ring the bell
                   payment:
                     id: 9b186018-751f-5f05-89e0-896252cd46cf
@@ -1453,7 +1453,7 @@ acceptDeliveryRequest:
                     paymentMethod: cash
                     status: pending
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: null
                     failureReason: null
@@ -1792,13 +1792,13 @@ driverDelivery:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   customerNote: Please ring the bell
                   payment:
                     id: 9b186018-751f-5f05-89e0-896252cd46cf
@@ -1807,7 +1807,7 @@ driverDelivery:
                     paymentMethod: cash
                     status: pending
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: null
                     failureReason: null
@@ -1905,13 +1905,13 @@ pickupDelivery:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   customerNote: Please ring the bell
                   payment:
                     id: 9b186018-751f-5f05-89e0-896252cd46cf
@@ -1920,7 +1920,7 @@ pickupDelivery:
                     paymentMethod: cash
                     status: pending
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: null
                     failureReason: null
@@ -2020,13 +2020,13 @@ startDelivery:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   customerNote: Please ring the bell
                   payment:
                     id: 9b186018-751f-5f05-89e0-896252cd46cf
@@ -2035,7 +2035,7 @@ startDelivery:
                     paymentMethod: cash
                     status: pending
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: null
                     failureReason: null
@@ -2078,7 +2078,9 @@ completeDelivery:
       Confirms that the order reached the customer. The order must be `out_for_delivery`. In one step
       the order moves to `delivered`, the assignment becomes `completed`, the driver's completed-
       delivery count goes up, an earning is recorded as `pending`, and the driver becomes `available`
-      again (`409` if the order is in any other status).
+      again (`409` if the order is in any other status). For a `cash` order the payment must already
+      be `paid`, so confirm the cash first with `POST /driver/deliveries/{assignmentId}/cash-
+      collection` (`409` otherwise).
 
     operationId: completeDelivery
 
@@ -2137,13 +2139,13 @@ completeDelivery:
                       menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
                       name: Mixed Grill
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
                       specialInstructions: No onions
                       options:
                         - optionGroupName: Size
                           optionValueName: Large
-                          priceAdjustment: 0
+                          priceAdjustment: 20
                   customerNote: Please ring the bell
                   payment:
                     id: 9b186018-751f-5f05-89e0-896252cd46cf
@@ -2152,12 +2154,81 @@ completeDelivery:
                     paymentMethod: cash
                     status: pending
                     transactionReference: txn_9f8e7d6c
-                    amount: 350
+                    amount: 396
                     currency: EGP
                     paidAt: null
                     failureReason: null
                     createdAt: "2024-10-05T18:30:30.000Z"
                     updatedAt: "2024-10-05T18:31:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+confirmCashCollection:
+  parameters:
+    - name: assignmentId
+      in: path
+      required: true
+      description: Unique identifier of the delivery (assignment).
+      schema:
+        type: string
+        format: uuid
+      example: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+
+  post:
+    tags:
+      - Drivers
+
+    summary: Confirm cash collected
+
+    description: |
+      Confirms that the driver collected the order's amount in cash from the customer. The order's
+      payment must use `cash` and still be `pending`, and the order must be `out_for_delivery`;
+      otherwise the call is rejected with `409`. The payment becomes `paid` and `paidAt` is set. The
+      driver who collected the cash is the one assigned to the order, so no separate record is kept. A
+      cash delivery cannot be completed until the cash has been confirmed.
+
+    operationId: confirmCashCollection
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Cash collection confirmed
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ConfirmCashCollectionResponse"
+            example:
+              success: true
+              message: Cash collection confirmed
+              data:
+                payment:
+                  id: 9b186018-751f-5f05-89e0-896252cd46cf
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  paymentMethod: cash
+                  status: paid
+                  transactionReference: null
+                  amount: 396
+                  currency: EGP
+                  paidAt: "2024-10-05T19:18:00.000Z"
+                  failureReason: null
+                  createdAt: "2024-10-05T18:30:30.000Z"
+                  updatedAt: "2024-10-05T18:31:00.000Z"
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"

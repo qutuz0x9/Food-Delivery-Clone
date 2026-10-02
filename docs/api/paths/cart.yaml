@@ -6,9 +6,10 @@ cart:
     summary: View the cart
 
     description: |
-      Returns the current customer's cart with its items and subtotal. A customer has at most one cart
-      and all of its items come from the same restaurant; `cart` is `null` when there is none. Items
-      whose menu item is no longer available are flagged with `isAvailable: false`.
+      Returns the current customer's cart with its lines, their options and the subtotal. A customer
+      has at most one cart and all of its items come from the same restaurant; `cart` is `null` when
+      there is none. Lines whose menu item is no longer available are flagged with `isAvailable:
+      false`.
 
     operationId: getCart
 
@@ -37,11 +38,18 @@ cart:
                       name: Mixed Grill
                       imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                          optionGroupName: Size
+                          optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                          optionValueName: Large
+                          priceAdjustment: 20
                       isAvailable: true
                   itemCount: 2
-                  subtotal: 300
+                  subtotal: 340
                   updatedAt: "2024-10-05T18:20:00.000Z"
 
       "401":
@@ -59,7 +67,7 @@ cart:
 
     summary: Clear the cart
 
-    description: Deletes the cart and all its items.
+    description: Deletes the cart with all its lines and their options.
 
     operationId: clearCart
 
@@ -95,11 +103,11 @@ cartItems:
     summary: Add an item to the cart
 
     description: |
-      Adds a menu item to the cart. Adding an item that is already in the cart increases its quantity. The unit price is the menu item's current base price. Only active, available items of an approved restaurant can be added (`404` or `409` otherwise).
+      Adds a menu item to the cart together with the options and note the customer chose. Only active, available items of an approved restaurant can be added (`404` or `409` otherwise). Each option must belong to the menu item, and every option group's rules must be met: the number of chosen options must be between the group's minimum and maximum, and a required group needs a choice (`400` otherwise).
+
+      The line's unit price is the item's base price plus the price adjustment of every chosen option. If the cart already has a line with the same item, the same options and the same note, that line's quantity goes up; otherwise a new line is added, so a Large and a Regular of the same item sit on separate lines.
 
       A cart holds one restaurant's items. If the cart already contains another restaurant's items the call is rejected with `409` unless `replaceCart` is `true`, which discards the old cart and starts a new one.
-
-      The cart stores only the item and quantity. Options and special instructions are chosen when the order is placed.
 
     operationId: addCartItem
 
@@ -115,6 +123,10 @@ cartItems:
           example:
             menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
             quantity: 2
+            specialInstructions: No onions
+            options:
+              - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
 
     responses:
       "201":
@@ -138,11 +150,18 @@ cartItems:
                       name: Mixed Grill
                       imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
                       quantity: 2
-                      unitPrice: 150
-                      totalPrice: 300
+                      unitPrice: 170
+                      totalPrice: 340
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                          optionGroupName: Size
+                          optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                          optionValueName: Large
+                          priceAdjustment: 20
                       isAvailable: true
                   itemCount: 2
-                  subtotal: 300
+                  subtotal: 340
                   updatedAt: "2024-10-05T18:20:00.000Z"
 
       "400":
@@ -168,7 +187,7 @@ cartItem:
     - name: itemId
       in: path
       required: true
-      description: Unique identifier of the cart item.
+      description: Unique identifier of the cart line.
       schema:
         type: string
         format: uuid
@@ -178,9 +197,14 @@ cartItem:
     tags:
       - Cart
 
-    summary: Change an item's quantity
+    summary: Change a cart line
 
-    description: Sets the quantity of one cart item.
+    description: |
+      Changes the quantity, the note or the options of one cart line. Only the supplied fields change;
+      `options`, when sent, replaces the line's whole set of options and the unit price is
+      recalculated. Each option must belong to the menu item, and every option group's rules must be
+      met: the number of chosen options must be between the group's minimum and maximum, and a
+      required group needs a choice (`400` otherwise).
 
     operationId: updateCartItem
 
@@ -218,11 +242,18 @@ cartItem:
                       name: Mixed Grill
                       imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
                       quantity: 3
-                      unitPrice: 150
-                      totalPrice: 450
+                      unitPrice: 170
+                      totalPrice: 510
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                          optionGroupName: Size
+                          optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                          optionValueName: Large
+                          priceAdjustment: 20
                       isAvailable: true
                   itemCount: 3
-                  subtotal: 450
+                  subtotal: 510
                   updatedAt: "2024-10-05T18:20:00.000Z"
 
       "400":
@@ -244,9 +275,9 @@ cartItem:
     tags:
       - Cart
 
-    summary: Remove an item from the cart
+    summary: Remove a line from the cart
 
-    description: Removes one item. Removing the last item deletes the cart.
+    description: Removes one line with its options. Removing the last line deletes the cart.
 
     operationId: removeCartItem
 
@@ -275,11 +306,18 @@ cartItem:
                       name: Mixed Grill
                       imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
                       quantity: 1
-                      unitPrice: 150
-                      totalPrice: 150
+                      unitPrice: 170
+                      totalPrice: 170
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                          optionGroupName: Size
+                          optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                          optionValueName: Large
+                          priceAdjustment: 20
                       isAvailable: true
                   itemCount: 1
-                  subtotal: 150
+                  subtotal: 170
                   updatedAt: "2024-10-05T18:20:00.000Z"
 
       "401":
