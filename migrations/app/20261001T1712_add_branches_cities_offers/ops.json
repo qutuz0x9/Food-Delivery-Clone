@@ -1,0 +1,2696 @@
+[
+  {
+    "id": "dropColumn.delivery_addresses.city",
+    "label": "Drop column \"city\" from \"delivery_addresses\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "city",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"city\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "city"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"city\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_addresses\" DROP COLUMN \"city\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"city\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "city"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropTable.restaurant_addresses",
+    "label": "Drop table \"restaurant_addresses\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "restaurant_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"restaurant_addresses\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_addresses\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop table \"restaurant_addresses\"",
+        "sql": "DROP TABLE \"public\".\"restaurant_addresses\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"restaurant_addresses\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_addresses\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropConstraint.restaurant_operating_hours.restaurant_operating_hours_restaurant_id_fkey",
+    "label": "Drop constraint \"restaurant_operating_hours_restaurant_id_fkey\" on \"restaurant_operating_hours\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "restaurant_operating_hours_restaurant_id_fkey",
+        "table": "restaurant_operating_hours"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"restaurant_operating_hours_restaurant_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_operating_hours_restaurant_id_fkey",
+          "public",
+          "\"public\".\"restaurant_operating_hours\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop constraint \"restaurant_operating_hours_restaurant_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_operating_hours\" DROP CONSTRAINT \"restaurant_operating_hours_restaurant_id_fkey\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"restaurant_operating_hours_restaurant_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_operating_hours_restaurant_id_fkey",
+          "public",
+          "\"public\".\"restaurant_operating_hours\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropIndex.restaurant_operating_hours.restaurant_operating_hours_restaurant_id_idx_5fa03bd5",
+    "label": "Drop index \"restaurant_operating_hours_restaurant_id_idx_5fa03bd5\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "restaurant_operating_hours_restaurant_id_idx_5fa03bd5",
+        "table": "restaurant_operating_hours"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"restaurant_operating_hours_restaurant_id_idx_5fa03bd5\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_operating_hours_restaurant_id_idx_5fa03bd5\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop index \"restaurant_operating_hours_restaurant_id_idx_5fa03bd5\"",
+        "sql": "DROP INDEX \"public\".\"restaurant_operating_hours_restaurant_id_idx_5fa03bd5\"",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"restaurant_operating_hours_restaurant_id_idx_5fa03bd5\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_operating_hours_restaurant_id_idx_5fa03bd5\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropConstraint.restaurant_operating_hours.restaurant_operating_hours_restaurant_id_day_of_week_key",
+    "label": "Drop constraint \"restaurant_operating_hours_restaurant_id_day_of_week_key\" on \"restaurant_operating_hours\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "restaurant_operating_hours_restaurant_id_day_of_week_key",
+        "table": "restaurant_operating_hours"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"restaurant_operating_hours_restaurant_id_day_of_week_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_operating_hours_restaurant_id_day_of_week_key",
+          "public",
+          "\"public\".\"restaurant_operating_hours\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop constraint \"restaurant_operating_hours_restaurant_id_day_of_week_key\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_operating_hours\" DROP CONSTRAINT \"restaurant_operating_hours_restaurant_id_day_of_week_key\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"restaurant_operating_hours_restaurant_id_day_of_week_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_operating_hours_restaurant_id_day_of_week_key",
+          "public",
+          "\"public\".\"restaurant_operating_hours\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropColumn.restaurant_operating_hours.restaurant_id",
+    "label": "Drop column \"restaurant_id\" from \"restaurant_operating_hours\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "restaurant_id",
+        "table": "restaurant_operating_hours"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"restaurant_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurant_operating_hours",
+          "restaurant_id"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"restaurant_id\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_operating_hours\" DROP COLUMN \"restaurant_id\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"restaurant_id\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurant_operating_hours",
+          "restaurant_id"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropCheckConstraint.restaurants.restaurants_availability_status_check_315ae2ed",
+    "label": "Drop check constraint \"restaurants_availability_status_check_315ae2ed\" on \"restaurants\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "restaurants_availability_status_check_315ae2ed",
+        "table": "restaurants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"restaurants_availability_status_check_315ae2ed\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurants_availability_status_check_315ae2ed",
+          "public",
+          "\"public\".\"restaurants\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"restaurants_availability_status_check_315ae2ed\"",
+        "sql": "ALTER TABLE \"public\".\"restaurants\" DROP CONSTRAINT \"restaurants_availability_status_check_315ae2ed\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"restaurants_availability_status_check_315ae2ed\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurants_availability_status_check_315ae2ed",
+          "public",
+          "\"public\".\"restaurants\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropColumn.restaurants.availability_status",
+    "label": "Drop column \"availability_status\" from \"restaurants\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "availability_status",
+        "table": "restaurants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"availability_status\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurants",
+          "availability_status"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"availability_status\"",
+        "sql": "ALTER TABLE \"public\".\"restaurants\" DROP COLUMN \"availability_status\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"availability_status\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurants",
+          "availability_status"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.cities",
+    "label": "Create table \"cities\"",
+    "summary": "Creates table \"cities\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "cities"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"cities\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"cities\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"cities\"",
+        "sql": "CREATE TABLE \"public\".\"cities\" (\n  \"country\" character varying(100) NOT NULL,\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"is_active\" bool DEFAULT true NOT NULL,\n  \"name\" character varying(100) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"cities\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"cities\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.delivery_offers",
+    "label": "Create table \"delivery_offers\"",
+    "summary": "Creates table \"delivery_offers\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "delivery_offers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"delivery_offers\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_offers\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"delivery_offers\"",
+        "sql": "CREATE TABLE \"public\".\"delivery_offers\" (\n  \"driver_id\" uuid NOT NULL,\n  \"expires_at\" timestamp(6) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"offered_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"order_id\" uuid NOT NULL,\n  \"responded_at\" timestamp(6),\n  \"status\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"delivery_offers_expiry_after_offer_8c9937b1\" CHECK (expires_at > offered_at),\n  CONSTRAINT \"delivery_offers_response_has_timestamp_97831090\" CHECK (status NOT IN ('accepted', 'rejected') OR responded_at IS NOT NULL),\n  CONSTRAINT \"delivery_offers_status_check_90df915c\" CHECK (\"status\" IN ('offered', 'accepted', 'rejected', 'expired', 'withdrawn'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"delivery_offers\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_offers\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.restaurant_branches",
+    "label": "Create table \"restaurant_branches\"",
+    "summary": "Creates table \"restaurant_branches\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "restaurant_branches"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"restaurant_branches\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"restaurant_branches\"",
+        "sql": "CREATE TABLE \"public\".\"restaurant_branches\" (\n  \"availability_status\" text DEFAULT 'closed' NOT NULL,\n  \"building\" text,\n  \"city_id\" uuid NOT NULL,\n  \"created_at\" timestamp(6) DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"is_active\" bool DEFAULT true NOT NULL,\n  \"label\" character varying(100) NOT NULL,\n  \"latitude\" numeric(9,6) NOT NULL,\n  \"longitude\" numeric(9,6) NOT NULL,\n  \"restaurant_id\" uuid NOT NULL,\n  \"street\" text NOT NULL,\n  \"updated_at\" timestamp(6),\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"restaurant_branches_availability_status_check_315ae2ed\" CHECK (\"availability_status\" IN ('open', 'closed', 'busy')),\n  CONSTRAINT \"restaurant_branches_coordinates_valid_b9fb9d9c\" CHECK (latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"restaurant_branches\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.delivery_address.city_id",
+    "label": "Add column \"city_id\" to \"delivery_address\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "city_id",
+        "table": "delivery_address"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"city_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "city_id"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"city_id\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_address\" ADD COLUMN \"city_id\" uuid"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"city_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "city_id"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-delivery_address-city_id",
+    "label": "Data transform: backfill-delivery_address-city_id",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-delivery_address-city_id has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"city_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-delivery_address-city_id",
+        "sql": "UPDATE \"public\".\"delivery_address\" SET \"city_id\" = $1::uuid WHERE \"id\" IS NULL",
+        "params": [
+          "00000000-0000-0000-0000-000000000000"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-delivery_address-city_id resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"city_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.delivery_address.city_id",
+    "label": "Set NOT NULL on \"delivery_address\".\"city_id\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "city_id",
+        "table": "delivery_address"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"city_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "city_id"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"city_id\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"delivery_address\" WHERE \"city_id\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"city_id\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_address\" ALTER COLUMN \"city_id\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"city_id\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "city_id",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.delivery_addresses.city_id",
+    "label": "Add column \"city_id\" to \"delivery_addresses\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "city_id",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"city_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "city_id"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"city_id\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_addresses\" ADD COLUMN \"city_id\" uuid"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"city_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "city_id"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-delivery_addresses-city_id",
+    "label": "Data transform: backfill-delivery_addresses-city_id",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-delivery_addresses-city_id has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"city_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-delivery_addresses-city_id",
+        "sql": "UPDATE \"public\".\"delivery_addresses\" SET \"city_id\" = $1::uuid WHERE \"id\" IS NULL",
+        "params": [
+          "00000000-0000-0000-0000-000000000000"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-delivery_addresses-city_id resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"city_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.delivery_addresses.city_id",
+    "label": "Set NOT NULL on \"delivery_addresses\".\"city_id\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "city_id",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"city_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "city_id"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"city_id\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"delivery_addresses\" WHERE \"city_id\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"city_id\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_addresses\" ALTER COLUMN \"city_id\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"city_id\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "city_id",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.drivers.working_city_id",
+    "label": "Add column \"working_city_id\" to \"drivers\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "working_city_id",
+        "table": "drivers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"working_city_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "drivers",
+          "working_city_id"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"working_city_id\"",
+        "sql": "ALTER TABLE \"public\".\"drivers\" ADD COLUMN \"working_city_id\" uuid"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"working_city_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "drivers",
+          "working_city_id"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-drivers-working_city_id",
+    "label": "Data transform: backfill-drivers-working_city_id",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-drivers-working_city_id has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"drivers\" WHERE \"working_city_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-drivers-working_city_id",
+        "sql": "UPDATE \"public\".\"drivers\" SET \"working_city_id\" = $1::uuid WHERE \"id\" IS NULL",
+        "params": [
+          "00000000-0000-0000-0000-000000000000"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-drivers-working_city_id resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"drivers\" WHERE \"working_city_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.drivers.working_city_id",
+    "label": "Set NOT NULL on \"drivers\".\"working_city_id\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "working_city_id",
+        "table": "drivers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"working_city_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "drivers",
+          "working_city_id"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"working_city_id\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"drivers\" WHERE \"working_city_id\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"working_city_id\"",
+        "sql": "ALTER TABLE \"public\".\"drivers\" ALTER COLUMN \"working_city_id\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"working_city_id\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "drivers",
+          "working_city_id",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.orders.restaurant_branch_id",
+    "label": "Add column \"restaurant_branch_id\" to \"orders\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "restaurant_branch_id",
+        "table": "orders"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"restaurant_branch_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "orders",
+          "restaurant_branch_id"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"restaurant_branch_id\"",
+        "sql": "ALTER TABLE \"public\".\"orders\" ADD COLUMN \"restaurant_branch_id\" uuid"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"restaurant_branch_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "orders",
+          "restaurant_branch_id"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-orders-restaurant_branch_id",
+    "label": "Data transform: backfill-orders-restaurant_branch_id",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-orders-restaurant_branch_id has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"orders\" WHERE \"restaurant_branch_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-orders-restaurant_branch_id",
+        "sql": "UPDATE \"public\".\"orders\" SET \"restaurant_branch_id\" = $1::uuid WHERE \"id\" IS NULL",
+        "params": [
+          "00000000-0000-0000-0000-000000000000"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-orders-restaurant_branch_id resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"orders\" WHERE \"restaurant_branch_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.orders.restaurant_branch_id",
+    "label": "Set NOT NULL on \"orders\".\"restaurant_branch_id\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "restaurant_branch_id",
+        "table": "orders"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"restaurant_branch_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "orders",
+          "restaurant_branch_id"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"restaurant_branch_id\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"orders\" WHERE \"restaurant_branch_id\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"restaurant_branch_id\"",
+        "sql": "ALTER TABLE \"public\".\"orders\" ALTER COLUMN \"restaurant_branch_id\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"restaurant_branch_id\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "orders",
+          "restaurant_branch_id",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.restaurant_operating_hours.branch_id",
+    "label": "Add column \"branch_id\" to \"restaurant_operating_hours\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "branch_id",
+        "table": "restaurant_operating_hours"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"branch_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurant_operating_hours",
+          "branch_id"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"branch_id\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_operating_hours\" ADD COLUMN \"branch_id\" uuid"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"branch_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurant_operating_hours",
+          "branch_id"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-restaurant_operating_hours-branch_id",
+    "label": "Data transform: backfill-restaurant_operating_hours-branch_id",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-restaurant_operating_hours-branch_id has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"restaurant_operating_hours\" WHERE \"branch_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-restaurant_operating_hours-branch_id",
+        "sql": "UPDATE \"public\".\"restaurant_operating_hours\" SET \"branch_id\" = $1::uuid WHERE \"id\" IS NULL",
+        "params": [
+          "00000000-0000-0000-0000-000000000000"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-restaurant_operating_hours-branch_id resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"restaurant_operating_hours\" WHERE \"branch_id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.restaurant_operating_hours.branch_id",
+    "label": "Set NOT NULL on \"restaurant_operating_hours\".\"branch_id\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "branch_id",
+        "table": "restaurant_operating_hours"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"branch_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurant_operating_hours",
+          "branch_id"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"branch_id\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"restaurant_operating_hours\" WHERE \"branch_id\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"branch_id\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_operating_hours\" ALTER COLUMN \"branch_id\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"branch_id\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurant_operating_hours",
+          "branch_id",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.typechange-delivery_address-latitude",
+    "label": "Data transform: typechange-delivery_address-latitude",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check typechange-delivery_address-latitude has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run typechange-delivery_address-latitude",
+        "sql": "UPDATE \"public\".\"delivery_address\" SET \"latitude\" = $1 WHERE \"id\" IS NULL",
+        "params": [
+          0
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify typechange-delivery_address-latitude resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterType.delivery_address.latitude",
+    "label": "Alter type of \"delivery_address\".\"latitude\" to numeric(9,6)",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "latitude",
+        "table": "delivery_address"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"latitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "latitude"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "alter type of \"latitude\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_address\" ALTER COLUMN \"latitude\" TYPE numeric(9,6) USING \"latitude\"::numeric(9,6)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"latitude\" has type \"numeric(9,6)\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "latitude",
+          "numeric(9,6)"
+        ]
+      }
+    ],
+    "meta": {
+      "warning": "TABLE_REWRITE"
+    }
+  },
+  {
+    "id": "data_migration.handle-nulls-delivery_address-latitude",
+    "label": "Data transform: handle-nulls-delivery_address-latitude",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check handle-nulls-delivery_address-latitude has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"latitude\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run handle-nulls-delivery_address-latitude",
+        "sql": "UPDATE \"public\".\"delivery_address\" SET \"latitude\" = $1 WHERE \"id\" IS NULL",
+        "params": [
+          0
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify handle-nulls-delivery_address-latitude resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"latitude\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.delivery_address.latitude",
+    "label": "Set NOT NULL on \"delivery_address\".\"latitude\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "latitude",
+        "table": "delivery_address"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"latitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "latitude"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"latitude\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"delivery_address\" WHERE \"latitude\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"latitude\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_address\" ALTER COLUMN \"latitude\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"latitude\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "latitude",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.typechange-delivery_address-longitude",
+    "label": "Data transform: typechange-delivery_address-longitude",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check typechange-delivery_address-longitude has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run typechange-delivery_address-longitude",
+        "sql": "UPDATE \"public\".\"delivery_address\" SET \"longitude\" = $1 WHERE \"id\" IS NULL",
+        "params": [
+          0
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify typechange-delivery_address-longitude resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterType.delivery_address.longitude",
+    "label": "Alter type of \"delivery_address\".\"longitude\" to numeric(9,6)",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "longitude",
+        "table": "delivery_address"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"longitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "longitude"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "alter type of \"longitude\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_address\" ALTER COLUMN \"longitude\" TYPE numeric(9,6) USING \"longitude\"::numeric(9,6)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"longitude\" has type \"numeric(9,6)\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "longitude",
+          "numeric(9,6)"
+        ]
+      }
+    ],
+    "meta": {
+      "warning": "TABLE_REWRITE"
+    }
+  },
+  {
+    "id": "data_migration.handle-nulls-delivery_address-longitude",
+    "label": "Data transform: handle-nulls-delivery_address-longitude",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check handle-nulls-delivery_address-longitude has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"longitude\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run handle-nulls-delivery_address-longitude",
+        "sql": "UPDATE \"public\".\"delivery_address\" SET \"longitude\" = $1 WHERE \"id\" IS NULL",
+        "params": [
+          0
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify handle-nulls-delivery_address-longitude resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_address\" WHERE \"longitude\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.delivery_address.longitude",
+    "label": "Set NOT NULL on \"delivery_address\".\"longitude\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "longitude",
+        "table": "delivery_address"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"longitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "longitude"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"longitude\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"delivery_address\" WHERE \"longitude\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"longitude\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_address\" ALTER COLUMN \"longitude\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"longitude\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_address",
+          "longitude",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.typechange-delivery_addresses-latitude",
+    "label": "Data transform: typechange-delivery_addresses-latitude",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check typechange-delivery_addresses-latitude has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run typechange-delivery_addresses-latitude",
+        "sql": "UPDATE \"public\".\"delivery_addresses\" SET \"latitude\" = $1 WHERE \"id\" IS NULL",
+        "params": [
+          0
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify typechange-delivery_addresses-latitude resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterType.delivery_addresses.latitude",
+    "label": "Alter type of \"delivery_addresses\".\"latitude\" to numeric(9,6)",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "latitude",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"latitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "latitude"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "alter type of \"latitude\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_addresses\" ALTER COLUMN \"latitude\" TYPE numeric(9,6) USING \"latitude\"::numeric(9,6)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"latitude\" has type \"numeric(9,6)\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "latitude",
+          "numeric(9,6)"
+        ]
+      }
+    ],
+    "meta": {
+      "warning": "TABLE_REWRITE"
+    }
+  },
+  {
+    "id": "data_migration.handle-nulls-delivery_addresses-latitude",
+    "label": "Data transform: handle-nulls-delivery_addresses-latitude",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check handle-nulls-delivery_addresses-latitude has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"latitude\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run handle-nulls-delivery_addresses-latitude",
+        "sql": "UPDATE \"public\".\"delivery_addresses\" SET \"latitude\" = $1 WHERE \"id\" IS NULL",
+        "params": [
+          0
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify handle-nulls-delivery_addresses-latitude resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"latitude\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.delivery_addresses.latitude",
+    "label": "Set NOT NULL on \"delivery_addresses\".\"latitude\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "latitude",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"latitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "latitude"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"latitude\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"delivery_addresses\" WHERE \"latitude\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"latitude\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_addresses\" ALTER COLUMN \"latitude\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"latitude\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "latitude",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.typechange-delivery_addresses-longitude",
+    "label": "Data transform: typechange-delivery_addresses-longitude",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check typechange-delivery_addresses-longitude has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run typechange-delivery_addresses-longitude",
+        "sql": "UPDATE \"public\".\"delivery_addresses\" SET \"longitude\" = $1 WHERE \"id\" IS NULL",
+        "params": [
+          0
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify typechange-delivery_addresses-longitude resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"id\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterType.delivery_addresses.longitude",
+    "label": "Alter type of \"delivery_addresses\".\"longitude\" to numeric(9,6)",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "longitude",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"longitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "longitude"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "alter type of \"longitude\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_addresses\" ALTER COLUMN \"longitude\" TYPE numeric(9,6) USING \"longitude\"::numeric(9,6)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"longitude\" has type \"numeric(9,6)\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "longitude",
+          "numeric(9,6)"
+        ]
+      }
+    ],
+    "meta": {
+      "warning": "TABLE_REWRITE"
+    }
+  },
+  {
+    "id": "data_migration.handle-nulls-delivery_addresses-longitude",
+    "label": "Data transform: handle-nulls-delivery_addresses-longitude",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check handle-nulls-delivery_addresses-longitude has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"longitude\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run handle-nulls-delivery_addresses-longitude",
+        "sql": "UPDATE \"public\".\"delivery_addresses\" SET \"longitude\" = $1 WHERE \"id\" IS NULL",
+        "params": [
+          0
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify handle-nulls-delivery_addresses-longitude resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"delivery_addresses\" WHERE \"longitude\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.delivery_addresses.longitude",
+    "label": "Set NOT NULL on \"delivery_addresses\".\"longitude\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "longitude",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"longitude\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "longitude"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"longitude\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"delivery_addresses\" WHERE \"longitude\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"longitude\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_addresses\" ALTER COLUMN \"longitude\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"longitude\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "delivery_addresses",
+          "longitude",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.cities.cities_name_country_key",
+    "label": "Add unique constraint on \"cities\" (name, country)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "cities_name_country_key",
+        "table": "cities"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"cities_name_country_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "cities_name_country_key",
+          "public",
+          "\"public\".\"cities\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"cities_name_country_key\"",
+        "sql": "ALTER TABLE \"public\".\"cities\" ADD CONSTRAINT \"cities_name_country_key\" UNIQUE (\"name\", \"country\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"cities_name_country_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "cities_name_country_key",
+          "public",
+          "\"public\".\"cities\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.delivery_address.delivery_address_coordinates_valid_b9fb9d9c",
+    "label": "Add check constraint \"delivery_address_coordinates_valid_b9fb9d9c\" on \"delivery_address\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "delivery_address_coordinates_valid_b9fb9d9c",
+        "table": "delivery_address"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"delivery_address_coordinates_valid_b9fb9d9c\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_address_coordinates_valid_b9fb9d9c",
+          "public",
+          "\"public\".\"delivery_address\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"delivery_address_coordinates_valid_b9fb9d9c\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_address\" ADD CONSTRAINT \"delivery_address_coordinates_valid_b9fb9d9c\" CHECK (latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"delivery_address_coordinates_valid_b9fb9d9c\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_address_coordinates_valid_b9fb9d9c",
+          "public",
+          "\"public\".\"delivery_address\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.delivery_addresses.delivery_addresses_coordinates_valid_b9fb9d9c",
+    "label": "Add check constraint \"delivery_addresses_coordinates_valid_b9fb9d9c\" on \"delivery_addresses\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "delivery_addresses_coordinates_valid_b9fb9d9c",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"delivery_addresses_coordinates_valid_b9fb9d9c\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_addresses_coordinates_valid_b9fb9d9c",
+          "public",
+          "\"public\".\"delivery_addresses\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"delivery_addresses_coordinates_valid_b9fb9d9c\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_addresses\" ADD CONSTRAINT \"delivery_addresses_coordinates_valid_b9fb9d9c\" CHECK (latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"delivery_addresses_coordinates_valid_b9fb9d9c\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_addresses_coordinates_valid_b9fb9d9c",
+          "public",
+          "\"public\".\"delivery_addresses\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.delivery_offers.delivery_offers_order_id_driver_id_key",
+    "label": "Add unique constraint on \"delivery_offers\" (order_id, driver_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "delivery_offers_order_id_driver_id_key",
+        "table": "delivery_offers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"delivery_offers_order_id_driver_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_offers_order_id_driver_id_key",
+          "public",
+          "\"public\".\"delivery_offers\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"delivery_offers_order_id_driver_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_offers\" ADD CONSTRAINT \"delivery_offers_order_id_driver_id_key\" UNIQUE (\"order_id\", \"driver_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"delivery_offers_order_id_driver_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_offers_order_id_driver_id_key",
+          "public",
+          "\"public\".\"delivery_offers\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.restaurant_branches.restaurant_branches_id_restaurant_id_key",
+    "label": "Add unique constraint on \"restaurant_branches\" (id, restaurant_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "restaurant_branches_id_restaurant_id_key",
+        "table": "restaurant_branches"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"restaurant_branches_id_restaurant_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_branches_id_restaurant_id_key",
+          "public",
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"restaurant_branches_id_restaurant_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_branches\" ADD CONSTRAINT \"restaurant_branches_id_restaurant_id_key\" UNIQUE (\"id\", \"restaurant_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"restaurant_branches_id_restaurant_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_branches_id_restaurant_id_key",
+          "public",
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.restaurant_branches.restaurant_branches_restaurant_id_label_key",
+    "label": "Add unique constraint on \"restaurant_branches\" (restaurant_id, label)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "restaurant_branches_restaurant_id_label_key",
+        "table": "restaurant_branches"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"restaurant_branches_restaurant_id_label_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_branches_restaurant_id_label_key",
+          "public",
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"restaurant_branches_restaurant_id_label_key\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_branches\" ADD CONSTRAINT \"restaurant_branches_restaurant_id_label_key\" UNIQUE (\"restaurant_id\", \"label\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"restaurant_branches_restaurant_id_label_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_branches_restaurant_id_label_key",
+          "public",
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.restaurant_operating_hours.restaurant_operating_hours_branch_id_day_of_week_key",
+    "label": "Add unique constraint on \"restaurant_operating_hours\" (branch_id, day_of_week)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "restaurant_operating_hours_branch_id_day_of_week_key",
+        "table": "restaurant_operating_hours"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"restaurant_operating_hours_branch_id_day_of_week_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_operating_hours_branch_id_day_of_week_key",
+          "public",
+          "\"public\".\"restaurant_operating_hours\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"restaurant_operating_hours_branch_id_day_of_week_key\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_operating_hours\" ADD CONSTRAINT \"restaurant_operating_hours_branch_id_day_of_week_key\" UNIQUE (\"branch_id\", \"day_of_week\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"restaurant_operating_hours_branch_id_day_of_week_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_operating_hours_branch_id_day_of_week_key",
+          "public",
+          "\"public\".\"restaurant_operating_hours\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.delivery_address.delivery_address_city_id_idx_79640ef2",
+    "label": "Create index \"delivery_address_city_id_idx_79640ef2\" on \"delivery_address\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "delivery_address_city_id_idx_79640ef2",
+        "table": "delivery_address"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"delivery_address_city_id_idx_79640ef2\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_address_city_id_idx_79640ef2\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"delivery_address_city_id_idx_79640ef2\"",
+        "sql": "CREATE INDEX \"delivery_address_city_id_idx_79640ef2\" ON \"public\".\"delivery_address\" (\"city_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"delivery_address_city_id_idx_79640ef2\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_address_city_id_idx_79640ef2\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.delivery_addresses.delivery_addresses_city_id_idx_79640ef2",
+    "label": "Create index \"delivery_addresses_city_id_idx_79640ef2\" on \"delivery_addresses\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "delivery_addresses_city_id_idx_79640ef2",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"delivery_addresses_city_id_idx_79640ef2\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_addresses_city_id_idx_79640ef2\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"delivery_addresses_city_id_idx_79640ef2\"",
+        "sql": "CREATE INDEX \"delivery_addresses_city_id_idx_79640ef2\" ON \"public\".\"delivery_addresses\" (\"city_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"delivery_addresses_city_id_idx_79640ef2\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_addresses_city_id_idx_79640ef2\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.delivery_offers.delivery_offers_driver_id_idx_56c848ae",
+    "label": "Create index \"delivery_offers_driver_id_idx_56c848ae\" on \"delivery_offers\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "delivery_offers_driver_id_idx_56c848ae",
+        "table": "delivery_offers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"delivery_offers_driver_id_idx_56c848ae\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_offers_driver_id_idx_56c848ae\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"delivery_offers_driver_id_idx_56c848ae\"",
+        "sql": "CREATE INDEX \"delivery_offers_driver_id_idx_56c848ae\" ON \"public\".\"delivery_offers\" (\"driver_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"delivery_offers_driver_id_idx_56c848ae\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_offers_driver_id_idx_56c848ae\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.delivery_offers.delivery_offers_driver_id_status_idx_fd70f38e",
+    "label": "Create index \"delivery_offers_driver_id_status_idx_fd70f38e\" on \"delivery_offers\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "delivery_offers_driver_id_status_idx_fd70f38e",
+        "table": "delivery_offers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"delivery_offers_driver_id_status_idx_fd70f38e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_offers_driver_id_status_idx_fd70f38e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"delivery_offers_driver_id_status_idx_fd70f38e\"",
+        "sql": "CREATE INDEX \"delivery_offers_driver_id_status_idx_fd70f38e\" ON \"public\".\"delivery_offers\" (\"driver_id\", \"status\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"delivery_offers_driver_id_status_idx_fd70f38e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_offers_driver_id_status_idx_fd70f38e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.delivery_offers.delivery_offers_order_id_idx_39ad19ad",
+    "label": "Create index \"delivery_offers_order_id_idx_39ad19ad\" on \"delivery_offers\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "delivery_offers_order_id_idx_39ad19ad",
+        "table": "delivery_offers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"delivery_offers_order_id_idx_39ad19ad\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_offers_order_id_idx_39ad19ad\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"delivery_offers_order_id_idx_39ad19ad\"",
+        "sql": "CREATE INDEX \"delivery_offers_order_id_idx_39ad19ad\" ON \"public\".\"delivery_offers\" (\"order_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"delivery_offers_order_id_idx_39ad19ad\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"delivery_offers_order_id_idx_39ad19ad\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.drivers.drivers_working_city_id_idx_1d57165f",
+    "label": "Create index \"drivers_working_city_id_idx_1d57165f\" on \"drivers\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "drivers_working_city_id_idx_1d57165f",
+        "table": "drivers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"drivers_working_city_id_idx_1d57165f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"drivers_working_city_id_idx_1d57165f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"drivers_working_city_id_idx_1d57165f\"",
+        "sql": "CREATE INDEX \"drivers_working_city_id_idx_1d57165f\" ON \"public\".\"drivers\" (\"working_city_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"drivers_working_city_id_idx_1d57165f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"drivers_working_city_id_idx_1d57165f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.orders.orders_restaurant_branch_id_restaurant_id_idx_780a8e01",
+    "label": "Create index \"orders_restaurant_branch_id_restaurant_id_idx_780a8e01\" on \"orders\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "orders_restaurant_branch_id_restaurant_id_idx_780a8e01",
+        "table": "orders"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"orders_restaurant_branch_id_restaurant_id_idx_780a8e01\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"orders_restaurant_branch_id_restaurant_id_idx_780a8e01\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"orders_restaurant_branch_id_restaurant_id_idx_780a8e01\"",
+        "sql": "CREATE INDEX \"orders_restaurant_branch_id_restaurant_id_idx_780a8e01\" ON \"public\".\"orders\" (\"restaurant_branch_id\", \"restaurant_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"orders_restaurant_branch_id_restaurant_id_idx_780a8e01\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"orders_restaurant_branch_id_restaurant_id_idx_780a8e01\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.restaurant_branches.restaurant_branches_city_id_idx_79640ef2",
+    "label": "Create index \"restaurant_branches_city_id_idx_79640ef2\" on \"restaurant_branches\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "restaurant_branches_city_id_idx_79640ef2",
+        "table": "restaurant_branches"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"restaurant_branches_city_id_idx_79640ef2\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_branches_city_id_idx_79640ef2\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"restaurant_branches_city_id_idx_79640ef2\"",
+        "sql": "CREATE INDEX \"restaurant_branches_city_id_idx_79640ef2\" ON \"public\".\"restaurant_branches\" (\"city_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"restaurant_branches_city_id_idx_79640ef2\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_branches_city_id_idx_79640ef2\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.restaurant_branches.restaurant_branches_restaurant_id_idx_5fa03bd5",
+    "label": "Create index \"restaurant_branches_restaurant_id_idx_5fa03bd5\" on \"restaurant_branches\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "restaurant_branches_restaurant_id_idx_5fa03bd5",
+        "table": "restaurant_branches"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"restaurant_branches_restaurant_id_idx_5fa03bd5\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_branches_restaurant_id_idx_5fa03bd5\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"restaurant_branches_restaurant_id_idx_5fa03bd5\"",
+        "sql": "CREATE INDEX \"restaurant_branches_restaurant_id_idx_5fa03bd5\" ON \"public\".\"restaurant_branches\" (\"restaurant_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"restaurant_branches_restaurant_id_idx_5fa03bd5\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_branches_restaurant_id_idx_5fa03bd5\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.restaurant_operating_hours.restaurant_operating_hours_branch_id_idx_b5212172",
+    "label": "Create index \"restaurant_operating_hours_branch_id_idx_b5212172\" on \"restaurant_operating_hours\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "restaurant_operating_hours_branch_id_idx_b5212172",
+        "table": "restaurant_operating_hours"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"restaurant_operating_hours_branch_id_idx_b5212172\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_operating_hours_branch_id_idx_b5212172\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"restaurant_operating_hours_branch_id_idx_b5212172\"",
+        "sql": "CREATE INDEX \"restaurant_operating_hours_branch_id_idx_b5212172\" ON \"public\".\"restaurant_operating_hours\" (\"branch_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"restaurant_operating_hours_branch_id_idx_b5212172\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"restaurant_operating_hours_branch_id_idx_b5212172\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.delivery_addresses.delivery_addresses_city_id_fkey",
+    "label": "Add foreign key \"delivery_addresses_city_id_fkey\" on \"delivery_addresses\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "delivery_addresses_city_id_fkey",
+        "table": "delivery_addresses"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"delivery_addresses_city_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_addresses_city_id_fkey",
+          "public",
+          "\"public\".\"delivery_addresses\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"delivery_addresses_city_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_addresses\"\nADD CONSTRAINT \"delivery_addresses_city_id_fkey\"\nFOREIGN KEY (\"city_id\")\nREFERENCES \"public\".\"cities\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"delivery_addresses_city_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_addresses_city_id_fkey",
+          "public",
+          "\"public\".\"delivery_addresses\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.delivery_offers.delivery_offers_order_id_fkey",
+    "label": "Add foreign key \"delivery_offers_order_id_fkey\" on \"delivery_offers\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "delivery_offers_order_id_fkey",
+        "table": "delivery_offers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"delivery_offers_order_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_offers_order_id_fkey",
+          "public",
+          "\"public\".\"delivery_offers\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"delivery_offers_order_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_offers\"\nADD CONSTRAINT \"delivery_offers_order_id_fkey\"\nFOREIGN KEY (\"order_id\")\nREFERENCES \"public\".\"orders\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"delivery_offers_order_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_offers_order_id_fkey",
+          "public",
+          "\"public\".\"delivery_offers\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.delivery_offers.delivery_offers_driver_id_fkey",
+    "label": "Add foreign key \"delivery_offers_driver_id_fkey\" on \"delivery_offers\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "delivery_offers_driver_id_fkey",
+        "table": "delivery_offers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"delivery_offers_driver_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_offers_driver_id_fkey",
+          "public",
+          "\"public\".\"delivery_offers\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"delivery_offers_driver_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"delivery_offers\"\nADD CONSTRAINT \"delivery_offers_driver_id_fkey\"\nFOREIGN KEY (\"driver_id\")\nREFERENCES \"public\".\"drivers\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"delivery_offers_driver_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "delivery_offers_driver_id_fkey",
+          "public",
+          "\"public\".\"delivery_offers\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.drivers.drivers_working_city_id_fkey",
+    "label": "Add foreign key \"drivers_working_city_id_fkey\" on \"drivers\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "drivers_working_city_id_fkey",
+        "table": "drivers"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"drivers_working_city_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "drivers_working_city_id_fkey",
+          "public",
+          "\"public\".\"drivers\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"drivers_working_city_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"drivers\"\nADD CONSTRAINT \"drivers_working_city_id_fkey\"\nFOREIGN KEY (\"working_city_id\")\nREFERENCES \"public\".\"cities\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"drivers_working_city_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "drivers_working_city_id_fkey",
+          "public",
+          "\"public\".\"drivers\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.restaurant_branches.restaurant_branches_restaurant_id_fkey",
+    "label": "Add foreign key \"restaurant_branches_restaurant_id_fkey\" on \"restaurant_branches\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "restaurant_branches_restaurant_id_fkey",
+        "table": "restaurant_branches"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"restaurant_branches_restaurant_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_branches_restaurant_id_fkey",
+          "public",
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"restaurant_branches_restaurant_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_branches\"\nADD CONSTRAINT \"restaurant_branches_restaurant_id_fkey\"\nFOREIGN KEY (\"restaurant_id\")\nREFERENCES \"public\".\"restaurants\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"restaurant_branches_restaurant_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_branches_restaurant_id_fkey",
+          "public",
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.restaurant_branches.restaurant_branches_city_id_fkey",
+    "label": "Add foreign key \"restaurant_branches_city_id_fkey\" on \"restaurant_branches\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "restaurant_branches_city_id_fkey",
+        "table": "restaurant_branches"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"restaurant_branches_city_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_branches_city_id_fkey",
+          "public",
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"restaurant_branches_city_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_branches\"\nADD CONSTRAINT \"restaurant_branches_city_id_fkey\"\nFOREIGN KEY (\"city_id\")\nREFERENCES \"public\".\"cities\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"restaurant_branches_city_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_branches_city_id_fkey",
+          "public",
+          "\"public\".\"restaurant_branches\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.orders.orders_restaurant_branch_id_restaurant_id_fkey",
+    "label": "Add foreign key \"orders_restaurant_branch_id_restaurant_id_fkey\" on \"orders\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "orders_restaurant_branch_id_restaurant_id_fkey",
+        "table": "orders"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"orders_restaurant_branch_id_restaurant_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "orders_restaurant_branch_id_restaurant_id_fkey",
+          "public",
+          "\"public\".\"orders\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"orders_restaurant_branch_id_restaurant_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"orders\"\nADD CONSTRAINT \"orders_restaurant_branch_id_restaurant_id_fkey\"\nFOREIGN KEY (\"restaurant_branch_id\", \"restaurant_id\")\nREFERENCES \"public\".\"restaurant_branches\" (\"id\", \"restaurant_id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"orders_restaurant_branch_id_restaurant_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "orders_restaurant_branch_id_restaurant_id_fkey",
+          "public",
+          "\"public\".\"orders\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.restaurant_operating_hours.restaurant_operating_hours_branch_id_fkey",
+    "label": "Add foreign key \"restaurant_operating_hours_branch_id_fkey\" on \"restaurant_operating_hours\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "restaurant_operating_hours_branch_id_fkey",
+        "table": "restaurant_operating_hours"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"restaurant_operating_hours_branch_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_operating_hours_branch_id_fkey",
+          "public",
+          "\"public\".\"restaurant_operating_hours\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"restaurant_operating_hours_branch_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"restaurant_operating_hours\"\nADD CONSTRAINT \"restaurant_operating_hours_branch_id_fkey\"\nFOREIGN KEY (\"branch_id\")\nREFERENCES \"public\".\"restaurant_branches\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"restaurant_operating_hours_branch_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "restaurant_operating_hours_branch_id_fkey",
+          "public",
+          "\"public\".\"restaurant_operating_hours\""
+        ]
+      }
+    ]
+  }
+]

@@ -12,6 +12,10 @@
       "model": "AuditLog",
       "namespace": "identity"
     },
+    "cities": {
+      "model": "City",
+      "namespace": "public"
+    },
     "customers": {
       "model": "Customer",
       "namespace": "public"
@@ -22,6 +26,10 @@
     },
     "delivery_addresses": {
       "model": "DeliveryAddress",
+      "namespace": "public"
+    },
+    "delivery_offers": {
+      "model": "DeliveryOffer",
       "namespace": "public"
     },
     "driver_assignments": {
@@ -108,8 +116,8 @@
       "model": "RefreshToken",
       "namespace": "identity"
     },
-    "restaurant_addresses": {
-      "model": "RestaurantAddress",
+    "restaurant_branches": {
+      "model": "RestaurantBranch",
       "namespace": "public"
     },
     "restaurant_categories": {
@@ -1267,6 +1275,31 @@
               }
             ]
           },
+          "delivery_offer_status": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "offered",
+                "value": "offered"
+              },
+              {
+                "name": "accepted",
+                "value": "accepted"
+              },
+              {
+                "name": "rejected",
+                "value": "rejected"
+              },
+              {
+                "name": "expired",
+                "value": "expired"
+              },
+              {
+                "name": "withdrawn",
+                "value": "withdrawn"
+              }
+            ]
+          },
           "discount_type": {
             "codecId": "pg/text@1",
             "members": [
@@ -1765,6 +1798,76 @@
               "table": "admins"
             }
           },
+          "City": {
+            "fields": {
+              "country": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 100
+                  }
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamp-string@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 6
+                  }
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "isActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "name": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 100
+                  }
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "country": {
+                  "column": "country"
+                },
+                "createdAt": {
+                  "column": "created_at"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "isActive": {
+                  "column": "is_active"
+                },
+                "name": {
+                  "column": "name"
+                }
+              },
+              "namespaceId": "public",
+              "table": "cities"
+            }
+          },
           "Customer": {
             "fields": {
               "createdAt": {
@@ -1897,10 +2000,10 @@
           },
           "DeliveryAddress": {
             "fields": {
-              "city": {
+              "cityId": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/text@1",
+                  "codecId": "pg/uuid@1",
                   "kind": "scalar"
                 }
               },
@@ -1943,17 +2046,25 @@
                 }
               },
               "latitude": {
-                "nullable": true,
+                "nullable": false,
                 "type": {
                   "codecId": "pg/numeric@1",
-                  "kind": "scalar"
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 9,
+                    "scale": 6
+                  }
                 }
               },
               "longitude": {
-                "nullable": true,
+                "nullable": false,
                 "type": {
                   "codecId": "pg/numeric@1",
-                  "kind": "scalar"
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 9,
+                    "scale": 6
+                  }
                 }
               },
               "phoneNumber": {
@@ -2003,6 +2114,22 @@
               }
             },
             "relations": {
+              "city": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "cityId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "City",
+                  "namespace": "public"
+                }
+              },
               "customer": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -2022,8 +2149,8 @@
             },
             "storage": {
               "fields": {
-                "city": {
-                  "column": "city"
+                "cityId": {
+                  "column": "city_id"
                 },
                 "createdAt": {
                   "column": "created_at"
@@ -2078,6 +2205,13 @@
                   "kind": "scalar"
                 }
               },
+              "cityId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
               "createdAt": {
                 "nullable": false,
                 "type": {
@@ -2117,17 +2251,25 @@
                 }
               },
               "latitude": {
-                "nullable": true,
+                "nullable": false,
                 "type": {
                   "codecId": "pg/numeric@1",
-                  "kind": "scalar"
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 9,
+                    "scale": 6
+                  }
                 }
               },
               "longitude": {
-                "nullable": true,
+                "nullable": false,
                 "type": {
                   "codecId": "pg/numeric@1",
-                  "kind": "scalar"
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 9,
+                    "scale": 6
+                  }
                 }
               },
               "phoneNumber": {
@@ -2182,6 +2324,9 @@
                 "city": {
                   "column": "city"
                 },
+                "cityId": {
+                  "column": "city_id"
+                },
                 "createdAt": {
                   "column": "created_at"
                 },
@@ -2224,6 +2369,135 @@
               },
               "namespaceId": "public",
               "table": "delivery_address"
+            }
+          },
+          "DeliveryOffer": {
+            "fields": {
+              "driverId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiresAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamp-string@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 6
+                  }
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "offeredAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamp-string@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 6
+                  }
+                }
+              },
+              "orderId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "respondedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamp-string@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 6
+                  }
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "delivery_offer_status",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              }
+            },
+            "relations": {
+              "driver": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "driverId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Driver",
+                  "namespace": "public"
+                }
+              },
+              "order": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "orderId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Order",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "driverId": {
+                  "column": "driver_id"
+                },
+                "expiresAt": {
+                  "column": "expires_at"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "offeredAt": {
+                  "column": "offered_at"
+                },
+                "orderId": {
+                  "column": "order_id"
+                },
+                "respondedAt": {
+                  "column": "responded_at"
+                },
+                "status": {
+                  "column": "status"
+                }
+              },
+              "namespaceId": "public",
+              "table": "delivery_offers"
             }
           },
           "Driver": {
@@ -2366,6 +2640,13 @@
                   "codecId": "pg/uuid@1",
                   "kind": "scalar"
                 }
+              },
+              "workingCityId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
               }
             },
             "relations": {
@@ -2383,6 +2664,22 @@
                 "to": {
                   "model": "User",
                   "namespace": "identity"
+                }
+              },
+              "workingCity": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "workingCityId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "City",
+                  "namespace": "public"
                 }
               }
             },
@@ -2432,6 +2729,9 @@
                 },
                 "userId": {
                   "column": "user_id"
+                },
+                "workingCityId": {
+                  "column": "working_city_id"
                 }
               },
               "namespaceId": "public",
@@ -4153,6 +4453,13 @@
                   }
                 }
               },
+              "restaurantBranchId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
               "restaurantId": {
                 "nullable": false,
                 "type": {
@@ -4206,6 +4513,24 @@
               }
             },
             "relations": {
+              "branch": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "restaurantBranchId",
+                    "restaurantId"
+                  ],
+                  "targetFields": [
+                    "id",
+                    "restaurantId"
+                  ]
+                },
+                "to": {
+                  "model": "RestaurantBranch",
+                  "namespace": "public"
+                }
+              },
               "customer": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -4307,6 +4632,9 @@
                 },
                 "rejectedAt": {
                   "column": "rejected_at"
+                },
+                "restaurantBranchId": {
+                  "column": "restaurant_branch_id"
                 },
                 "restaurantId": {
                   "column": "restaurant_id"
@@ -4975,19 +5303,6 @@
           },
           "Restaurant": {
             "fields": {
-              "availabilityStatus": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                },
-                "valueSet": {
-                  "entityKind": "enum",
-                  "entityName": "restaurant_availability",
-                  "namespaceId": "public",
-                  "plane": "domain"
-                }
-              },
               "coverImageUrl": {
                 "nullable": true,
                 "type": {
@@ -5017,13 +5332,6 @@
                 }
               },
               "description": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "email": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
@@ -5070,13 +5378,6 @@
                   "typeParams": {
                     "length": 150
                   }
-                }
-              },
-              "phoneNumber": {
-                "nullable": true,
-                "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
                 }
               },
               "ratingAverage": {
@@ -5148,9 +5449,6 @@
             },
             "storage": {
               "fields": {
-                "availabilityStatus": {
-                  "column": "availability_status"
-                },
                 "coverImageUrl": {
                   "column": "cover_image_url"
                 },
@@ -5162,9 +5460,6 @@
                 },
                 "description": {
                   "column": "description"
-                },
-                "email": {
-                  "column": "email"
                 },
                 "estimatedDeliveryTime": {
                   "column": "estimated_delivery_time"
@@ -5180,9 +5475,6 @@
                 },
                 "name": {
                   "column": "name"
-                },
-                "phoneNumber": {
-                  "column": "phone_number"
                 },
                 "ratingAverage": {
                   "column": "rating_average"
@@ -5204,8 +5496,21 @@
               "table": "restaurants"
             }
           },
-          "RestaurantAddress": {
+          "RestaurantBranch": {
             "fields": {
+              "availabilityStatus": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "restaurant_availability",
+                  "namespaceId": "public",
+                  "plane": "domain"
+                }
+              },
               "building": {
                 "nullable": true,
                 "type": {
@@ -5213,17 +5518,10 @@
                   "kind": "scalar"
                 }
               },
-              "city": {
+              "cityId": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/text@1",
-                  "kind": "scalar"
-                }
-              },
-              "country": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/text@1",
+                  "codecId": "pg/uuid@1",
                   "kind": "scalar"
                 }
               },
@@ -5242,6 +5540,23 @@
                 "type": {
                   "codecId": "pg/uuid@1",
                   "kind": "scalar"
+                }
+              },
+              "isActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "label": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 100
+                  }
                 }
               },
               "latitude": {
@@ -5292,6 +5607,22 @@
               }
             },
             "relations": {
+              "city": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "cityId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "City",
+                  "namespace": "public"
+                }
+              },
               "restaurant": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -5311,20 +5642,26 @@
             },
             "storage": {
               "fields": {
+                "availabilityStatus": {
+                  "column": "availability_status"
+                },
                 "building": {
                   "column": "building"
                 },
-                "city": {
-                  "column": "city"
-                },
-                "country": {
-                  "column": "country"
+                "cityId": {
+                  "column": "city_id"
                 },
                 "createdAt": {
                   "column": "created_at"
                 },
                 "id": {
                   "column": "id"
+                },
+                "isActive": {
+                  "column": "is_active"
+                },
+                "label": {
+                  "column": "label"
                 },
                 "latitude": {
                   "column": "latitude"
@@ -5343,7 +5680,7 @@
                 }
               },
               "namespaceId": "public",
-              "table": "restaurant_addresses"
+              "table": "restaurant_branches"
             }
           },
           "RestaurantCategory": {
@@ -5445,6 +5782,13 @@
           },
           "RestaurantOperatingHour": {
             "fields": {
+              "branchId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
               "closesAt": {
                 "nullable": true,
                 "type": {
@@ -5496,13 +5840,6 @@
                   }
                 }
               },
-              "restaurantId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/uuid@1",
-                  "kind": "scalar"
-                }
-              },
               "updatedAt": {
                 "nullable": true,
                 "type": {
@@ -5515,25 +5852,28 @@
               }
             },
             "relations": {
-              "restaurant": {
+              "branch": {
                 "cardinality": "N:1",
                 "nullable": false,
                 "on": {
                   "localFields": [
-                    "restaurantId"
+                    "branchId"
                   ],
                   "targetFields": [
                     "id"
                   ]
                 },
                 "to": {
-                  "model": "Restaurant",
+                  "model": "RestaurantBranch",
                   "namespace": "public"
                 }
               }
             },
             "storage": {
               "fields": {
+                "branchId": {
+                  "column": "branch_id"
+                },
                 "closesAt": {
                   "column": "closes_at"
                 },
@@ -5551,9 +5891,6 @@
                 },
                 "opensAt": {
                   "column": "opens_at"
-                },
-                "restaurantId": {
-                  "column": "restaurant_id"
                 },
                 "updatedAt": {
                   "column": "updated_at"
@@ -7315,6 +7652,67 @@
                 }
               ]
             },
+            "cities": {
+              "columns": {
+                "country": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 100
+                  }
+                },
+                "created_at": {
+                  "codecId": "pg/timestamp-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamp",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 6
+                  }
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "is_active": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "name": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 100
+                  }
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "name",
+                    "country"
+                  ]
+                }
+              ]
+            },
             "customers": {
               "checks": [
                 {
@@ -7420,10 +7818,22 @@
               ]
             },
             "delivery_address": {
+              "checks": [
+                {
+                  "expression": "latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180",
+                  "name": "delivery_address_coordinates_valid_b9fb9d9c",
+                  "prefix": "delivery_address_coordinates_valid"
+                }
+              ],
               "columns": {
                 "city": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
+                  "nullable": false
+                },
+                "city_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
                   "nullable": false
                 },
                 "created_at": {
@@ -7465,12 +7875,20 @@
                 "latitude": {
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
-                  "nullable": true
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 9,
+                    "scale": 6
+                  }
                 },
                 "longitude": {
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
-                  "nullable": true
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 9,
+                    "scale": 6
+                  }
                 },
                 "phone_number": {
                   "codecId": "pg/text@1",
@@ -7507,7 +7925,16 @@
                 }
               },
               "foreignKeys": [],
-              "indexes": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "city_id"
+                  ],
+                  "name": "delivery_address_city_id_idx_79640ef2",
+                  "prefix": "delivery_address_city_id_idx",
+                  "unique": false
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "id"
@@ -7516,10 +7943,17 @@
               "uniques": []
             },
             "delivery_addresses": {
+              "checks": [
+                {
+                  "expression": "latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180",
+                  "name": "delivery_addresses_coordinates_valid_b9fb9d9c",
+                  "prefix": "delivery_addresses_coordinates_valid"
+                }
+              ],
               "columns": {
-                "city": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
+                "city_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
                   "nullable": false
                 },
                 "created_at": {
@@ -7561,12 +7995,20 @@
                 "latitude": {
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
-                  "nullable": true
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 9,
+                    "scale": 6
+                  }
                 },
                 "longitude": {
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
-                  "nullable": true
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 9,
+                    "scale": 6
+                  }
                 },
                 "phone_number": {
                   "codecId": "pg/text@1",
@@ -7619,9 +8061,34 @@
                     "namespaceId": "public",
                     "tableName": "customers"
                   }
+                },
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "city_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "delivery_addresses"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "cities"
+                  }
                 }
               ],
               "indexes": [
+                {
+                  "columns": [
+                    "city_id"
+                  ],
+                  "name": "delivery_addresses_city_id_idx_79640ef2",
+                  "prefix": "delivery_addresses_city_id_idx",
+                  "unique": false
+                },
                 {
                   "columns": [
                     "customer_id"
@@ -7646,6 +8113,157 @@
                 ]
               },
               "uniques": []
+            },
+            "delivery_offers": {
+              "checks": [
+                {
+                  "expression": "expires_at > offered_at",
+                  "name": "delivery_offers_expiry_after_offer_8c9937b1",
+                  "prefix": "delivery_offers_expiry_after_offer"
+                },
+                {
+                  "expression": "status NOT IN ('accepted', 'rejected') OR responded_at IS NOT NULL",
+                  "name": "delivery_offers_response_has_timestamp_97831090",
+                  "prefix": "delivery_offers_response_has_timestamp"
+                },
+                {
+                  "expression": "\"status\" IN ('offered', 'accepted', 'rejected', 'expired', 'withdrawn')",
+                  "name": "delivery_offers_status_check_90df915c",
+                  "prefix": "delivery_offers_status_check"
+                }
+              ],
+              "columns": {
+                "driver_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "expires_at": {
+                  "codecId": "pg/timestamp-string@1",
+                  "nativeType": "timestamp",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 6
+                  }
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "offered_at": {
+                  "codecId": "pg/timestamp-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamp",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 6
+                  }
+                },
+                "order_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "responded_at": {
+                  "codecId": "pg/timestamp-string@1",
+                  "nativeType": "timestamp",
+                  "nullable": true,
+                  "typeParams": {
+                    "precision": 6
+                  }
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "delivery_offer_status",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "order_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "delivery_offers"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "orders"
+                  }
+                },
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "driver_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "delivery_offers"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "drivers"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "driver_id"
+                  ],
+                  "name": "delivery_offers_driver_id_idx_56c848ae",
+                  "prefix": "delivery_offers_driver_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "driver_id",
+                    "status"
+                  ],
+                  "name": "delivery_offers_driver_id_status_idx_fd70f38e",
+                  "prefix": "delivery_offers_driver_id_status_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "order_id"
+                  ],
+                  "name": "delivery_offers_order_id_idx_39ad19ad",
+                  "prefix": "delivery_offers_order_id_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "order_id",
+                    "driver_id"
+                  ]
+                }
+              ]
             },
             "driver_assignments": {
               "checks": [
@@ -8616,6 +9234,11 @@
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
                   "nullable": false
+                },
+                "working_city_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
                 }
               },
               "foreignKeys": [
@@ -8635,9 +9258,35 @@
                     "namespaceId": "identity",
                     "tableName": "users"
                   }
+                },
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "working_city_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "drivers"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "cities"
+                  }
                 }
               ],
-              "indexes": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "working_city_id"
+                  ],
+                  "name": "drivers_working_city_id_idx_1d57165f",
+                  "prefix": "drivers_working_city_id_idx",
+                  "unique": false
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "id"
@@ -9937,6 +10586,11 @@
                     "precision": 6
                   }
                 },
+                "restaurant_branch_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
                 "restaurant_id": {
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
@@ -10028,6 +10682,25 @@
                     "namespaceId": "public",
                     "tableName": "delivery_address"
                   }
+                },
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "restaurant_branch_id",
+                      "restaurant_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "orders"
+                  },
+                  "target": {
+                    "columns": [
+                      "id",
+                      "restaurant_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "restaurant_branches"
+                  }
                 }
               ],
               "indexes": [
@@ -10045,6 +10718,15 @@
                   ],
                   "name": "orders_delivery_address_id_idx_db598ff5",
                   "prefix": "orders_delivery_address_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "restaurant_branch_id",
+                    "restaurant_id"
+                  ],
+                  "name": "orders_restaurant_branch_id_restaurant_id_idx_780a8e01",
+                  "prefix": "orders_restaurant_branch_id_restaurant_id_idx",
                   "unique": false
                 },
                 {
@@ -10323,28 +11005,43 @@
                 }
               ]
             },
-            "restaurant_addresses": {
+            "restaurant_branches": {
               "checks": [
                 {
+                  "expression": "\"availability_status\" IN ('open', 'closed', 'busy')",
+                  "name": "restaurant_branches_availability_status_check_315ae2ed",
+                  "prefix": "restaurant_branches_availability_status_check"
+                },
+                {
                   "expression": "latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180",
-                  "name": "restaurant_addresses_coordinates_valid_b9fb9d9c",
-                  "prefix": "restaurant_addresses_coordinates_valid"
+                  "name": "restaurant_branches_coordinates_valid_b9fb9d9c",
+                  "prefix": "restaurant_branches_coordinates_valid"
                 }
               ],
               "columns": {
+                "availability_status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "closed"
+                  },
+                  "nativeType": "text",
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "restaurant_availability",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
                 "building": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
                 },
-                "city": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": false
-                },
-                "country": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
+                "city_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
                   "nullable": false
                 },
                 "created_at": {
@@ -10363,6 +11060,23 @@
                   "codecId": "pg/uuid@1",
                   "nativeType": "uuid",
                   "nullable": false
+                },
+                "is_active": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "label": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 100
+                  }
                 },
                 "latitude": {
                   "codecId": "pg/numeric@1",
@@ -10409,7 +11123,7 @@
                       "restaurant_id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "restaurant_addresses"
+                    "tableName": "restaurant_branches"
                   },
                   "target": {
                     "columns": [
@@ -10418,15 +11132,40 @@
                     "namespaceId": "public",
                     "tableName": "restaurants"
                   }
+                },
+                {
+                  "onDelete": "restrict",
+                  "source": {
+                    "columns": [
+                      "city_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "restaurant_branches"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "cities"
+                  }
                 }
               ],
               "indexes": [
                 {
                   "columns": [
+                    "city_id"
+                  ],
+                  "name": "restaurant_branches_city_id_idx_79640ef2",
+                  "prefix": "restaurant_branches_city_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
                     "restaurant_id"
                   ],
-                  "name": "restaurant_addresses_restaurant_id_idx_5fa03bd5",
-                  "prefix": "restaurant_addresses_restaurant_id_idx",
+                  "name": "restaurant_branches_restaurant_id_idx_5fa03bd5",
+                  "prefix": "restaurant_branches_restaurant_id_idx",
                   "unique": false
                 }
               ],
@@ -10435,7 +11174,20 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "id",
+                    "restaurant_id"
+                  ]
+                },
+                {
+                  "columns": [
+                    "restaurant_id",
+                    "label"
+                  ]
+                }
+              ]
             },
             "restaurant_categories": {
               "columns": {
@@ -10544,6 +11296,11 @@
                 }
               ],
               "columns": {
+                "branch_id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
                 "closes_at": {
                   "codecId": "pg/time-string@1",
                   "nativeType": "time",
@@ -10591,11 +11348,6 @@
                     "precision": 6
                   }
                 },
-                "restaurant_id": {
-                  "codecId": "pg/uuid@1",
-                  "nativeType": "uuid",
-                  "nullable": false
-                },
                 "updated_at": {
                   "codecId": "pg/timestamp-string@1",
                   "nativeType": "timestamp",
@@ -10610,7 +11362,7 @@
                   "onDelete": "restrict",
                   "source": {
                     "columns": [
-                      "restaurant_id"
+                      "branch_id"
                     ],
                     "namespaceId": "public",
                     "tableName": "restaurant_operating_hours"
@@ -10620,17 +11372,17 @@
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "restaurants"
+                    "tableName": "restaurant_branches"
                   }
                 }
               ],
               "indexes": [
                 {
                   "columns": [
-                    "restaurant_id"
+                    "branch_id"
                   ],
-                  "name": "restaurant_operating_hours_restaurant_id_idx_5fa03bd5",
-                  "prefix": "restaurant_operating_hours_restaurant_id_idx",
+                  "name": "restaurant_operating_hours_branch_id_idx_b5212172",
+                  "prefix": "restaurant_operating_hours_branch_id_idx",
                   "unique": false
                 }
               ],
@@ -10642,7 +11394,7 @@
               "uniques": [
                 {
                   "columns": [
-                    "restaurant_id",
+                    "branch_id",
                     "day_of_week"
                   ]
                 }
@@ -11195,11 +11947,6 @@
                   "prefix": "restaurants_amounts_non_negative"
                 },
                 {
-                  "expression": "\"availability_status\" IN ('open', 'closed', 'busy')",
-                  "name": "restaurants_availability_status_check_315ae2ed",
-                  "prefix": "restaurants_availability_status_check"
-                },
-                {
                   "expression": "estimated_delivery_time >= 0",
                   "name": "restaurants_delivery_time_non_negative_f6b1d51b",
                   "prefix": "restaurants_delivery_time_non_negative"
@@ -11216,17 +11963,6 @@
                 }
               ],
               "columns": {
-                "availability_status": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true,
-                  "valueSet": {
-                    "entityKind": "valueSet",
-                    "entityName": "restaurant_availability",
-                    "namespaceId": "public",
-                    "plane": "storage"
-                  }
-                },
                 "cover_image_url": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -11258,11 +11994,6 @@
                   }
                 },
                 "description": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
-                },
-                "email": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": true
@@ -11302,11 +12033,6 @@
                   "typeParams": {
                     "length": 150
                   }
-                },
-                "phone_number": {
-                  "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": true
                 },
                 "rating_average": {
                   "codecId": "pg/numeric@1",
@@ -11609,6 +12335,16 @@
                 "suspended"
               ]
             },
+            "delivery_offer_status": {
+              "kind": "valueSet",
+              "values": [
+                "offered",
+                "accepted",
+                "rejected",
+                "expired",
+                "withdrawn"
+              ]
+            },
             "discount_type": {
               "kind": "valueSet",
               "values": [
@@ -11773,7 +12509,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "a98b30a8e34766794f71cd8c4353f09dbe6385274a89cf6b674b66bc09e7d3a5"
+    "storageHash": "501087c1758dd8de5456a39323546d09ad38317508442062f7836c56e1f3d83f"
   },
   "execution": {
     "executionHash": "c7383a38623f75c4ebb17fbaf4c5c055cbf27ab16d0c8f4e4148ba4f057850ed",

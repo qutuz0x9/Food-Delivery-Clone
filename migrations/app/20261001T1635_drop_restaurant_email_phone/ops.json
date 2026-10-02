@@ -1,0 +1,86 @@
+[
+  {
+    "id": "dropColumn.restaurants.email",
+    "label": "Drop column \"email\" from \"restaurants\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "email",
+        "table": "restaurants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"email\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurants",
+          "email"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"email\"",
+        "sql": "ALTER TABLE \"public\".\"restaurants\" DROP COLUMN \"email\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"email\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurants",
+          "email"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dropColumn.restaurants.phone_number",
+    "label": "Drop column \"phone_number\" from \"restaurants\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "phone_number",
+        "table": "restaurants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"phone_number\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurants",
+          "phone_number"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"phone_number\"",
+        "sql": "ALTER TABLE \"public\".\"restaurants\" DROP COLUMN \"phone_number\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"phone_number\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "restaurants",
+          "phone_number"
+        ]
+      }
+    ]
+  }
+]

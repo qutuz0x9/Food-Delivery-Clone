@@ -201,20 +201,40 @@ model Admin {
   @@map("admins")
 }
 
+// Cities the platform operates in. One canonical row per city, so "Cairo" means the same thing for a restaurant
+// branch, a driver's working city and a customer's delivery address — routing an order and notifying drivers
+// compares ids, never spellings. Rows are deactivated (isActive), never deleted. Decided 2026-10-01.
+model City {
+  id        Uuid               @id
+  name      VarChar(100)
+  country   VarChar(100)
+  isActive  Boolean            @default(true) @map("is_active")
+  createdAt TimestampString(6) @default(now()) @map("created_at")
+
+  @@unique([name, country])
+  @@map("cities")
+}
+
 // Minimal Restaurant profile — only what shopping_cart/orders/menu need to FK into. status and
 // availability_status are nullable and created_at has no default because the DDL declares them
 // that way (sqldiagram.sql:391-409) — not something introduced here.
+//
+// A restaurant has no email or phone number of its own: like Customer and Driver, its login email and
+// phone number live on User (users.email / users.phone_number, both unique). There is deliberately no
+// separate public contact (decided 2026-10-01).
+//
+// A restaurant is the brand ("Ahmed Res"); it trades through one or more RestaurantBranch rows. Menu, prices, fees,
+// minimum order, delivery time and rating are shared by all branches and live here. Address, opening hours and
+// open/closed/busy status are per branch. There is no restaurant-level availability: a restaurant is open when at
+// least one of its active branches is (decided 2026-10-01).
 model Restaurant {
   id                     Uuid                    @id
   userId                 Uuid                    @unique @map("user_id")
   name                   VarChar(150)
   description            String?
-  phoneNumber            String?                 @map("phone_number")
-  email                  String?
   logoUrl                String?                 @map("logo_url")
   coverImageUrl          String?                 @map("cover_image_url")
   status                 restaurant_status?
-  availabilityStatus     restaurant_availability? @map("availability_status")
   minimumOrderAmount     Numeric(10, 2)?          @default(dbgenerated("'0'::numeric(10,2)")) @map("minimum_order_amount")
   deliveryFee            Numeric(10, 2)?          @default(dbgenerated("'0'::numeric(10,2)")) @map("delivery_fee")
   estimatedDeliveryTime  Int?                     @map("estimated_delivery_time")
@@ -328,18 +348,22 @@ model DeliveryAddress {
   recipientName  String              @map("recipient_name")
   phoneNumber    String              @map("phone_number")
   streetAddress  String              @map("street_address")
-  city           String
+  cityId         Uuid                @map("city_id")
   state          String?
   postalCode     String?             @map("postal_code")
-  latitude       Decimal?
-  longitude      Decimal?
+  latitude       Numeric(9, 6)
+  longitude      Numeric(9, 6)
   isDefault      Boolean             @default(false) @map("is_default")
   createdAt      TimestampString(6)  @default(now()) @map("created_at")
   updatedAt      TimestampString(6)? @map("updated_at")
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  city     City     @relation(fields: [cityId], references: [id], onDelete: Restrict)
 
+  // Coordinates are required: the nearest branch to the delivery address is found from them (decided 2026-10-01).
+  @@check(expression: "latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180", name: "delivery_addresses_coordinates_valid")
   @@index([customerId])
+  @@index([cityId])
   @@index([customerId], unique: true, where: "is_default = true", name: "delivery_addresses_one_default_per_customer")
   @@map("delivery_addresses")
 }
@@ -355,15 +379,20 @@ model DeliveryAddressSnapshot {
   recipientName  String              @map("recipient_name")
   phoneNumber    String              @map("phone_number")
   streetAddress  String              @map("street_address")
+  cityId         Uuid                @map("city_id")
   city           String
   state          String?
   postalCode     String?             @map("postal_code")
-  latitude       Decimal?
-  longitude      Decimal?
+  latitude       Numeric(9, 6)
+  longitude      Numeric(9, 6)
   isDefault      Boolean             @default(false) @map("is_default")
   createdAt      TimestampString(6)  @default(now()) @map("created_at")
   updatedAt      TimestampString(6)? @map("updated_at")
 
+  // cityId keeps the routing key and city keeps the name as it was when the order was placed, so a later rename of the
+  // City row cannot change a past order. Like customerId, cityId is a plain scalar with no @relation (snapshot).
+  @@check(expression: "latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180", name: "delivery_address_coordinates_valid")
+  @@index([cityId])
   @@map("delivery_address")
 }
 
@@ -410,6 +439,7 @@ model Order {
   orderNumber        String              @unique @map("order_number")
   customerId         Uuid                @map("customer_id")
   restaurantId       Uuid                @map("restaurant_id")
+  restaurantBranchId Uuid                @map("restaurant_branch_id")
   deliveryAddressId  Uuid                @map("delivery_address_id")
   status             order_status
   subtotal           Decimal
@@ -433,6 +463,9 @@ model Order {
   customer         Customer                @relation(fields: [customerId], references: [id], onDelete: Restrict)
   restaurant       Restaurant              @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
   deliveryAddress  DeliveryAddressSnapshot @relation(fields: [deliveryAddressId], references: [id], onDelete: Restrict)
+  // Composite FK: the fulfilling branch must belong to this same restaurant. It is the pickup location for the driver
+  // and its city decides which drivers are offered the order.
+  branch           RestaurantBranch        @relation(fields: [restaurantBranchId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
 
   @@check(expression: "subtotal >= 0 AND delivery_fee >= 0 AND tax_amount >= 0 AND discount_amount >= 0 AND total_amount >= 0", name: "order_amounts_non_negative")
   @@check(expression: "total_amount = subtotal + delivery_fee + tax_amount - discount_amount", name: "order_total_matches_components")
@@ -441,6 +474,7 @@ model Order {
   @@index([customerId])
   @@index([restaurantId])
   @@index([deliveryAddressId])
+  @@index([restaurantBranchId, restaurantId])
   @@map("orders")
 }
 
@@ -542,33 +576,49 @@ model PaymentRefund {
   @@map("payment_refunds")
 }
 
-// Remaining Restaurant-domain tables (addresses, hours, cuisine tags, promotions, extra menu
+// Remaining Restaurant-domain tables (branches, hours, cuisine tags, promotions, extra menu
 // images) — completes the Restaurant module started above.
-model RestaurantAddress {
-  id           Uuid                @id
-  restaurantId Uuid                @map("restaurant_id")
-  country      String
-  city         String
-  street       String
-  building     String?
-  latitude     Numeric(9, 6)
-  longitude    Numeric(9, 6)
-  createdAt    TimestampString(6)  @default(now()) @map("created_at")
-  updatedAt    TimestampString(6)? @map("updated_at")
+//
+// A branch is where a restaurant actually operates: an address in one city, with its own opening hours and its own
+// open/closed/busy status. Customers only see a restaurant in a city where it has an active branch, and every order
+// is fulfilled by exactly one branch (Order.restaurantBranchId), chosen as the nearest active, open branch to the
+// delivery address. Drivers are offered an order only if their working city is the branch's city. Replaces the old
+// RestaurantAddress model (decided 2026-10-01).
+//
+// A new branch starts `closed`, so it cannot receive orders until the restaurant opens it. Branches are deactivated
+// (isActive = false), not deleted; Order's Restrict FK also blocks deleting a branch that has orders.
+model RestaurantBranch {
+  id                 Uuid                    @id
+  restaurantId       Uuid                    @map("restaurant_id")
+  cityId             Uuid                    @map("city_id")
+  label              VarChar(100)
+  street             String
+  building           String?
+  latitude           Numeric(9, 6)
+  longitude          Numeric(9, 6)
+  availabilityStatus restaurant_availability @default(closed) @map("availability_status")
+  isActive           Boolean                 @default(true) @map("is_active")
+  createdAt          TimestampString(6)      @default(now()) @map("created_at")
+  updatedAt          TimestampString(6)?     @map("updated_at")
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  city       City       @relation(fields: [cityId], references: [id], onDelete: Restrict)
 
-  @@check(expression: "latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180", name: "restaurant_addresses_coordinates_valid")
+  // (id, restaurantId) is the target of Order's composite FK, so an order can only name a branch of its own restaurant.
+  @@check(expression: "latitude BETWEEN -90 AND 90 AND longitude BETWEEN -180 AND 180", name: "restaurant_branches_coordinates_valid")
+  @@unique([id, restaurantId])
+  @@unique([restaurantId, label])
   @@index([restaurantId])
-  @@map("restaurant_addresses")
+  @@index([cityId])
+  @@map("restaurant_branches")
 }
 
-// @@unique([restaurantId, dayOfWeek]) makes this an upsert-safe key, matching FR-RES-006.3's
+// @@unique([branchId, dayOfWeek]) makes this an upsert-safe key, matching FR-RES-006.3's
 // "update its operating schedule" — without it, nothing would stop two rows for the same
-// restaurant's same day of week from coexisting.
+// branch's same day of week from coexisting. Hours are per branch (decided 2026-10-01).
 model RestaurantOperatingHour {
   id           Uuid                @id
-  restaurantId Uuid                @map("restaurant_id")
+  branchId     Uuid                @map("branch_id")
   dayOfWeek    Int                 @map("day_of_week")
   opensAt      TimeString(6)?      @map("opens_at")
   closesAt     TimeString(6)?      @map("closes_at")
@@ -576,12 +626,12 @@ model RestaurantOperatingHour {
   createdAt    TimestampString(6)  @default(now()) @map("created_at")
   updatedAt    TimestampString(6)? @map("updated_at")
 
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Restrict)
+  branch RestaurantBranch @relation(fields: [branchId], references: [id], onDelete: Restrict)
 
   // dayOfWeek is 0-6 (0 = Sunday). An open day must have both opening and closing times.
   @@check(expression: "day_of_week BETWEEN 0 AND 6", name: "restaurant_operating_hours_day_of_week_valid")
   @@check(expression: "is_closed OR (opens_at IS NOT NULL AND closes_at IS NOT NULL)", name: "restaurant_operating_hours_open_day_has_hours")
-  @@unique([restaurantId, dayOfWeek])
+  @@unique([branchId, dayOfWeek])
   @@map("restaurant_operating_hours")
 }
 
@@ -648,6 +698,7 @@ model Driver {
   nationalId         VarChar(30)                 @unique @map("national_id")
   licenseNumber      VarChar(50)                 @unique @map("license_number")
   licenseExpiryDate  DateString                  @map("license_expiry_date")
+  workingCityId      Uuid                        @map("working_city_id")
   status             driver_status
   availabilityStatus driver_availability_status  @map("availability_status")
   rating             Numeric(3, 2)?              @default(dbgenerated("'0'::numeric(3,2)"))
@@ -655,9 +706,13 @@ model Driver {
   createdAt          TimestampString(6)          @default(now()) @map("created_at")
   updatedAt          TimestampString(6)          @default(now()) @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user        User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  workingCity City @relation(fields: [workingCityId], references: [id], onDelete: Restrict)
 
+  // workingCityId is the one city the driver serves. Only drivers whose working city equals the pickup branch's city
+  // are offered an order (decided 2026-10-01).
   @@check(expression: "rating BETWEEN 0 AND 5 AND total_deliveries >= 0", name: "drivers_rating_cache_valid")
+  @@index([workingCityId])
   @@map("drivers")
 }
 
@@ -776,6 +831,31 @@ model DriverAssignment {
   @@index([orderId])
   @@index([orderId], unique: true, where: "status IN ('pending', 'accepted', 'completed')", name: "driver_assignments_active_order_unique")
   @@map("driver_assignments")
+}
+
+// One row per driver an order was offered to. Every eligible driver in the pickup branch's city gets an offer, and the
+// first to accept wins: accepting inserts the DriverAssignment (whose partial unique index lets only one succeed),
+// then every other open offer for the order is marked withdrawn. A driver's pending request list is their `offered`
+// rows that have not expired. Offers are the drivers' in-app inbox, not a general notifications table (decided
+// 2026-10-01). expiresAt is set per offer; the default window is a service setting, not part of the API.
+model DeliveryOffer {
+  id          Uuid                  @id
+  orderId     Uuid                  @map("order_id")
+  driverId    Uuid                  @map("driver_id")
+  status      delivery_offer_status
+  offeredAt   TimestampString(6)    @default(now()) @map("offered_at")
+  expiresAt   TimestampString(6)    @map("expires_at")
+  respondedAt TimestampString(6)?   @map("responded_at")
+
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Restrict)
+
+  @@check(expression: "expires_at > offered_at", name: "delivery_offers_expiry_after_offer")
+  @@check(expression: "status NOT IN ('accepted', 'rejected') OR responded_at IS NOT NULL", name: "delivery_offers_response_has_timestamp")
+  @@unique([orderId, driverId])
+  @@index([orderId])
+  @@index([driverId, status])
+  @@map("delivery_offers")
 }
 
 model DriverPayout {
@@ -1038,6 +1118,15 @@ enum driver_assignments_status {
   rejected  = "rejected"
   completed = "completed"
   cancelled = "cancelled"
+}
+
+enum delivery_offer_status {
+  @@type("pg/text@1")
+  offered   = "offered"
+  accepted  = "accepted"
+  rejected  = "rejected"
+  expired   = "expired"
+  withdrawn = "withdrawn"
 }
 
 // Reviews domain
