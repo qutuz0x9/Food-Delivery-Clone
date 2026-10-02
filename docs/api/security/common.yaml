@@ -3,5 +3,6 @@ bearerAuth:
   scheme: bearer
   bearerFormat: JWT
   description: |
-    JWT access token issued at login/registration and refreshed via the
-    refresh token endpoint. Send as `Authorization: Bearer <token>`.
+    JWT access token issued in the login response body. Send as `Authorization: Bearer <token>`.
+    The matching refresh token is not part of the body: login sets it in an `HttpOnly` `refreshToken` cookie,
+    and the refresh endpoints (`/auth/refresh/customer`, `/restaurants/auth/refresh`) exchange it for a new access token.

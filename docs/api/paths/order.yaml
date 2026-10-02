@@ -1,0 +1,1643 @@
+orders:
+  post:
+    tags:
+      - Orders
+
+    summary: Place an order
+
+    description: |
+      Turns the customer's cart into an order.
+
+      The server chooses the fulfilling branch: the nearest active, open branch of the restaurant, among those in the delivery address's city, measured from the address coordinates. If no branch is open there the call is rejected with `409`. It is also rejected with `409` when the cart is empty, an item is no longer available, the restaurant is not approved, or the subtotal is below the restaurant's minimum order amount.
+
+      Options and special instructions are supplied per cart item in `items`. Every option group's minimum, maximum and required rules must be met (`400` otherwise). The delivery fee comes from the restaurant, and the subtotal, tax, discount and total are always calculated by the server (total = subtotal + delivery fee + tax − discount).
+
+      In one step the order is created as `pending` with a unique order number, a copy of the delivery address and of the chosen options is stored with it, the first entry is added to the status history, a payment is created for `paymentMethod`, and the cart is deleted.
+
+    operationId: placeOrder
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/order.yaml#/PlaceOrderRequest"
+          example:
+            deliveryAddressId: deebf84a-2ed2-579a-80d7-b820d7e655c4
+            paymentMethod: credit_card
+            customerNote: Please ring the bell
+            items:
+              - cartItemId: 502199a9-304a-553b-ad69-1bf2baa4391e
+                specialInstructions: No onions
+                options:
+                  - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                    optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
+
+    responses:
+      "201":
+        description: Order placed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/PlaceOrderResponse"
+            example:
+              success: true
+              message: Order placed successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: pending
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  customer:
+                    id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    firstName: John
+                    lastName: Doe
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  deliveryAddress:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: null
+                  rejectedAt: null
+                  preparedAt: null
+                  readyForPickupAt: null
+                  pickedUpAt: null
+                  outForDeliveryAt: null
+                  deliveredAt: null
+                  cancelledAt: null
+                  createdAt: "2024-10-05T18:30:00.000Z"
+                  updatedAt: "2024-10-05T19:20:00.000Z"
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: credit_card
+                    status: pending
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: null
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+                  delivery: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  get:
+    tags:
+      - Orders
+
+    summary: List own orders
+
+    description: Returns the current customer's orders, newest first.
+
+    operationId: listOrders
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: Only orders in this status.
+        schema:
+          $ref: "../schemas/order.yaml#/OrderStatus"
+        example: delivered
+      - name: from
+        in: query
+        required: false
+        description: Only orders placed on or after this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Only orders placed on or before this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Orders retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/ListOrdersResponse"
+            example:
+              success: true
+              message: Orders retrieved successfully
+              data:
+                orders:
+                  - id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    status: delivered
+                    customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    customerName: John Doe
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    branchLabel: Ramses Branch
+                    itemCount: 2
+                    totalAmount: 350
+                    placedAt: "2024-10-05T18:30:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+order:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  get:
+    tags:
+      - Orders
+
+    summary: View an order
+
+    description: |
+      Returns one of the customer's orders with its items and options, the delivery address copy, the
+      fulfilling branch, totals, every status timestamp, the status history, the payment and the
+      delivering driver. Another customer's order is reported as `404`.
+
+    operationId: getOrder
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Order retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/GetOrderResponse"
+            example:
+              success: true
+              message: Order retrieved successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: delivered
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  customer:
+                    id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    firstName: John
+                    lastName: Doe
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  deliveryAddress:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: "2024-10-05T18:32:00.000Z"
+                  rejectedAt: null
+                  preparedAt: "2024-10-05T18:50:00.000Z"
+                  readyForPickupAt: "2024-10-05T18:55:00.000Z"
+                  pickedUpAt: "2024-10-05T19:00:00.000Z"
+                  outForDeliveryAt: "2024-10-05T19:02:00.000Z"
+                  deliveredAt: "2024-10-05T19:20:00.000Z"
+                  cancelledAt: null
+                  createdAt: "2024-10-05T18:30:00.000Z"
+                  updatedAt: "2024-10-05T19:20:00.000Z"
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: accepted
+                      changedAt: "2024-10-05T18:32:00.000Z"
+                      changedByUserId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                      note: null
+                    - status: delivered
+                      changedAt: "2024-10-05T19:20:00.000Z"
+                      changedByUserId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                      note: null
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: credit_card
+                    status: paid
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: "2024-10-05T18:31:00.000Z"
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+                  delivery:
+                    assignmentId: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                    driverId: e035c191-7d58-52be-9f78-c9a9351192dd
+                    driverName: Omar Hassan
+                    assignmentStatus: completed
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+orderStatus:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  get:
+    tags:
+      - Orders
+
+    summary: Track an order's status
+
+    description: |
+      Returns the order's current status, the time it reached each stage and the status history, for
+      polling the progress of an order.
+
+    operationId: getOrderStatus
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Order status retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/GetOrderStatusResponse"
+            example:
+              success: true
+              message: Order status retrieved successfully
+              data:
+                orderStatus:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: delivered
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  acceptedAt: "2024-10-05T18:32:00.000Z"
+                  rejectedAt: null
+                  preparedAt: "2024-10-05T18:50:00.000Z"
+                  readyForPickupAt: "2024-10-05T18:55:00.000Z"
+                  pickedUpAt: "2024-10-05T19:00:00.000Z"
+                  outForDeliveryAt: "2024-10-05T19:02:00.000Z"
+                  deliveredAt: "2024-10-05T19:20:00.000Z"
+                  cancelledAt: null
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: accepted
+                      changedAt: "2024-10-05T18:32:00.000Z"
+                      changedByUserId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                      note: null
+                    - status: delivered
+                      changedAt: "2024-10-05T19:20:00.000Z"
+                      changedByUserId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                      note: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+orderTracking:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  get:
+    tags:
+      - Orders
+
+    summary: Track the delivery driver
+
+    description: |
+      Returns the delivering driver and their latest position. `driver` is `null` until a driver
+      accepts, and `location` is only available while the order is `picked_up` or `out_for_delivery`.
+
+    operationId: getOrderTracking
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Order tracking retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/GetOrderTrackingResponse"
+            example:
+              success: true
+              message: Order tracking retrieved successfully
+              data:
+                tracking:
+                  orderNumber: ORD-1001
+                  status: out_for_delivery
+                  driver:
+                    name: Omar Hassan
+                    rating: 4.8
+                    vehicle:
+                      vehicleType: motorcycle
+                      brand: Honda
+                      model: CB125
+                      color: Red
+                      plateNumber: ABC 1234
+                  location:
+                    latitude: 30.0501
+                    longitude: 31.24
+                    heading: 90
+                    speed: 32.5
+                    recordedAt: "2024-10-05T19:10:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+orderCancellation:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  post:
+    tags:
+      - Orders
+
+    summary: Cancel an order
+
+    description: |
+      Cancels the customer's order. An order can only be cancelled while it is `pending`, before the
+      restaurant has accepted it; after that the call is rejected with `409`. The order moves to
+      `cancelled`, `cancelledAt` is set, the optional `reason` is stored in the status history, and if
+      the order was already paid a refund for the full amount is started.
+
+    operationId: cancelOrder
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/order.yaml#/CancelOrderRequest"
+          example:
+            reason: Ordered by mistake
+
+    responses:
+      "200":
+        description: Order cancelled successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/CancelOrderResponse"
+            example:
+              success: true
+              message: Order cancelled successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: cancelled
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  customer:
+                    id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    firstName: John
+                    lastName: Doe
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  deliveryAddress:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: null
+                  rejectedAt: null
+                  preparedAt: null
+                  readyForPickupAt: null
+                  pickedUpAt: null
+                  outForDeliveryAt: null
+                  deliveredAt: null
+                  cancelledAt: "2024-10-05T18:31:00.000Z"
+                  createdAt: "2024-10-05T18:30:00.000Z"
+                  updatedAt: "2024-10-05T19:20:00.000Z"
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: cancelled
+                      changedAt: "2024-10-05T18:31:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: Ordered by mistake
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: credit_card
+                    status: pending
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: null
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+                  delivery: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantOrders:
+  get:
+    tags:
+      - Restaurant Orders
+
+    summary: List restaurant orders
+
+    description: |
+      Returns the orders placed with the authenticated restaurant, across all its branches, newest
+      first.
+
+    operationId: listRestaurantOrders
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: Only orders in this status.
+        schema:
+          $ref: "../schemas/order.yaml#/OrderStatus"
+        example: pending
+      - name: branchId
+        in: query
+        required: false
+        description: Only orders fulfilled by this branch.
+        schema:
+          type: string
+          format: uuid
+        example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+      - name: from
+        in: query
+        required: false
+        description: Only orders placed on or after this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Only orders placed on or before this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Orders retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/ListRestaurantOrdersResponse"
+            example:
+              success: true
+              message: Orders retrieved successfully
+              data:
+                orders:
+                  - id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    status: pending
+                    customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    customerName: John Doe
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    branchLabel: Ramses Branch
+                    itemCount: 2
+                    totalAmount: 350
+                    placedAt: "2024-10-05T18:30:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantActiveOrders:
+  get:
+    tags:
+      - Restaurant Orders
+
+    summary: List active orders
+
+    description: |
+      Returns the orders the kitchen still has to work on: `pending`, `accepted`, `preparing` and
+      `ready_for_pickup`, oldest first.
+
+    operationId: listActiveRestaurantOrders
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: branchId
+        in: query
+        required: false
+        description: Only orders fulfilled by this branch.
+        schema:
+          type: string
+          format: uuid
+        example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Active orders retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/ListRestaurantOrdersResponse"
+            example:
+              success: true
+              message: Active orders retrieved successfully
+              data:
+                orders:
+                  - id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    status: pending
+                    customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    customerName: John Doe
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    branchLabel: Ramses Branch
+                    itemCount: 2
+                    totalAmount: 350
+                    placedAt: "2024-10-05T18:30:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantOrderHistory:
+  get:
+    tags:
+      - Restaurant Orders
+
+    summary: Order history
+
+    description: Returns finished orders (`delivered`, `cancelled`, `rejected`), newest first.
+
+    operationId: listRestaurantOrderHistory
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: branchId
+        in: query
+        required: false
+        description: Only orders fulfilled by this branch.
+        schema:
+          type: string
+          format: uuid
+        example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+      - name: from
+        in: query
+        required: false
+        description: Only orders placed on or after this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Only orders placed on or before this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Order history retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/ListRestaurantOrdersResponse"
+            example:
+              success: true
+              message: Order history retrieved successfully
+              data:
+                orders:
+                  - id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    status: delivered
+                    customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    customerName: John Doe
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    branchLabel: Ramses Branch
+                    itemCount: 2
+                    totalAmount: 350
+                    placedAt: "2024-10-05T18:30:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantOrder:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  get:
+    tags:
+      - Restaurant Orders
+
+    summary: View an order
+
+    description: |
+      Returns one order: items and options, totals, the fulfilling branch, status timestamps and
+      history, and the driver once assigned. The customer's street address and phone number are not
+      shown to the restaurant, only the delivery city.
+
+    operationId: getRestaurantOrder
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Order retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/GetRestaurantOrderResponse"
+            example:
+              success: true
+              message: Order retrieved successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: delivered
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: "2024-10-05T18:32:00.000Z"
+                  rejectedAt: null
+                  preparedAt: "2024-10-05T18:50:00.000Z"
+                  readyForPickupAt: "2024-10-05T18:55:00.000Z"
+                  pickedUpAt: "2024-10-05T19:00:00.000Z"
+                  outForDeliveryAt: "2024-10-05T19:02:00.000Z"
+                  deliveredAt: "2024-10-05T19:20:00.000Z"
+                  cancelledAt: null
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: accepted
+                      changedAt: "2024-10-05T18:32:00.000Z"
+                      changedByUserId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                      note: null
+                    - status: delivered
+                      changedAt: "2024-10-05T19:20:00.000Z"
+                      changedByUserId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                      note: null
+                  deliveryCity: Cairo
+                  delivery:
+                    driverName: Omar Hassan
+                    assignmentStatus: accepted
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+acceptRestaurantOrder:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  post:
+    tags:
+      - Restaurant Orders
+
+    summary: Accept an order
+
+    description: |
+      Accepts a `pending` order (`409` if it is in any other status). It moves to `accepted`,
+      `acceptedAt` is set, the change is added to the status history, and the order is offered to
+      every available, approved driver whose working city is the fulfilling branch's city; the first
+      to accept delivers it.
+
+    operationId: acceptRestaurantOrder
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Order updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/RestaurantOrderActionResponse"
+            example:
+              success: true
+              message: Order updated successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: accepted
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: "2024-10-05T18:32:00.000Z"
+                  rejectedAt: null
+                  preparedAt: "2024-10-05T18:50:00.000Z"
+                  readyForPickupAt: "2024-10-05T18:55:00.000Z"
+                  pickedUpAt: "2024-10-05T19:00:00.000Z"
+                  outForDeliveryAt: "2024-10-05T19:02:00.000Z"
+                  deliveredAt: "2024-10-05T19:20:00.000Z"
+                  cancelledAt: null
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: accepted
+                      changedAt: "2024-10-05T18:32:00.000Z"
+                      changedByUserId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                      note: null
+                    - status: delivered
+                      changedAt: "2024-10-05T19:20:00.000Z"
+                      changedByUserId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                      note: null
+                  deliveryCity: Cairo
+                  delivery:
+                    driverName: Omar Hassan
+                    assignmentStatus: accepted
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+rejectRestaurantOrder:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  post:
+    tags:
+      - Restaurant Orders
+
+    summary: Reject an order
+
+    description: |
+      Rejects a `pending` order (`409` if it is in any other status). It moves to `rejected`,
+      `rejectedAt` is set, the optional `reason` is stored in the status history, and if the order was
+      already paid a refund for the full amount is started.
+
+    operationId: rejectRestaurantOrder
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/order.yaml#/RejectOrderRequest"
+          example:
+            reason: Kitchen is closed early today
+
+    responses:
+      "200":
+        description: Order updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/RestaurantOrderActionResponse"
+            example:
+              success: true
+              message: Order updated successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: rejected
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: "2024-10-05T18:32:00.000Z"
+                  rejectedAt: null
+                  preparedAt: "2024-10-05T18:50:00.000Z"
+                  readyForPickupAt: "2024-10-05T18:55:00.000Z"
+                  pickedUpAt: "2024-10-05T19:00:00.000Z"
+                  outForDeliveryAt: "2024-10-05T19:02:00.000Z"
+                  deliveredAt: "2024-10-05T19:20:00.000Z"
+                  cancelledAt: null
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: accepted
+                      changedAt: "2024-10-05T18:32:00.000Z"
+                      changedByUserId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                      note: null
+                    - status: delivered
+                      changedAt: "2024-10-05T19:20:00.000Z"
+                      changedByUserId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                      note: null
+                  deliveryCity: Cairo
+                  delivery:
+                    driverName: Omar Hassan
+                    assignmentStatus: accepted
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+prepareRestaurantOrder:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  post:
+    tags:
+      - Restaurant Orders
+
+    summary: Start preparing an order
+
+    description: |
+      Marks an `accepted` order as being prepared (`409` otherwise). It moves to `preparing` and
+      `preparedAt` records when preparation started.
+
+    operationId: prepareRestaurantOrder
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Order updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/RestaurantOrderActionResponse"
+            example:
+              success: true
+              message: Order updated successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: preparing
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: "2024-10-05T18:32:00.000Z"
+                  rejectedAt: null
+                  preparedAt: "2024-10-05T18:50:00.000Z"
+                  readyForPickupAt: "2024-10-05T18:55:00.000Z"
+                  pickedUpAt: "2024-10-05T19:00:00.000Z"
+                  outForDeliveryAt: "2024-10-05T19:02:00.000Z"
+                  deliveredAt: "2024-10-05T19:20:00.000Z"
+                  cancelledAt: null
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: accepted
+                      changedAt: "2024-10-05T18:32:00.000Z"
+                      changedByUserId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                      note: null
+                    - status: delivered
+                      changedAt: "2024-10-05T19:20:00.000Z"
+                      changedByUserId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                      note: null
+                  deliveryCity: Cairo
+                  delivery:
+                    driverName: Omar Hassan
+                    assignmentStatus: accepted
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+readyRestaurantOrder:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  post:
+    tags:
+      - Restaurant Orders
+
+    summary: Mark an order ready for pickup
+
+    description: |
+      Marks a `preparing` order as ready for the driver (`409` otherwise). It moves to
+      `ready_for_pickup` and `readyForPickupAt` is set.
+
+    operationId: readyRestaurantOrder
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Order updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/order.yaml#/RestaurantOrderActionResponse"
+            example:
+              success: true
+              message: Order updated successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: ready_for_pickup
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: "2024-10-05T18:32:00.000Z"
+                  rejectedAt: null
+                  preparedAt: "2024-10-05T18:50:00.000Z"
+                  readyForPickupAt: "2024-10-05T18:55:00.000Z"
+                  pickedUpAt: "2024-10-05T19:00:00.000Z"
+                  outForDeliveryAt: "2024-10-05T19:02:00.000Z"
+                  deliveredAt: "2024-10-05T19:20:00.000Z"
+                  cancelledAt: null
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: accepted
+                      changedAt: "2024-10-05T18:32:00.000Z"
+                      changedByUserId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                      note: null
+                    - status: delivered
+                      changedAt: "2024-10-05T19:20:00.000Z"
+                      changedByUserId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                      note: null
+                  deliveryCity: Cairo
+                  delivery:
+                    driverName: Omar Hassan
+                    assignmentStatus: accepted
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

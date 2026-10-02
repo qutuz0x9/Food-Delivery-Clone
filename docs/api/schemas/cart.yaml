@@ -1,0 +1,272 @@
+CartItem:
+  type: object
+  required:
+    - id
+    - menuItemId
+    - name
+    - imageUrl
+    - quantity
+    - unitPrice
+    - totalPrice
+    - isAvailable
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique cart item identifier.
+      example: 502199a9-304a-553b-ad69-1bf2baa4391e
+
+    menuItemId:
+      type: string
+      format: uuid
+      description: The menu item in the cart.
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+    name:
+      type: string
+      description: Current name of the menu item.
+      example: Mixed Grill
+
+    imageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: First image of the menu item.
+      example: https://cdn.example.com/menu/mixed-grill.jpg
+
+    quantity:
+      type: integer
+      minimum: 1
+      description: Quantity in the cart.
+      example: 2
+
+    unitPrice:
+      type: number
+      format: double
+      minimum: 0
+      description: Price of one unit when it was added.
+      example: 150
+
+    totalPrice:
+      type: number
+      format: double
+      minimum: 0
+      description: Unit price multiplied by quantity.
+      example: 300
+
+    isAvailable:
+      type: boolean
+      description: Whether the menu item can still be ordered. An unavailable item blocks checkout until removed.
+      example: true
+
+Cart:
+  type: object
+  description: A customer has at most one cart, and all its items come from one restaurant.
+  required:
+    - id
+    - restaurant
+    - items
+    - itemCount
+    - subtotal
+    - updatedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique cart identifier.
+      example: 84c74967-41e7-5a32-a5ed-9506bf92a459
+
+    restaurant:
+      type: object
+      description: The restaurant every item in the cart belongs to.
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+        name:
+          type: string
+          example: Nile Grill House
+
+    items:
+      type: array
+      items:
+        $ref: "#/CartItem"
+
+    itemCount:
+      type: integer
+      minimum: 0
+      description: Total quantity of all items.
+      example: 2
+
+    subtotal:
+      type: number
+      format: double
+      minimum: 0
+      description: Sum of the item totals.
+      example: 300
+
+    updatedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Last change.
+      example: "2024-10-05T18:20:00.000Z"
+
+GetCartResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cart retrieved successfully
+
+    data:
+      type: object
+      required:
+        - cart
+      properties:
+        cart:
+          type: object
+          nullable: true
+          description: The cart, or null when the customer has none.
+          allOf:
+            - $ref: "#/Cart"
+
+AddCartItemRequest:
+  type: object
+  required:
+    - menuItemId
+  properties:
+    menuItemId:
+      type: string
+      format: uuid
+      description: The menu item to add.
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+    quantity:
+      type: integer
+      minimum: 1
+      default: 1
+      description: How many to add.
+      example: 2
+
+    replaceCart:
+      type: boolean
+      default: false
+      description: Set to `true` to discard a cart that holds another restaurant's items and start a new one.
+      example: false
+
+AddCartItemResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Item added to cart
+
+    data:
+      type: object
+      required:
+        - cart
+      properties:
+        cart:
+          $ref: "#/Cart"
+
+UpdateCartItemRequest:
+  type: object
+  required:
+    - quantity
+  properties:
+    quantity:
+      type: integer
+      minimum: 1
+      description: New quantity.
+      example: 3
+
+UpdateCartItemResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cart item updated
+
+    data:
+      type: object
+      required:
+        - cart
+      properties:
+        cart:
+          $ref: "#/Cart"
+
+RemoveCartItemResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Item removed from cart
+
+    data:
+      type: object
+      required:
+        - cart
+      properties:
+        cart:
+          type: object
+          nullable: true
+          description: The cart after the removal, or null when it was the last item.
+          allOf:
+            - $ref: "#/Cart"
+
+ClearCartResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cart cleared
+
+    data:
+      type: object
+      nullable: true

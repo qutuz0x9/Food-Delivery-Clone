@@ -27,16 +27,42 @@ ValidationError:
                 firstName: First name is required
 
 Conflict:
-  description: Conflict with the current state of the resource (e.g. duplicate email)
+  description: |
+    The request conflicts with the current state of the resource: a value that must be unique is already taken, or the
+    resource is not in a state that allows the action.
   content:
     application/json:
       schema:
         $ref: "../schemas/common.yaml#/ErrorResponse"
-      example:
-        success: false
-        message: Email address is already registered
-        error:
-          code: EMAIL_ALREADY_EXISTS
+      examples:
+        emailAlreadyExists:
+          summary: Email address already registered
+          value:
+            success: false
+            message: Email address is already registered
+            error:
+              code: EMAIL_ALREADY_EXISTS
+        valueAlreadyInUse:
+          summary: A unique value (label, plate number, national id, ...) is already taken
+          value:
+            success: false
+            message: This value is already in use
+            error:
+              code: VALUE_ALREADY_IN_USE
+        invalidState:
+          summary: The resource is not in a state that allows this action
+          value:
+            success: false
+            message: The resource is not in a state that allows this action
+            error:
+              code: INVALID_STATE
+        offerNoLongerAvailable:
+          summary: The delivery request was accepted by another driver, withdrawn or expired
+          value:
+            success: false
+            message: This delivery request is no longer available
+            error:
+              code: OFFER_NO_LONGER_AVAILABLE
 
 InternalServerError:
   description: Internal server error
@@ -74,14 +100,87 @@ InvalidResetToken:
         error:
           code: INVALID_OR_EXPIRED_TOKEN
 
+Forbidden:
+  description: |
+    The credentials or token are valid, but the account is not allowed to perform this action. Returned on login when
+    the user's `account_status` is not `active`, and on protected endpoints when the caller's role does not match the
+    route.
+  content:
+    application/json:
+      schema:
+        $ref: "../schemas/common.yaml#/ErrorResponse"
+      examples:
+        accountSuspended:
+          summary: Account suspended by an administrator (account_status = suspended)
+          value:
+            success: false
+            message: This account has been suspended
+            error:
+              code: ACCOUNT_SUSPENDED
+        accountLocked:
+          summary: Account locked (account_status = locked)
+          value:
+            success: false
+            message: This account is locked
+            error:
+              code: ACCOUNT_LOCKED
+        accountInactive:
+          summary: Account deactivated (account_status = inactive)
+          value:
+            success: false
+            message: This account is inactive
+            error:
+              code: ACCOUNT_INACTIVE
+        insufficientRole:
+          summary: Authenticated, but the role cannot use this endpoint
+          value:
+            success: false
+            message: You do not have permission to perform this action
+            error:
+              code: FORBIDDEN
+
+InvalidRefreshToken:
+  description: |
+    The refresh token is missing, unknown, expired, revoked, or was already rotated. A reused token also revokes the
+    rest of its chain. The client must discard its session and log in again.
+  content:
+    application/json:
+      schema:
+        $ref: "../schemas/common.yaml#/ErrorResponse"
+      examples:
+        missing:
+          summary: No refresh token cookie was sent
+          value:
+            success: false
+            message: Refresh token is required
+            error:
+              code: INVALID_REFRESH_TOKEN
+        expiredOrRevoked:
+          summary: Token expired, revoked, or already used
+          value:
+            success: false
+            message: Your session has expired. Please log in again
+            error:
+              code: INVALID_REFRESH_TOKEN
+
 NotFound:
   description: The requested resource does not exist or does not belong to the authenticated user
   content:
     application/json:
       schema:
         $ref: "../schemas/common.yaml#/ErrorResponse"
-      example:
-        success: false
-        message: Delivery address not found
-        error:
-          code: DELIVERY_ADDRESS_NOT_FOUND
+      examples:
+        deliveryAddressNotFound:
+          summary: Saved delivery address not found
+          value:
+            success: false
+            message: Delivery address not found
+            error:
+              code: DELIVERY_ADDRESS_NOT_FOUND
+        resourceNotFound:
+          summary: Generic resource not found
+          value:
+            success: false
+            message: Resource not found
+            error:
+              code: RESOURCE_NOT_FOUND

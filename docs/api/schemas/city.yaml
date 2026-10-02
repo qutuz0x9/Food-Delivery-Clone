@@ -1,0 +1,49 @@
+City:
+  type: object
+  required:
+    - id
+    - name
+    - country
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique city identifier. Use it wherever the API asks for a `cityId`.
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+    name:
+      type: string
+      maxLength: 100
+      description: City name.
+      example: Cairo
+
+    country:
+      type: string
+      maxLength: 100
+      description: Country the city is in.
+      example: Egypt
+
+ListCitiesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cities retrieved successfully
+
+    data:
+      type: object
+      required:
+        - cities
+      properties:
+        cities:
+          type: array
+          items:
+            $ref: "#/City"

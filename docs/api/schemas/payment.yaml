@@ -1,0 +1,293 @@
+PaymentMethod:
+  type: string
+  enum:
+    - cash
+    - credit_card
+    - debit_card
+    - apple_pay
+    - google_pay
+    - wallet
+  description: How the customer pays.
+  example: credit_card
+
+PaymentStatus:
+  type: string
+  enum:
+    - pending
+    - processing
+    - paid
+    - failed
+    - refunded
+    - partially_refunded
+  description: State of a payment.
+  example: paid
+
+RefundStatus:
+  type: string
+  enum:
+    - pending
+    - completed
+    - failed
+    - cancelled
+  description: State of a refund.
+  example: completed
+
+Refund:
+  type: object
+  required:
+    - id
+    - paymentId
+    - amount
+    - reason
+    - status
+    - processedAt
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique refund identifier.
+      example: 4dcf6b09-1985-5814-a1d4-73cad05922c4
+
+    paymentId:
+      type: string
+      format: uuid
+      description: Payment the refund belongs to.
+      example: 9b186018-751f-5f05-89e0-896252cd46cf
+
+    amount:
+      type: number
+      format: double
+      minimum: 0
+      description: Refunded amount.
+      example: 50
+
+    reason:
+      type: string
+      nullable: true
+      description: Why the refund was made.
+      example: Missing item
+
+    status:
+      $ref: "#/RefundStatus"
+
+    processedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the refund was processed.
+      example: "2024-10-06T10:00:00.000Z"
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the refund was requested.
+      example: "2024-10-06T09:30:00.000Z"
+
+PaymentSummary:
+  type: object
+  required:
+    - id
+    - orderId
+    - orderNumber
+    - paymentMethod
+    - status
+    - transactionReference
+    - amount
+    - currency
+    - paidAt
+    - failureReason
+    - createdAt
+    - updatedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique payment identifier.
+      example: 9b186018-751f-5f05-89e0-896252cd46cf
+
+    orderId:
+      type: string
+      format: uuid
+      description: Order the payment is for.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Number of that order.
+      example: ORD-1001
+
+    paymentMethod:
+      $ref: "#/PaymentMethod"
+
+    status:
+      $ref: "#/PaymentStatus"
+
+    transactionReference:
+      type: string
+      nullable: true
+      description: Reference from the payment provider. Unique across payments.
+      example: txn_9f8e7d6c
+
+    amount:
+      type: number
+      format: double
+      minimum: 0
+      description: Amount charged.
+      example: 350
+
+    currency:
+      type: string
+      minLength: 3
+      maxLength: 3
+      description: ISO 4217 currency code.
+      example: EGP
+
+    paidAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the payment succeeded.
+      example: "2024-10-05T18:31:00.000Z"
+
+    failureReason:
+      type: string
+      nullable: true
+      description: Why the payment failed.
+      example: null
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the payment was created.
+      example: "2024-10-05T18:30:30.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Last change time.
+      example: "2024-10-05T18:31:00.000Z"
+
+PaymentDetail:
+  allOf:
+    - $ref: "#/PaymentSummary"
+    - type: object
+      required:
+        - refundedAmount
+        - refunds
+      properties:
+        refundedAmount:
+          type: number
+          format: double
+          minimum: 0
+          description: Total of the refunds that were completed.
+          example: 50
+
+        refunds:
+          type: array
+          items:
+            $ref: "#/Refund"
+
+PaymentMethodOption:
+  type: object
+  required:
+    - method
+    - label
+    - online
+  properties:
+    method:
+      $ref: "#/PaymentMethod"
+
+    label:
+      type: string
+      description: Name to show to the customer.
+      example: Credit card
+
+    online:
+      type: boolean
+      description: |
+        Whether the method is paid online through `POST /orders/{orderId}/payment`. `cash` is paid to
+        the driver on delivery.
+      example: true
+
+ListPaymentMethodsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payment methods retrieved successfully
+
+    data:
+      type: object
+      required:
+        - paymentMethods
+      properties:
+        paymentMethods:
+          type: array
+          items:
+            $ref: "#/PaymentMethodOption"
+
+ProcessPaymentRequest:
+  type: object
+  required:
+    - paymentToken
+  properties:
+    paymentToken:
+      type: string
+      description: Single-use token from the payment provider representing the customer's payment details.
+      example: tok_1QxA9z2eZvKYlo2C
+
+ProcessPaymentResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payment processed successfully
+
+    data:
+      type: object
+      required:
+        - payment
+      properties:
+        payment:
+          $ref: "#/PaymentSummary"
+
+GetPaymentResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payment retrieved successfully
+
+    data:
+      type: object
+      required:
+        - payment
+      properties:
+        payment:
+          $ref: "#/PaymentSummary"

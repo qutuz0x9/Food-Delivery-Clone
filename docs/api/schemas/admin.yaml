@@ -1,0 +1,2845 @@
+AccountStatus:
+  type: string
+  enum:
+    - active
+    - inactive
+    - locked
+    - suspended
+  description: Login state of a user account. Only `active` accounts can log in.
+  example: active
+
+ReviewStatus:
+  type: string
+  enum:
+    - pending
+    - published
+    - hidden
+    - deleted
+  description: Moderation state of a review. Only `published` reviews are shown to the public.
+  example: published
+
+UpdateAccountStatusRequest:
+  type: object
+  required:
+    - accountStatus
+  properties:
+    accountStatus:
+      $ref: "#/AccountStatus"
+
+AdminProfile:
+  type: object
+  required:
+    - id
+    - firstName
+    - lastName
+    - email
+    - phoneNumber
+    - profileImageUrl
+    - createdAt
+    - updatedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique administrator identifier.
+      example: 383e47af-52e5-51be-b66f-057bcb14629c
+
+    firstName:
+      type: string
+      description: First name.
+      example: Sara
+
+    lastName:
+      type: string
+      description: Last name.
+      example: Mostafa
+
+    email:
+      type: string
+      format: email
+      description: Login email of the administrator's user account.
+      example: sara.mostafa@example.com
+
+    phoneNumber:
+      type: string
+      description: Phone number of the user account.
+      example: "+201112223334"
+
+    profileImageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: Profile picture.
+      example: null
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the account was created.
+      example: "2024-01-02T08:00:00.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Last profile change.
+      example: null
+
+LoginAdminRequest:
+  type: object
+  required:
+    - email
+    - password
+  properties:
+    email:
+      type: string
+      format: email
+      description: Account email.
+      example: sara.mostafa@example.com
+
+    password:
+      type: string
+      format: password
+      description: Account password.
+      example: StrongPassword123!
+
+LoginAdminResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Logged in successfully
+
+    data:
+      type: object
+      required:
+        - admin
+        - accessToken
+      properties:
+        admin:
+          $ref: "#/AdminProfile"
+
+        accessToken:
+          type: string
+          description: JWT access token used to authenticate subsequent requests.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+RefreshAdminResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Access token refreshed successfully
+
+    data:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+          description: New JWT access token. The rotated refresh token is sent only in the `Set-Cookie` header.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+LogoutAdminResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Logged out successfully
+
+    data:
+      type: object
+      nullable: true
+
+ForgotPasswordAdminRequest:
+  type: object
+  required:
+    - email
+  properties:
+    email:
+      type: string
+      format: email
+      description: Email of the account to recover.
+      example: sara.mostafa@example.com
+
+ForgotPasswordAdminResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: If an account with that email exists, a password reset link has been sent.
+
+    data:
+      type: object
+      nullable: true
+
+ResetPasswordAdminRequest:
+  type: object
+  required:
+    - token
+    - newPassword
+    - confirmPassword
+  properties:
+    token:
+      type: string
+      description: Password reset token received via email.
+      example: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+
+    newPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: New account password.
+      example: NewStrongPassword123!
+
+    confirmPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: Must match `newPassword` exactly.
+      example: NewStrongPassword123!
+
+ResetPasswordAdminResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Password reset successfully. Please log in again.
+
+    data:
+      type: object
+      nullable: true
+
+ChangePasswordAdminRequest:
+  type: object
+  required:
+    - currentPassword
+    - newPassword
+    - confirmPassword
+  properties:
+    currentPassword:
+      type: string
+      format: password
+      description: The administrator's current password.
+      example: StrongPassword123!
+
+    newPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: New account password.
+      example: NewStrongPassword123!
+
+    confirmPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: Must match `newPassword` exactly.
+      example: NewStrongPassword123!
+
+ChangePasswordAdminResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Password changed successfully
+
+    data:
+      type: object
+      nullable: true
+
+GetAdminProfileResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Profile retrieved successfully
+
+    data:
+      type: object
+      required:
+        - admin
+      properties:
+        admin:
+          $ref: "#/AdminProfile"
+
+UpdateAdminProfileRequest:
+  type: object
+  minProperties: 1
+  properties:
+    firstName:
+      type: string
+      minLength: 1
+      description: First name.
+      example: Sara
+
+    lastName:
+      type: string
+      minLength: 1
+      description: Last name.
+      example: Mostafa
+
+    phoneNumber:
+      type: string
+      description: Phone number. Must stay unique across all accounts.
+      example: "+201112223334"
+
+    profileImageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: Profile picture URL.
+      example: https://cdn.example.com/admins/sara.jpg
+
+UpdateAdminProfileResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Profile updated successfully
+
+    data:
+      type: object
+      required:
+        - admin
+      properties:
+        admin:
+          $ref: "#/AdminProfile"
+
+AdminCity:
+  type: object
+  required:
+    - id
+    - name
+    - country
+    - isActive
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique city identifier.
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+    name:
+      type: string
+      maxLength: 100
+      description: City name.
+      example: Cairo
+
+    country:
+      type: string
+      maxLength: 100
+      description: Country.
+      example: Egypt
+
+    isActive:
+      type: boolean
+      description: |
+        Whether the city is in service. Inactive cities are hidden from `GET /cities` and cannot be
+        chosen.
+      example: true
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the city was added.
+      example: "2024-01-01T00:00:00.000Z"
+
+ListAdminCitiesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cities retrieved successfully
+
+    data:
+      type: object
+      required:
+        - cities
+      properties:
+        cities:
+          type: array
+          items:
+            $ref: "#/AdminCity"
+
+CreateCityRequest:
+  type: object
+  required:
+    - name
+    - country
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: City name.
+      example: Alexandria
+
+    country:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Country.
+      example: Egypt
+
+CreateCityResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: City created successfully
+
+    data:
+      type: object
+      required:
+        - city
+      properties:
+        city:
+          $ref: "#/AdminCity"
+
+UpdateCityRequest:
+  type: object
+  minProperties: 1
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: City name.
+      example: Alexandria
+
+    country:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Country.
+      example: Egypt
+
+    isActive:
+      type: boolean
+      description: Set to `false` to take the city out of service.
+      example: true
+
+UpdateCityResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: City updated successfully
+
+    data:
+      type: object
+      required:
+        - city
+      properties:
+        city:
+          $ref: "#/AdminCity"
+
+AdminCustomerSummary:
+  type: object
+  required:
+    - id
+    - userId
+    - firstName
+    - lastName
+    - email
+    - phoneNumber
+    - accountStatus
+    - emailVerified
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Customer identifier.
+      example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+
+    userId:
+      type: string
+      format: uuid
+      description: The customer's user account.
+      example: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+
+    firstName:
+      type: string
+      description: First name.
+      example: John
+
+    lastName:
+      type: string
+      description: Last name.
+      example: Doe
+
+    email:
+      type: string
+      format: email
+      description: Login email.
+      example: john@example.com
+
+    phoneNumber:
+      type: string
+      description: Phone number.
+      example: "+201234567890"
+
+    accountStatus:
+      $ref: "#/AccountStatus"
+
+    emailVerified:
+      type: boolean
+      description: True once the email has been verified.
+      example: true
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the account was created.
+      example: "2024-01-15T10:30:00.000Z"
+
+AdminCustomer:
+  allOf:
+    - $ref: "#/AdminCustomerSummary"
+    - type: object
+      required:
+        - orderCount
+        - deliveryAddresses
+      properties:
+        profileImageUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Profile picture.
+          example: null
+
+        dateOfBirth:
+          type: string
+          format: date
+          nullable: true
+          description: Date of birth.
+          example: "1990-05-20"
+
+        gender:
+          type: string
+          nullable: true
+          enum:
+            - male
+            - female
+          description: Gender.
+          example: male
+
+        orderCount:
+          type: integer
+          minimum: 0
+          description: Orders the customer has placed.
+          example: 14
+
+        deliveryAddresses:
+          type: array
+          description: The customer's saved delivery addresses.
+          items:
+            $ref: "./customer.yaml#/DeliveryAddress"
+
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last profile change.
+          example: "2024-02-01T09:00:00.000Z"
+
+ListAdminCustomersResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Customers retrieved successfully
+
+    data:
+      type: object
+      required:
+        - customers
+        - pagination
+      properties:
+        customers:
+          type: array
+          items:
+            $ref: "#/AdminCustomerSummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetAdminCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Customer retrieved successfully
+
+    data:
+      type: object
+      required:
+        - customer
+      properties:
+        customer:
+          $ref: "#/AdminCustomer"
+
+UpdateAdminCustomerRequest:
+  type: object
+  minProperties: 1
+  properties:
+    firstName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: First name.
+      example: John
+
+    lastName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Last name.
+      example: Doe
+
+    phoneNumber:
+      type: string
+      description: Phone number. Must stay unique across all accounts.
+      example: "+201234567890"
+
+    dateOfBirth:
+      type: string
+      format: date
+      nullable: true
+      description: Date of birth.
+      example: "1990-05-20"
+
+    gender:
+      type: string
+      nullable: true
+      enum:
+        - male
+        - female
+      description: Gender.
+      example: male
+
+    profileImageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: Profile picture URL.
+      example: null
+
+UpdateAdminCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Customer updated successfully
+
+    data:
+      type: object
+      required:
+        - customer
+      properties:
+        customer:
+          $ref: "#/AdminCustomer"
+
+UpdateCustomerAccountStatusResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Account status updated successfully
+
+    data:
+      type: object
+      required:
+        - customer
+      properties:
+        customer:
+          $ref: "#/AdminCustomerSummary"
+
+DeleteAdminCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Customer deleted successfully
+
+    data:
+      type: object
+      nullable: true
+
+AdminRestaurantSummary:
+  type: object
+  required:
+    - id
+    - userId
+    - name
+    - email
+    - phoneNumber
+    - status
+    - accountStatus
+    - branchCount
+    - ratingAverage
+    - ratingCount
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Restaurant identifier.
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    userId:
+      type: string
+      format: uuid
+      description: The restaurant's user account.
+      example: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+
+    name:
+      type: string
+      maxLength: 150
+      description: Restaurant name.
+      example: Nile Grill House
+
+    email:
+      type: string
+      format: email
+      description: Login email of the restaurant's user account.
+      example: contact@nilegrill.example.com
+
+    phoneNumber:
+      type: string
+      description: Phone number of the user account.
+      example: "+201234567890"
+
+    status:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+      description: Registration approval state.
+      example: approved
+
+    accountStatus:
+      $ref: "#/AccountStatus"
+
+    branchCount:
+      type: integer
+      minimum: 0
+      description: Number of branches, active or not.
+      example: 2
+
+    ratingAverage:
+      type: number
+      format: double
+      minimum: 0
+      maximum: 5
+      description: Average rating (0-5), a cached value.
+      example: 4.5
+
+    ratingCount:
+      type: integer
+      minimum: 0
+      description: Number of ratings, a cached value.
+      example: 128
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the account was created.
+      example: "2023-11-10T08:00:00.000Z"
+
+AdminRestaurant:
+  allOf:
+    - $ref: "#/AdminRestaurantSummary"
+    - type: object
+      required:
+        - minimumOrderAmount
+        - deliveryFee
+        - branches
+      properties:
+        description:
+          type: string
+          nullable: true
+          description: Description.
+          example: Authentic Egyptian grills and mezze.
+
+        logoUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Logo.
+          example: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+
+        coverImageUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Cover image.
+          example: https://cdn.example.com/restaurants/nile-grill/cover.jpg
+
+        minimumOrderAmount:
+          type: number
+          format: double
+          minimum: 0
+          description: Minimum order amount.
+          example: 100
+
+        deliveryFee:
+          type: number
+          format: double
+          minimum: 0
+          description: Delivery fee.
+          example: 25
+
+        estimatedDeliveryTime:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: Estimated delivery time in minutes.
+          example: 35
+
+        branches:
+          type: array
+          description: All branches, including inactive ones.
+          items:
+            $ref: "./restaurant.yaml#/RestaurantBranch"
+
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last change.
+          example: "2024-02-01T09:00:00.000Z"
+
+ListAdminRestaurantsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurants retrieved successfully
+
+    data:
+      type: object
+      required:
+        - restaurants
+        - pagination
+      properties:
+        restaurants:
+          type: array
+          items:
+            $ref: "#/AdminRestaurantSummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetAdminRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant retrieved successfully
+
+    data:
+      type: object
+      required:
+        - restaurant
+      properties:
+        restaurant:
+          $ref: "#/AdminRestaurant"
+
+UpdateAdminRestaurantRequest:
+  type: object
+  minProperties: 1
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 150
+      description: Restaurant name.
+      example: Nile Grill House
+
+    description:
+      type: string
+      nullable: true
+      description: Description.
+      example: Authentic Egyptian grills and mezze.
+
+    minimumOrderAmount:
+      type: number
+      format: double
+      minimum: 0
+      description: Minimum order amount.
+      example: 120
+
+    deliveryFee:
+      type: number
+      format: double
+      minimum: 0
+      description: Delivery fee.
+      example: 30
+
+    estimatedDeliveryTime:
+      type: integer
+      minimum: 0
+      description: Estimated delivery time in minutes.
+      example: 40
+
+UpdateAdminRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant updated successfully
+
+    data:
+      type: object
+      required:
+        - restaurant
+      properties:
+        restaurant:
+          $ref: "#/AdminRestaurant"
+
+UpdateRestaurantStatusResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant status updated successfully
+
+    data:
+      type: object
+      required:
+        - restaurant
+      properties:
+        restaurant:
+          $ref: "#/AdminRestaurantSummary"
+
+UpdateRestaurantAccountStatusResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Account status updated successfully
+
+    data:
+      type: object
+      required:
+        - restaurant
+      properties:
+        restaurant:
+          $ref: "#/AdminRestaurantSummary"
+
+DeleteAdminRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Restaurant deleted successfully
+
+    data:
+      type: object
+      nullable: true
+
+AdminDriverSummary:
+  type: object
+  required:
+    - id
+    - userId
+    - firstName
+    - lastName
+    - email
+    - phoneNumber
+    - workingCity
+    - status
+    - availabilityStatus
+    - accountStatus
+    - rating
+    - totalDeliveries
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Driver identifier.
+      example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+    userId:
+      type: string
+      format: uuid
+      description: The driver's user account.
+      example: 0611da80-d0d0-535a-8bf9-6503cef2f460
+
+    firstName:
+      type: string
+      maxLength: 100
+      description: First name.
+      example: Omar
+
+    lastName:
+      type: string
+      maxLength: 100
+      description: Last name.
+      example: Hassan
+
+    email:
+      type: string
+      format: email
+      description: Login email.
+      example: omar.hassan@example.com
+
+    phoneNumber:
+      type: string
+      description: Phone number.
+      example: "+201001234567"
+
+    workingCity:
+      $ref: "./city.yaml#/City"
+
+    status:
+      type: string
+      enum:
+        - pending
+        - active
+        - inactive
+      description: Approval state.
+      example: active
+
+    availabilityStatus:
+      type: string
+      enum:
+        - available
+        - busy
+        - offline
+        - on_break
+      description: Whether the driver is taking deliveries.
+      example: available
+
+    accountStatus:
+      $ref: "#/AccountStatus"
+
+    rating:
+      type: number
+      format: double
+      minimum: 0
+      maximum: 5
+      description: Average review rating (0-5), a cached value.
+      example: 4.8
+
+    totalDeliveries:
+      type: integer
+      minimum: 0
+      description: Completed deliveries, a cached value.
+      example: 312
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the account was created.
+      example: "2024-01-10T09:00:00.000Z"
+
+AdminDriver:
+  allOf:
+    - $ref: "#/AdminDriverSummary"
+    - type: object
+      required:
+        - dateOfBirth
+        - nationalId
+        - licenseNumber
+        - licenseExpiryDate
+        - documents
+      properties:
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth.
+          example: "1992-04-18"
+
+        profileImageUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Profile picture.
+          example: https://cdn.example.com/drivers/omar/profile.jpg
+
+        nationalId:
+          type: string
+          maxLength: 30
+          description: National identity number.
+          example: "29204180101234"
+
+        licenseNumber:
+          type: string
+          maxLength: 50
+          description: Driving licence number.
+          example: LIC-559213
+
+        licenseExpiryDate:
+          type: string
+          format: date
+          description: When the licence expires.
+          example: "2027-08-30"
+
+        vehicle:
+          type: object
+          nullable: true
+          description: The driver's active vehicle.
+          allOf:
+            - $ref: "./driver.yaml#/DriverVehicle"
+
+        documents:
+          type: array
+          description: Every document the driver uploaded.
+          items:
+            $ref: "./driver.yaml#/DriverDocument"
+
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last profile change.
+          example: "2024-02-01T09:00:00.000Z"
+
+ListAdminDriversResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Drivers retrieved successfully
+
+    data:
+      type: object
+      required:
+        - drivers
+        - pagination
+      properties:
+        drivers:
+          type: array
+          items:
+            $ref: "#/AdminDriverSummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetAdminDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Driver retrieved successfully
+
+    data:
+      type: object
+      required:
+        - driver
+      properties:
+        driver:
+          $ref: "#/AdminDriver"
+
+UpdateAdminDriverRequest:
+  type: object
+  minProperties: 1
+  properties:
+    firstName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: First name.
+      example: Omar
+
+    lastName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Last name.
+      example: Hassan
+
+    phoneNumber:
+      type: string
+      description: Phone number. Must stay unique across all accounts.
+      example: "+201001234567"
+
+    dateOfBirth:
+      type: string
+      format: date
+      description: Date of birth.
+      example: "1992-04-18"
+
+    nationalId:
+      type: string
+      maxLength: 30
+      description: National identity number. Must stay unique across drivers.
+      example: "29204180101234"
+
+    licenseNumber:
+      type: string
+      maxLength: 50
+      description: Driving licence number. Must stay unique across drivers.
+      example: LIC-559213
+
+    licenseExpiryDate:
+      type: string
+      format: date
+      description: When the licence expires.
+      example: "2028-08-30"
+
+    workingCityId:
+      type: string
+      format: uuid
+      description: Working city, from `GET /cities`.
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+UpdateAdminDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Driver updated successfully
+
+    data:
+      type: object
+      required:
+        - driver
+      properties:
+        driver:
+          $ref: "#/AdminDriver"
+
+UpdateDriverStatusRequest:
+  type: object
+  required:
+    - status
+  properties:
+    status:
+      type: string
+      enum:
+        - pending
+        - active
+        - inactive
+      description: |
+        New approval state. `active` approves the driver. There is no `rejected` value: a registration
+        that should not go ahead is set to `inactive`.
+      example: active
+
+UpdateDriverStatusResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Driver status updated successfully
+
+    data:
+      type: object
+      required:
+        - driver
+      properties:
+        driver:
+          $ref: "#/AdminDriverSummary"
+
+UpdateDriverAccountStatusResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Account status updated successfully
+
+    data:
+      type: object
+      required:
+        - driver
+      properties:
+        driver:
+          $ref: "#/AdminDriverSummary"
+
+ReviewDriverDocumentRequest:
+  type: object
+  required:
+    - status
+  properties:
+    status:
+      type: string
+      enum:
+        - verified
+        - rejected
+        - expired
+      description: Review outcome. `verified` also records when it was verified.
+      example: verified
+
+ReviewDriverDocumentResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Document reviewed successfully
+
+    data:
+      type: object
+      required:
+        - document
+      properties:
+        document:
+          $ref: "./driver.yaml#/DriverDocument"
+
+DeleteAdminDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Driver deleted successfully
+
+    data:
+      type: object
+      nullable: true
+
+ListAdminOrdersResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Orders retrieved successfully
+
+    data:
+      type: object
+      required:
+        - orders
+        - pagination
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: "./order.yaml#/OrderSummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetAdminOrderResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order retrieved successfully
+
+    data:
+      type: object
+      required:
+        - order
+      properties:
+        order:
+          $ref: "./order.yaml#/OrderDetail"
+
+UpdateOrderStatusRequest:
+  type: object
+  required:
+    - status
+  properties:
+    status:
+      $ref: "./order.yaml#/OrderStatus"
+
+    note:
+      type: string
+      nullable: true
+      description: Why the status was changed. Stored in the order's status history.
+      example: Restaurant could not fulfil the order
+
+UpdateOrderStatusResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order status updated successfully
+
+    data:
+      type: object
+      required:
+        - order
+      properties:
+        order:
+          $ref: "./order.yaml#/OrderDetail"
+
+ListAdminPaymentsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payments retrieved successfully
+
+    data:
+      type: object
+      required:
+        - payments
+        - pagination
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: "./payment.yaml#/PaymentSummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetAdminPaymentResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payment retrieved successfully
+
+    data:
+      type: object
+      required:
+        - payment
+      properties:
+        payment:
+          $ref: "./payment.yaml#/PaymentDetail"
+
+CreateRefundRequest:
+  type: object
+  required:
+    - amount
+  properties:
+    amount:
+      type: number
+      format: double
+      minimum: 0.01
+      description: Amount to refund. Cannot exceed what is still refundable on the payment.
+      example: 50
+
+    reason:
+      type: string
+      nullable: true
+      description: Why the refund is made.
+      example: Missing item
+
+CreateRefundResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Refund created successfully
+
+    data:
+      type: object
+      required:
+        - refund
+        - payment
+      properties:
+        refund:
+          $ref: "./payment.yaml#/Refund"
+
+        payment:
+          $ref: "./payment.yaml#/PaymentDetail"
+
+UpdateRefundRequest:
+  type: object
+  required:
+    - status
+  properties:
+    status:
+      $ref: "./payment.yaml#/RefundStatus"
+
+UpdateRefundResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Refund updated successfully
+
+    data:
+      type: object
+      required:
+        - refund
+        - payment
+      properties:
+        refund:
+          $ref: "./payment.yaml#/Refund"
+
+        payment:
+          $ref: "./payment.yaml#/PaymentDetail"
+
+AdminRestaurantReview:
+  type: object
+  required:
+    - id
+    - orderId
+    - orderNumber
+    - customer
+    - restaurant
+    - rating
+    - title
+    - comment
+    - status
+    - isEdited
+    - images
+    - createdAt
+    - updatedAt
+    - publishedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Review identifier.
+      example: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+
+    orderId:
+      type: string
+      format: uuid
+      description: Order reviewed.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Order number.
+      example: ORD-1001
+
+    customer:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+
+        name:
+          type: string
+          example: John Doe
+
+    restaurant:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+        name:
+          type: string
+          example: Nile Grill House
+
+    rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: Rating from 1 to 5.
+      example: 4
+
+    title:
+      type: string
+      nullable: true
+      description: Review title.
+      example: Great grills
+
+    comment:
+      type: string
+      nullable: true
+      description: Review text.
+      example: Tasty food, a bit late.
+
+    status:
+      $ref: "#/ReviewStatus"
+
+    isEdited:
+      type: boolean
+      description: Whether the customer edited the review.
+      example: false
+
+    images:
+      type: array
+      description: Photos attached to the review.
+      items:
+        type: string
+        format: uri
+        example: https://cdn.example.com/reviews/1/photo1.jpg
+
+    reply:
+      type: object
+      nullable: true
+      description: The restaurant's single reply, if any.
+      required:
+        - reply
+        - createdAt
+        - updatedAt
+      properties:
+        reply:
+          type: string
+          example: Thank you, we are working on delivery times.
+
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-10-06T09:00:00.000Z"
+
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-10-06T09:00:00.000Z"
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the review was written.
+      example: "2024-10-05T20:00:00.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      description: Last change.
+      example: "2024-10-05T20:00:00.000Z"
+
+    publishedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the review was published.
+      example: null
+
+AdminDriverReview:
+  type: object
+  required:
+    - id
+    - orderId
+    - orderNumber
+    - customer
+    - driver
+    - rating
+    - title
+    - comment
+    - status
+    - isEdited
+    - createdAt
+    - updatedAt
+    - publishedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Review identifier.
+      example: 05d4f94b-3812-570d-848c-c7db2eeef83f
+
+    orderId:
+      type: string
+      format: uuid
+      description: Order reviewed.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Order number.
+      example: ORD-1001
+
+    customer:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+
+        name:
+          type: string
+          example: John Doe
+
+    driver:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+        name:
+          type: string
+          example: Omar Hassan
+
+    rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: Rating from 1 to 5.
+      example: 5
+
+    title:
+      type: string
+      nullable: true
+      description: Review title.
+      example: Fast and polite
+
+    comment:
+      type: string
+      nullable: true
+      description: Review text.
+      example: Arrived early and the food was still hot.
+
+    status:
+      $ref: "#/ReviewStatus"
+
+    isEdited:
+      type: boolean
+      description: Whether the customer edited the review.
+      example: false
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the review was written.
+      example: "2024-10-05T20:00:00.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      description: Last change.
+      example: "2024-10-05T20:00:00.000Z"
+
+    publishedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the review was published.
+      example: null
+
+ListAdminRestaurantReviewsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Reviews retrieved successfully
+
+    data:
+      type: object
+      required:
+        - reviews
+        - pagination
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/AdminRestaurantReview"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+ListAdminDriverReviewsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Reviews retrieved successfully
+
+    data:
+      type: object
+      required:
+        - reviews
+        - pagination
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/AdminDriverReview"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+ModerateReviewRequest:
+  type: object
+  required:
+    - status
+  properties:
+    status:
+      type: string
+      enum:
+        - published
+        - hidden
+        - deleted
+      description: |
+        New moderation state. `published` shows the review, `hidden` removes it from view but keeps it,
+        `deleted` removes it permanently from the public side.
+      example: published
+
+ModerateRestaurantReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review moderated successfully
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/AdminRestaurantReview"
+
+ModerateDriverReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review moderated successfully
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/AdminDriverReview"
+
+AdminPayout:
+  type: object
+  required:
+    - id
+    - driver
+    - periodStart
+    - periodEnd
+    - amount
+    - status
+    - paidAt
+    - earningCount
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Payout identifier.
+      example: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+
+    driver:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+        name:
+          type: string
+          example: Omar Hassan
+
+    periodStart:
+      type: string
+      format: date
+      description: First day the payout covers.
+      example: "2024-09-29"
+
+    periodEnd:
+      type: string
+      format: date
+      description: Last day the payout covers.
+      example: "2024-10-05"
+
+    amount:
+      type: number
+      format: double
+      minimum: 0
+      description: Total of the settled earnings.
+      example: 1450
+
+    status:
+      $ref: "./driver.yaml#/PayoutStatus"
+
+    paidAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the payout was paid.
+      example: "2024-10-07T10:00:00.000Z"
+
+    earningCount:
+      type: integer
+      minimum: 0
+      description: Earnings the payout settles.
+      example: 38
+
+ListAdminPayoutsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payouts retrieved successfully
+
+    data:
+      type: object
+      required:
+        - payouts
+        - pagination
+      properties:
+        payouts:
+          type: array
+          items:
+            $ref: "#/AdminPayout"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetAdminPayoutResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payout retrieved successfully
+
+    data:
+      type: object
+      required:
+        - payout
+        - earnings
+      properties:
+        payout:
+          $ref: "#/AdminPayout"
+
+        earnings:
+          type: array
+          description: The earnings the payout settles.
+          items:
+            $ref: "./driver.yaml#/Earning"
+
+CreatePayoutRequest:
+  type: object
+  required:
+    - driverId
+    - periodStart
+    - periodEnd
+  properties:
+    driverId:
+      type: string
+      format: uuid
+      description: Driver to pay.
+      example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+    periodStart:
+      type: string
+      format: date
+      description: First day to include.
+      example: "2024-09-29"
+
+    periodEnd:
+      type: string
+      format: date
+      description: Last day to include. Must not be before `periodStart`.
+      example: "2024-10-05"
+
+CreatePayoutResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payout created successfully
+
+    data:
+      type: object
+      required:
+        - payout
+      properties:
+        payout:
+          $ref: "#/AdminPayout"
+
+UpdatePayoutRequest:
+  type: object
+  required:
+    - status
+  properties:
+    status:
+      $ref: "./driver.yaml#/PayoutStatus"
+
+    paidAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the money was paid. Required when the status is `completed`; defaults to now if omitted.
+      example: "2024-10-07T10:00:00.000Z"
+
+UpdatePayoutResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payout updated successfully
+
+    data:
+      type: object
+      required:
+        - payout
+      properties:
+        payout:
+          $ref: "#/AdminPayout"
+
+AuditLogEntry:
+  type: object
+  required:
+    - id
+    - userId
+    - actorEmail
+    - action
+    - entityName
+    - entityId
+    - oldValue
+    - newValue
+    - ipAddress
+    - requestId
+    - userAgent
+    - status
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Audit entry identifier.
+      example: 50ae95e4-d466-5172-81c9-3bf14f3dd388
+
+    userId:
+      type: string
+      format: uuid
+      description: User account that performed the action.
+      example: 97cb9ca6-a304-5227-956d-e9b0bf0f83cc
+
+    actorEmail:
+      type: string
+      format: email
+      description: The actor's email when the action happened. Not updated if the email later changes.
+      example: sara.mostafa@example.com
+
+    action:
+      type: string
+      description: What was done.
+      example: order.status.update
+
+    entityName:
+      type: string
+      description: Kind of record that was changed.
+      example: orders
+
+    entityId:
+      type: string
+      format: uuid
+      nullable: true
+      description: The record that was changed.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    oldValue:
+      type: object
+      nullable: true
+      description: Values before the change.
+      additionalProperties: true
+
+    newValue:
+      type: object
+      nullable: true
+      description: Values after the change.
+      additionalProperties: true
+
+    ipAddress:
+      type: string
+      description: Client IP address.
+      example: 203.0.113.24
+
+    requestId:
+      type: string
+      nullable: true
+      description: Correlation id of the request.
+      example: req_7f3a9c
+
+    userAgent:
+      type: string
+      description: Client user agent.
+      example: Mozilla/5.0
+
+    status:
+      type: string
+      nullable: true
+      description: Outcome of the action.
+      example: success
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the action happened.
+      example: "2024-10-05T19:40:00.000Z"
+
+ListAuditLogsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Audit log retrieved successfully
+
+    data:
+      type: object
+      required:
+        - entries
+        - pagination
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/AuditLogEntry"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetAuditLogResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Audit entry retrieved successfully
+
+    data:
+      type: object
+      required:
+        - entry
+      properties:
+        entry:
+          $ref: "#/AuditLogEntry"
+
+AdminDashboard:
+  type: object
+  description: Headline numbers for the admin overview.
+  required:
+    - customers
+    - restaurants
+    - drivers
+    - orders
+    - revenue
+  properties:
+    customers:
+      type: object
+      required:
+        - total
+        - active
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          example: 1250
+
+        active:
+          type: integer
+          minimum: 0
+          example: 1198
+
+    restaurants:
+      type: object
+      required:
+        - pending
+        - approved
+        - rejected
+        - activeBranches
+      properties:
+        pending:
+          type: integer
+          minimum: 0
+          example: 4
+
+        approved:
+          type: integer
+          minimum: 0
+          example: 63
+
+        rejected:
+          type: integer
+          minimum: 0
+          example: 2
+
+        activeBranches:
+          type: integer
+          minimum: 0
+          example: 91
+
+    drivers:
+      type: object
+      required:
+        - pending
+        - active
+        - inactive
+        - availableNow
+      properties:
+        pending:
+          type: integer
+          minimum: 0
+          example: 6
+
+        active:
+          type: integer
+          minimum: 0
+          example: 210
+
+        inactive:
+          type: integer
+          minimum: 0
+          example: 12
+
+        availableNow:
+          type: integer
+          minimum: 0
+          example: 87
+
+    orders:
+      type: object
+      required:
+        - today
+        - inProgress
+        - todayByStatus
+      properties:
+        today:
+          type: integer
+          minimum: 0
+          example: 342
+
+        inProgress:
+          type: integer
+          minimum: 0
+          example: 58
+
+        todayByStatus:
+          type: object
+          description: Today's orders by status.
+          additionalProperties:
+            type: integer
+            minimum: 0
+          example:
+            pending: 5
+            accepted: 12
+            preparing: 18
+            ready_for_pickup: 6
+            picked_up: 4
+            out_for_delivery: 13
+            delivered: 270
+            cancelled: 14
+            rejected: 0
+
+    revenue:
+      type: object
+      description: Sum of `totalAmount` of delivered orders.
+      required:
+        - today
+        - last7Days
+        - last30Days
+      properties:
+        today:
+          type: number
+          format: double
+          minimum: 0
+          example: 48200
+
+        last7Days:
+          type: number
+          format: double
+          minimum: 0
+          example: 301450
+
+        last30Days:
+          type: number
+          format: double
+          minimum: 0
+          example: 1290300
+
+GetAdminDashboardResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Dashboard retrieved successfully
+
+    data:
+      type: object
+      required:
+        - dashboard
+      properties:
+        dashboard:
+          $ref: "#/AdminDashboard"
+
+OrdersReport:
+  type: object
+  required:
+    - groupBy
+    - from
+    - to
+    - rows
+  properties:
+    groupBy:
+      type: string
+      enum:
+        - day
+        - week
+        - month
+      description: How rows are grouped.
+      example: day
+
+    from:
+      type: string
+      format: date
+      description: First day of the report.
+      example: "2024-10-01"
+
+    to:
+      type: string
+      format: date
+      description: Last day of the report.
+      example: "2024-10-07"
+
+    rows:
+      type: array
+      items:
+        type: object
+        required:
+          - period
+          - orders
+          - delivered
+          - cancelled
+          - rejected
+        properties:
+          period:
+            type: string
+            description: Start of the group (day, week or month).
+            example: "2024-10-05"
+
+          orders:
+            type: integer
+            minimum: 0
+            description: Orders placed.
+            example: 342
+
+          delivered:
+            type: integer
+            minimum: 0
+            description: Delivered.
+            example: 270
+
+          cancelled:
+            type: integer
+            minimum: 0
+            description: Cancelled.
+            example: 14
+
+          rejected:
+            type: integer
+            minimum: 0
+            description: Rejected.
+            example: 8
+
+SalesReport:
+  type: object
+  required:
+    - groupBy
+    - from
+    - to
+    - rows
+  properties:
+    groupBy:
+      type: string
+      enum:
+        - day
+        - week
+        - month
+      description: How rows are grouped.
+      example: day
+
+    from:
+      type: string
+      format: date
+      description: First day of the report.
+      example: "2024-10-01"
+
+    to:
+      type: string
+      format: date
+      description: Last day of the report.
+      example: "2024-10-07"
+
+    rows:
+      type: array
+      description: Only delivered orders are counted.
+      items:
+        type: object
+        required:
+          - period
+          - orders
+          - subtotal
+          - deliveryFees
+          - tax
+          - discounts
+          - total
+        properties:
+          period:
+            type: string
+            description: Start of the group (day, week or month).
+            example: "2024-10-05"
+
+          orders:
+            type: integer
+            minimum: 0
+            description: Delivered orders.
+            example: 270
+
+          subtotal:
+            type: number
+            format: double
+            minimum: 0
+            description: Sum of subtotals.
+            example: 81000
+
+          deliveryFees:
+            type: number
+            format: double
+            minimum: 0
+            description: Sum of delivery fees.
+            example: 6750
+
+          tax:
+            type: number
+            format: double
+            minimum: 0
+            description: Sum of tax.
+            example: 12150
+
+          discounts:
+            type: number
+            format: double
+            minimum: 0
+            description: Sum of discounts.
+            example: 3200
+
+          total:
+            type: number
+            format: double
+            minimum: 0
+            description: Sum of order totals.
+            example: 96700
+
+GetOrdersReportResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Report generated successfully
+
+    data:
+      type: object
+      required:
+        - report
+      properties:
+        report:
+          $ref: "#/OrdersReport"
+
+GetSalesReportResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Report generated successfully
+
+    data:
+      type: object
+      required:
+        - report
+      properties:
+        report:
+          $ref: "#/SalesReport"

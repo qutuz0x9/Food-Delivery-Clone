@@ -1,0 +1,691 @@
+ReviewImage:
+  type: object
+  required:
+    - id
+    - imageUrl
+    - sortOrder
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique image identifier.
+      example: c2779949-0759-5883-98e6-8ef9d8da783e
+
+    imageUrl:
+      type: string
+      format: uri
+      description: Where the photo is stored.
+      example: https://cdn.example.com/reviews/1/photo1.jpg
+
+    sortOrder:
+      type: integer
+      minimum: 0
+      description: Position among the review's photos.
+      example: 0
+
+ReviewReply:
+  type: object
+  required:
+    - reply
+    - createdAt
+    - updatedAt
+  properties:
+    reply:
+      type: string
+      minLength: 1
+      description: The restaurant's reply.
+      example: Thank you, we are working on delivery times.
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the reply was written.
+      example: "2024-10-06T09:00:00.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      description: When the reply was last edited.
+      example: "2024-10-06T09:00:00.000Z"
+
+RestaurantReviewPublic:
+  type: object
+  description: A review as shown to the public. Only `published` reviews are shown.
+  required:
+    - id
+    - authorName
+    - rating
+    - title
+    - comment
+    - isEdited
+    - images
+    - createdAt
+    - publishedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique review identifier.
+      example: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+
+    authorName:
+      type: string
+      description: Reviewer's first name and last initial. The full name is never shown.
+      example: John D.
+
+    rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: Rating from 1 to 5.
+      example: 4
+
+    title:
+      type: string
+      nullable: true
+      description: Review title.
+      example: Great grills
+
+    comment:
+      type: string
+      nullable: true
+      description: Review text.
+      example: Tasty food, a bit late.
+
+    isEdited:
+      type: boolean
+      description: Whether the reviewer edited the review after writing it.
+      example: false
+
+    images:
+      type: array
+      description: Photos attached to the review.
+      items:
+        $ref: "#/ReviewImage"
+
+    reply:
+      type: object
+      nullable: true
+      description: The restaurant's single reply, if any.
+      allOf:
+        - $ref: "#/ReviewReply"
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the review was written.
+      example: "2024-10-05T20:00:00.000Z"
+
+    publishedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the review was published.
+      example: "2024-10-06T08:00:00.000Z"
+
+MyRestaurantReview:
+  allOf:
+    - $ref: "#/RestaurantReviewPublic"
+    - type: object
+      required:
+        - orderId
+        - orderNumber
+        - status
+        - updatedAt
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: The order reviewed.
+          example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+        orderNumber:
+          type: string
+          description: Order number.
+          example: ORD-1001
+
+        status:
+          $ref: "./admin.yaml#/ReviewStatus"
+
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last change.
+          example: "2024-10-05T20:00:00.000Z"
+  description: A review as its author sees it, in any moderation state.
+
+OwnerRestaurantReview:
+  allOf:
+    - $ref: "#/RestaurantReviewPublic"
+    - type: object
+      required:
+        - orderNumber
+      properties:
+        orderNumber:
+          type: string
+          description: Order the review is about.
+          example: ORD-1001
+
+DriverReviewPublic:
+  type: object
+  description: A review as shown to the public. Only `published` reviews are shown.
+  required:
+    - id
+    - authorName
+    - rating
+    - title
+    - comment
+    - isEdited
+    - createdAt
+    - publishedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique review identifier.
+      example: 05d4f94b-3812-570d-848c-c7db2eeef83f
+
+    authorName:
+      type: string
+      description: Reviewer's first name and last initial. The full name is never shown.
+      example: John D.
+
+    rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: Rating from 1 to 5.
+      example: 5
+
+    title:
+      type: string
+      nullable: true
+      description: Review title.
+      example: Great grills
+
+    comment:
+      type: string
+      nullable: true
+      description: Review text.
+      example: Tasty food, a bit late.
+
+    isEdited:
+      type: boolean
+      description: Whether the reviewer edited the review after writing it.
+      example: false
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the review was written.
+      example: "2024-10-05T20:00:00.000Z"
+
+    publishedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the review was published.
+      example: "2024-10-06T08:00:00.000Z"
+
+MyDriverReview:
+  allOf:
+    - $ref: "#/DriverReviewPublic"
+    - type: object
+      required:
+        - orderId
+        - orderNumber
+        - status
+        - updatedAt
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: The order reviewed.
+          example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+        orderNumber:
+          type: string
+          description: Order number.
+          example: ORD-1001
+
+        status:
+          $ref: "./admin.yaml#/ReviewStatus"
+
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last change.
+          example: "2024-10-05T20:00:00.000Z"
+  description: A review as its author sees it, in any moderation state.
+
+CreateReviewRequest:
+  type: object
+  required:
+    - rating
+  properties:
+    rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: Rating from 1 to 5.
+      example: 4
+
+    title:
+      type: string
+      nullable: true
+      description: Review title.
+      example: Great grills
+
+    comment:
+      type: string
+      nullable: true
+      description: Review text.
+      example: Tasty food, a bit late.
+
+UpdateReviewRequest:
+  type: object
+  minProperties: 1
+  properties:
+    rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: Rating from 1 to 5.
+      example: 5
+
+    title:
+      type: string
+      nullable: true
+      description: Review title.
+      example: Great grills
+
+    comment:
+      type: string
+      nullable: true
+      description: Review text.
+      example: Even better than last time.
+
+CreateRestaurantReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review submitted successfully. It will be shown once it has been approved.
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/MyRestaurantReview"
+
+GetMyRestaurantReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review retrieved successfully
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/MyRestaurantReview"
+
+UpdateRestaurantReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review updated successfully
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/MyRestaurantReview"
+
+DeleteRestaurantReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review deleted successfully
+
+    data:
+      type: object
+      nullable: true
+
+ListRestaurantReviewsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Reviews retrieved successfully
+
+    data:
+      type: object
+      required:
+        - reviews
+        - pagination
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/RestaurantReviewPublic"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+AddReviewImageResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Photo added successfully
+
+    data:
+      type: object
+      required:
+        - image
+      properties:
+        image:
+          $ref: "#/ReviewImage"
+
+DeleteReviewImageResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Photo removed successfully
+
+    data:
+      type: object
+      nullable: true
+
+CreateDriverReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review submitted successfully. It will be shown once it has been approved.
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/MyDriverReview"
+
+GetMyDriverReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review retrieved successfully
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/MyDriverReview"
+
+UpdateDriverReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review updated successfully
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/MyDriverReview"
+
+DeleteDriverReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review deleted successfully
+
+    data:
+      type: object
+      nullable: true
+
+ListPublicDriverReviewsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Reviews retrieved successfully
+
+    data:
+      type: object
+      required:
+        - reviews
+        - pagination
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/DriverReviewPublic"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+ListOwnerReviewsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Reviews retrieved successfully
+
+    data:
+      type: object
+      required:
+        - reviews
+        - pagination
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/OwnerRestaurantReview"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetOwnerReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Review retrieved successfully
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/OwnerRestaurantReview"
+
+ReplyToReviewRequest:
+  type: object
+  required:
+    - reply
+  properties:
+    reply:
+      type: string
+      minLength: 1
+      description: The reply text.
+      example: Thank you, we are working on delivery times.
+
+ReplyToReviewResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Reply saved successfully
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/OwnerRestaurantReview"
+
+DeleteReviewReplyResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Reply removed successfully
+
+    data:
+      type: object
+      required:
+        - review
+      properties:
+        review:
+          $ref: "#/OwnerRestaurantReview"

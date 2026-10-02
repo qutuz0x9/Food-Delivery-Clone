@@ -1,0 +1,2724 @@
+registerDriver:
+  post:
+    tags:
+      - Auth
+
+    summary: Register a driver
+
+    description: |
+      Creates a new driver account.
+
+      The registration validates the supplied information, verifies that the email, phone number, national id, licence number and vehicle plate are unique (`409` if one is taken), creates the user identity, the driver profile and the driver's first vehicle. The driver starts `pending` and `offline`: until an administrator approves the account the driver can log in, edit the profile and upload documents, but cannot go available or receive delivery requests.
+
+      The working city must be an active city (`GET /cities`).
+
+    operationId: registerDriver
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/RegisterDriverRequest"
+          example:
+            email: omar.hassan@example.com
+            password: StrongPassword123!
+            phoneNumber: "+201001234567"
+            firstName: Omar
+            lastName: Hassan
+            dateOfBirth: "1992-04-18"
+            nationalId: "29204180101234"
+            licenseNumber: LIC-559213
+            licenseExpiryDate: "2027-08-30"
+            workingCityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+            vehicle:
+              vehicleType: motorcycle
+              brand: Honda
+              model: CB125
+              color: Red
+              plateNumber: ABC 1234
+              manufactureYear: 2021
+              insuranceExpiryDate: "2025-12-31"
+
+    responses:
+      "201":
+        description: Driver account created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/RegisterDriverResponse"
+            example:
+              success: true
+              message: Driver account created successfully. It is now pending approval.
+              data:
+                driver:
+                  id: e035c191-7d58-52be-9f78-c9a9351192dd
+                  firstName: Omar
+                  lastName: Hassan
+                  email: omar.hassan@example.com
+                  phoneNumber: "+201001234567"
+                  dateOfBirth: "1992-04-18"
+                  profileImageUrl: https://cdn.example.com/drivers/omar/profile.jpg
+                  nationalId: "29204180101234"
+                  licenseNumber: LIC-559213
+                  licenseExpiryDate: "2027-08-30"
+                  workingCity:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  status: pending
+                  availabilityStatus: offline
+                  rating: 4.8
+                  totalDeliveries: 312
+                  vehicle:
+                    id: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+                    vehicleType: motorcycle
+                    brand: Honda
+                    model: CB125
+                    color: Red
+                    plateNumber: ABC 1234
+                    manufactureYear: 2021
+                    insuranceExpiryDate: "2025-12-31"
+                    isActive: true
+                    createdAt: "2024-01-10T09:00:00.000Z"
+                  createdAt: "2024-01-10T09:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+loginDriver:
+  post:
+    tags:
+      - Auth
+
+    summary: Log in a driver
+
+    description: |
+      Authenticates a driver using their email and password.
+
+      On success, issues a JWT access token in the response body and a refresh token in an `HttpOnly` cookie (`Set-Cookie`); the refresh token is never returned in the body. A driver may log in while still `pending` approval.
+
+      Only accounts whose `account_status` is `active` can log in. A `suspended`, `locked` or `inactive` account is rejected with `403`, and only after the email and password have been verified, so the response does not reveal whether an email is registered.
+
+    operationId: loginDriver
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/LoginDriverRequest"
+          example:
+            email: omar.hassan@example.com
+            password: StrongPassword123!
+
+    responses:
+      "200":
+        description: Driver logged in successfully
+        headers:
+          Set-Cookie:
+            description: |
+              Sets the `refreshToken` cookie. It is `HttpOnly`, `Secure` and `SameSite=Strict`, so scripts cannot read it
+              and the browser sends it back on its own. It is never returned in the response body.
+            schema:
+              type: string
+            example: refreshToken=9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6; HttpOnly; Secure; SameSite=Strict
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/LoginDriverResponse"
+            example:
+              success: true
+              message: Logged in successfully
+              data:
+                driver:
+                  id: e035c191-7d58-52be-9f78-c9a9351192dd
+                  firstName: Omar
+                  lastName: Hassan
+                  email: omar.hassan@example.com
+                  phoneNumber: "+201001234567"
+                  dateOfBirth: "1992-04-18"
+                  profileImageUrl: https://cdn.example.com/drivers/omar/profile.jpg
+                  nationalId: "29204180101234"
+                  licenseNumber: LIC-559213
+                  licenseExpiryDate: "2027-08-30"
+                  workingCity:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  status: active
+                  availabilityStatus: available
+                  rating: 4.8
+                  totalDeliveries: 312
+                  vehicle:
+                    id: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+                    vehicleType: motorcycle
+                    brand: Honda
+                    model: CB125
+                    color: Red
+                    plateNumber: ABC 1234
+                    manufactureYear: 2021
+                    insuranceExpiryDate: "2025-12-31"
+                    isActive: true
+                    createdAt: "2024-01-10T09:00:00.000Z"
+                  createdAt: "2024-01-10T09:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+logoutDriver:
+  post:
+    tags:
+      - Auth
+
+    summary: Log out a driver
+
+    description: |
+      Logs out the currently authenticated driver by revoking the refresh token, ending the session securely.
+
+      The refresh token is read from the `refreshToken` HttpOnly cookie set during login - it is not accepted in the request body or as a query parameter. The response clears the cookie.
+
+    operationId: logoutDriver
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: refreshToken
+        in: cookie
+        required: true
+        description: |
+          Refresh token set by the driver login response. The browser sends it automatically. It is not
+          accepted in the request body or as a query parameter.
+        schema:
+          type: string
+
+    responses:
+      "200":
+        description: Driver logged out successfully
+        headers:
+          Set-Cookie:
+            description: Expires the `refreshToken` cookie so the browser discards it.
+            schema:
+              type: string
+            example: refreshToken=; Max-Age=0; HttpOnly; Secure; SameSite=Strict
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/LogoutDriverResponse"
+            example:
+              success: true
+              message: Logged out successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+refreshDriver:
+  post:
+    tags:
+      - Auth
+
+    summary: Refresh a driver access token
+
+    description: |
+      Issues a new JWT access token using the `refreshToken` cookie set at login.
+
+      The refresh token is rotated on every call: the presented token is revoked, a new one is issued in a fresh `HttpOnly` cookie, and the new access token is returned in the body. If a token that was already rotated or revoked is presented again, the whole token chain for that session is revoked and the caller must log in again.
+
+      The cookie is the credential, so no `Authorization` header is needed. The call is rejected with `401` if the cookie is missing, unknown, expired or revoked, and with `403` if the token does not belong to a driver or the account is no longer `active`.
+
+    operationId: refreshDriver
+
+    security: []
+
+    parameters:
+      - name: refreshToken
+        in: cookie
+        required: true
+        description: |
+          Refresh token set by the driver login response. The browser sends it automatically. It is not
+          accepted in the request body or as a query parameter.
+        schema:
+          type: string
+
+    responses:
+      "200":
+        description: Access token refreshed successfully
+        headers:
+          Set-Cookie:
+            description: |
+              Sets the `refreshToken` cookie. It is `HttpOnly`, `Secure` and `SameSite=Strict`, so scripts cannot read it
+              and the browser sends it back on its own. It is never returned in the response body.
+            schema:
+              type: string
+            example: refreshToken=9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6; HttpOnly; Secure; SameSite=Strict
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/RefreshDriverResponse"
+            example:
+              success: true
+              message: Access token refreshed successfully
+              data:
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+      "401":
+        $ref: "../responses/common.yaml#/InvalidRefreshToken"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+forgotPasswordDriver:
+  post:
+    tags:
+      - Auth
+
+    summary: Request a driver password reset
+
+    description: |
+      Starts password recovery for a driver who forgot their password.
+
+      If the email matches a driver account, a password reset token is generated and emailed. To avoid revealing account existence, the endpoint always responds with the same generic success message.
+
+    operationId: forgotPasswordDriver
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/ForgotPasswordDriverRequest"
+          example:
+            email: omar.hassan@example.com
+
+    responses:
+      "200":
+        description: Request accepted
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ForgotPasswordDriverResponse"
+            example:
+              success: true
+              message: If an account with that email exists, a password reset link has been sent.
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+resetPasswordDriver:
+  post:
+    tags:
+      - Auth
+
+    summary: Reset a driver password
+
+    description: |
+      Completes password recovery, verifying the driver's identity through the reset token before setting the new password.
+
+      The token must match an unused, unexpired password reset token issued by the forgot-password request. On success the token is marked as used and all existing refresh tokens for the account are revoked, requiring the driver to log in again.
+
+    operationId: resetPasswordDriver
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/ResetPasswordDriverRequest"
+          example:
+            token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+            newPassword: NewStrongPassword123!
+            confirmPassword: NewStrongPassword123!
+
+    responses:
+      "200":
+        description: Password reset successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ResetPasswordDriverResponse"
+            example:
+              success: true
+              message: Password reset successfully. Please log in again.
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "422":
+        $ref: "../responses/common.yaml#/InvalidResetToken"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverProfile:
+  get:
+    tags:
+      - Drivers
+
+    summary: View own driver profile
+
+    description: |
+      Returns the profile of the currently authenticated driver, including the working city, the
+      active vehicle, the approval `status` and the current availability.
+
+    operationId: getDriverProfile
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Driver profile retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/GetDriverProfileResponse"
+            example:
+              success: true
+              message: Driver profile retrieved successfully
+              data:
+                driver:
+                  id: e035c191-7d58-52be-9f78-c9a9351192dd
+                  firstName: Omar
+                  lastName: Hassan
+                  email: omar.hassan@example.com
+                  phoneNumber: "+201001234567"
+                  dateOfBirth: "1992-04-18"
+                  profileImageUrl: https://cdn.example.com/drivers/omar/profile.jpg
+                  nationalId: "29204180101234"
+                  licenseNumber: LIC-559213
+                  licenseExpiryDate: "2027-08-30"
+                  workingCity:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  status: active
+                  availabilityStatus: available
+                  rating: 4.8
+                  totalDeliveries: 312
+                  vehicle:
+                    id: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+                    vehicleType: motorcycle
+                    brand: Honda
+                    model: CB125
+                    color: Red
+                    plateNumber: ABC 1234
+                    manufactureYear: 2021
+                    insuranceExpiryDate: "2025-12-31"
+                    isActive: true
+                    createdAt: "2024-01-10T09:00:00.000Z"
+                  createdAt: "2024-01-10T09:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Drivers
+
+    summary: Update own driver profile
+
+    description: |
+      Updates the profile of the currently authenticated driver. Only the supplied fields are updated; omitted fields remain unchanged.
+
+      The phone number belongs to the driver's user account and the licence number to the driver, and both must stay unique (`409` otherwise). The login email and the national id cannot be changed here. A new working city must be an active city; it cannot be changed while a delivery is in progress (`409`).
+
+    operationId: updateDriverProfile
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/UpdateDriverProfileRequest"
+          example:
+            firstName: Omar
+            licenseExpiryDate: "2028-08-30"
+            workingCityId: 7a4c1e92-0d5b-4b3f-9e68-1f2a3b4c5d6e
+
+    responses:
+      "200":
+        description: Driver profile updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/UpdateDriverProfileResponse"
+            example:
+              success: true
+              message: Driver profile updated successfully
+              data:
+                driver:
+                  id: e035c191-7d58-52be-9f78-c9a9351192dd
+                  firstName: Omar
+                  lastName: Hassan
+                  email: omar.hassan@example.com
+                  phoneNumber: "+201001234567"
+                  dateOfBirth: "1992-04-18"
+                  profileImageUrl: https://cdn.example.com/drivers/omar/profile.jpg
+                  nationalId: "29204180101234"
+                  licenseNumber: LIC-559213
+                  licenseExpiryDate: "2028-08-30"
+                  workingCity:
+                    id: 7a4c1e92-0d5b-4b3f-9e68-1f2a3b4c5d6e
+                    name: Giza
+                    country: Egypt
+                  status: active
+                  availabilityStatus: available
+                  rating: 4.8
+                  totalDeliveries: 312
+                  vehicle:
+                    id: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+                    vehicleType: motorcycle
+                    brand: Honda
+                    model: CB125
+                    color: Red
+                    plateNumber: ABC 1234
+                    manufactureYear: 2021
+                    insuranceExpiryDate: "2025-12-31"
+                    isActive: true
+                    createdAt: "2024-01-10T09:00:00.000Z"
+                  createdAt: "2024-01-10T09:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+changePasswordDriver:
+  post:
+    tags:
+      - Drivers
+
+    summary: Change own password
+
+    description: |
+      Changes the password of the currently authenticated driver. The current password must be
+      supplied and the new one confirmed. Existing refresh tokens are revoked.
+
+    operationId: changePasswordDriver
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/ChangePasswordDriverRequest"
+          example:
+            currentPassword: StrongPassword123!
+            newPassword: NewStrongPassword123!
+            confirmPassword: NewStrongPassword123!
+
+    responses:
+      "200":
+        description: Password changed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ChangePasswordDriverResponse"
+            example:
+              success: true
+              message: Password changed successfully
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverProfileImage:
+  post:
+    tags:
+      - Drivers
+
+    summary: Upload or update profile picture
+
+    description: |
+      Uploads a new profile picture for the currently authenticated driver, replacing any existing
+      one.
+
+    operationId: uploadDriverProfileImage
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - image
+            properties:
+              image:
+                type: string
+                format: binary
+                description: Profile picture file (JPEG or PNG).
+
+    responses:
+      "200":
+        description: Profile picture updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/UploadDriverImageResponse"
+            example:
+              success: true
+              message: Profile picture updated successfully
+              data:
+                profileImageUrl: https://cdn.example.com/drivers/omar/profile.jpg
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverVehicles:
+  get:
+    tags:
+      - Drivers
+
+    summary: List own vehicles
+
+    description: |
+      Returns every vehicle the driver has registered. Exactly one is active; inactive vehicles are
+      kept as history.
+
+    operationId: listDriverVehicles
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Vehicles retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ListDriverVehiclesResponse"
+            example:
+              success: true
+              message: Vehicles retrieved successfully
+              data:
+                vehicles:
+                  - id: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+                    vehicleType: motorcycle
+                    brand: Honda
+                    model: CB125
+                    color: Red
+                    plateNumber: ABC 1234
+                    manufactureYear: 2021
+                    insuranceExpiryDate: "2025-12-31"
+                    isActive: true
+                    createdAt: "2024-01-10T09:00:00.000Z"
+                  - id: e08edf9b-2c2b-5680-8b67-83f041d0b604
+                    vehicleType: motorcycle
+                    brand: Yamaha
+                    model: YBR125
+                    color: Red
+                    plateNumber: XYZ 9876
+                    manufactureYear: 2021
+                    insuranceExpiryDate: "2025-12-31"
+                    isActive: false
+                    createdAt: "2024-01-10T09:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Drivers
+
+    summary: Replace the active vehicle
+
+    description: |
+      Registers a new vehicle and makes it the driver's active one. The previously active vehicle is
+      kept as an inactive record, because a driver has at most one active vehicle. The plate number
+      must be unique across all vehicles (`409` otherwise).
+
+    operationId: createDriverVehicle
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/CreateDriverVehicleRequest"
+          example:
+            vehicleType: car
+            brand: Toyota
+            model: Yaris
+            color: White
+            plateNumber: DEF 5678
+            manufactureYear: 2023
+            insuranceExpiryDate: "2026-06-30"
+
+    responses:
+      "201":
+        description: Vehicle added successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/CreateDriverVehicleResponse"
+            example:
+              success: true
+              message: Vehicle added successfully
+              data:
+                vehicle:
+                  id: 1d7b02d0-d153-5042-8e42-c8d8554d5306
+                  vehicleType: car
+                  brand: Toyota
+                  model: Yaris
+                  color: White
+                  plateNumber: DEF 5678
+                  manufactureYear: 2023
+                  insuranceExpiryDate: "2026-06-30"
+                  isActive: true
+                  createdAt: "2024-01-10T09:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverVehicle:
+  parameters:
+    - name: vehicleId
+      in: path
+      required: true
+      description: Unique identifier of the vehicle.
+      schema:
+        type: string
+        format: uuid
+      example: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+
+  patch:
+    tags:
+      - Drivers
+
+    summary: Update a vehicle
+
+    description: |
+      Updates the details of one of the driver's vehicles. Only the supplied fields are updated. The
+      plate number must stay unique across all vehicles (`409` otherwise).
+
+    operationId: updateDriverVehicle
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/UpdateDriverVehicleRequest"
+          example:
+            color: Black
+            insuranceExpiryDate: "2026-12-31"
+
+    responses:
+      "200":
+        description: Vehicle updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/UpdateDriverVehicleResponse"
+            example:
+              success: true
+              message: Vehicle updated successfully
+              data:
+                vehicle:
+                  id: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+                  vehicleType: motorcycle
+                  brand: Honda
+                  model: CB125
+                  color: Black
+                  plateNumber: ABC 1234
+                  manufactureYear: 2021
+                  insuranceExpiryDate: "2026-12-31"
+                  isActive: true
+                  createdAt: "2024-01-10T09:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverDocuments:
+  get:
+    tags:
+      - Drivers
+
+    summary: List own documents
+
+    description: |
+      Returns the documents the driver has uploaded, with the review `status` an administrator gave
+      each one.
+
+    operationId: listDriverDocuments
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Documents retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ListDriverDocumentsResponse"
+            example:
+              success: true
+              message: Documents retrieved successfully
+              data:
+                documents:
+                  - id: 75488f9f-8635-539a-9d05-8e7c88db41e1
+                    documentType: driver_license
+                    fileUrl: https://cdn.example.com/drivers/omar/license.jpg
+                    status: verified
+                    expiryDate: "2027-08-30"
+                    verifiedAt: "2024-01-12T11:00:00.000Z"
+                    createdAt: "2024-01-10T09:05:00.000Z"
+                  - id: 0196cfec-70b9-503e-ac2d-accc2f4528d0
+                    documentType: insurance
+                    fileUrl: https://cdn.example.com/drivers/omar/insurance.pdf
+                    status: submitted
+                    expiryDate: "2025-12-31"
+                    verifiedAt: null
+                    createdAt: "2024-01-10T09:05:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Drivers
+
+    summary: Upload a document
+
+    description: |
+      Uploads a document for review. It starts as `submitted` until an administrator verifies or
+      rejects it.
+
+    operationId: uploadDriverDocument
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - documentType
+              - file
+            properties:
+              documentType:
+                type: string
+                enum:
+                  - driver_license
+                  - national_id
+                  - passport
+                  - insurance
+                  - vehicle_registration
+                  - background_check
+                  - medical_certificate
+                  - other
+                description: Kind of document.
+
+              file:
+                type: string
+                format: binary
+                description: The document file (JPEG, PNG or PDF).
+
+              expiryDate:
+                type: string
+                format: date
+                description: When the document expires, if it does.
+
+    responses:
+      "201":
+        description: Document uploaded successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/UploadDriverDocumentResponse"
+            example:
+              success: true
+              message: Document uploaded successfully
+              data:
+                document:
+                  id: 75488f9f-8635-539a-9d05-8e7c88db41e1
+                  documentType: driver_license
+                  fileUrl: https://cdn.example.com/drivers/omar/license.jpg
+                  status: submitted
+                  expiryDate: "2027-08-30"
+                  verifiedAt: null
+                  createdAt: "2024-01-10T09:05:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverDocument:
+  parameters:
+    - name: documentId
+      in: path
+      required: true
+      description: Unique identifier of the document.
+      schema:
+        type: string
+        format: uuid
+      example: 75488f9f-8635-539a-9d05-8e7c88db41e1
+
+  delete:
+    tags:
+      - Drivers
+
+    summary: Remove a document
+
+    description: Removes one of the driver's uploaded documents.
+
+    operationId: deleteDriverDocument
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Document removed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/DeleteDriverDocumentResponse"
+            example:
+              success: true
+              message: Document removed successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverAvailability:
+  get:
+    tags:
+      - Drivers
+
+    summary: Get current availability
+
+    description: Returns whether the driver is currently taking deliveries, together with the approval status.
+
+    operationId: getDriverAvailability
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Availability retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/GetDriverAvailabilityResponse"
+            example:
+              success: true
+              message: Availability retrieved successfully
+              data:
+                availability:
+                  status: active
+                  availabilityStatus: available
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Drivers
+
+    summary: Change availability
+
+    description: |
+      Sets the driver `available`, `offline` or `on_break`. Only drivers whose approval status is
+      `active` can go available (`403` otherwise). `busy` is set by the system while a delivery is in
+      progress and cannot be requested; while one is in progress the driver cannot go `offline` or
+      `on_break` (`409`). Only available drivers are offered new delivery requests.
+
+    operationId: updateDriverAvailability
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/UpdateDriverAvailabilityRequest"
+          example:
+            availabilityStatus: offline
+
+    responses:
+      "200":
+        description: Availability updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/UpdateDriverAvailabilityResponse"
+            example:
+              success: true
+              message: Availability updated successfully
+              data:
+                availability:
+                  status: active
+                  availabilityStatus: offline
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverLocation:
+  post:
+    tags:
+      - Drivers
+
+    summary: Send current location
+
+    description: |
+      Records the driver's current position. Positions are stored as history, one per timestamp;
+      sending the same `recordedAt` twice is rejected with `409`. When `recordedAt` is omitted the
+      server time is used. Only drivers whose approval status is `active` can send their location.
+
+    operationId: updateDriverLocation
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/driver.yaml#/UpdateDriverLocationRequest"
+          example:
+            latitude: 30.0561
+            longitude: 31.2394
+            heading: 90
+            speed: 32.5
+            recordedAt: "2024-10-05T19:05:00.000Z"
+
+    responses:
+      "201":
+        description: Location recorded successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/UpdateDriverLocationResponse"
+            example:
+              success: true
+              message: Location recorded successfully
+              data:
+                recordedAt: "2024-10-05T19:05:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverDeliveryRequests:
+  get:
+    tags:
+      - Drivers
+
+    summary: List pending delivery requests
+
+    description: |
+      Returns the delivery requests currently offered to the driver: offers that are still `offered` and have not expired. A driver is offered an order once the restaurant has accepted it, and only when the pickup branch is in the driver's working city, and every eligible driver receives the same order at the same time - the first to accept wins.
+
+      Newest first. Offers that were accepted by someone else, withdrawn or expired are not listed.
+
+    operationId: listDeliveryRequests
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Delivery requests retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ListDeliveryRequestsResponse"
+            example:
+              success: true
+              message: Delivery requests retrieved successfully
+              data:
+                requests:
+                  - id: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+                    status: offered
+                    offeredAt: "2024-10-05T18:32:30.000Z"
+                    expiresAt: "2024-10-05T18:33:30.000Z"
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    restaurantName: Nile Grill House
+                    itemCount: 2
+                    pickup:
+                      branchLabel: Ramses Branch
+                      street: 15 Ramses St
+                      building: Building 4
+                      city:
+                        id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                        name: Cairo
+                        country: Egypt
+                      latitude: 30.0561
+                      longitude: 31.2394
+                    dropoff:
+                      cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      city: Cairo
+                      latitude: 30.0444
+                      longitude: 31.2357
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverDeliveryRequest:
+  parameters:
+    - name: offerId
+      in: path
+      required: true
+      description: Unique identifier of the delivery request (offer).
+      schema:
+        type: string
+        format: uuid
+      example: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+
+  get:
+    tags:
+      - Drivers
+
+    summary: View a delivery request
+
+    description: |
+      Returns the details of one delivery request: the pickup branch, the delivery area, and what is
+      in the order. The customer's name, phone number and street address are shown only after the
+      request is accepted.
+
+    operationId: getDeliveryRequest
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery request retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/GetDeliveryRequestResponse"
+            example:
+              success: true
+              message: Delivery request retrieved successfully
+              data:
+                request:
+                  id: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+                  status: offered
+                  offeredAt: "2024-10-05T18:32:30.000Z"
+                  expiresAt: "2024-10-05T18:33:30.000Z"
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  restaurantName: Nile Grill House
+                  itemCount: 2
+                  pickup:
+                    branchLabel: Ramses Branch
+                    street: 15 Ramses St
+                    building: Building 4
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  dropoff:
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - name: Mixed Grill
+                      quantity: 2
+                  customerNote: Please ring the bell
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+acceptDeliveryRequest:
+  parameters:
+    - name: offerId
+      in: path
+      required: true
+      description: Unique identifier of the delivery request (offer).
+      schema:
+        type: string
+        format: uuid
+      example: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+
+  post:
+    tags:
+      - Drivers
+
+    summary: Accept a delivery request
+
+    description: |
+      Accepts the delivery request. The first accepting driver gets the delivery: an assignment is
+      created, every other open offer for the order is withdrawn, and the driver's availability
+      becomes `busy`. If the request was already taken, withdrawn or has expired, the call is rejected
+      with `409`. Only available drivers with `active` approval status can accept (`403`).
+
+    operationId: acceptDeliveryRequest
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery request accepted
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/AcceptDeliveryRequestResponse"
+            example:
+              success: true
+              message: Delivery request accepted
+              data:
+                delivery:
+                  id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  orderStatus: ready_for_pickup
+                  status: accepted
+                  restaurantName: Nile Grill House
+                  branchLabel: Ramses Branch
+                  dropoffCity: Cairo
+                  assignedAt: "2024-10-05T18:33:00.000Z"
+                  acceptedAt: "2024-10-05T18:33:00.000Z"
+                  completedAt: null
+                  pickup:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  dropoff:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  customerNote: Please ring the bell
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: cash
+                    status: pending
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: null
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+rejectDeliveryRequest:
+  parameters:
+    - name: offerId
+      in: path
+      required: true
+      description: Unique identifier of the delivery request (offer).
+      schema:
+        type: string
+        format: uuid
+      example: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+
+  post:
+    tags:
+      - Drivers
+
+    summary: Reject a delivery request
+
+    description: |
+      Rejects the delivery request. It disappears from this driver's list and the order stays offered
+      to the other drivers. A request that is no longer open cannot be rejected (`409`).
+
+    operationId: rejectDeliveryRequest
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery request rejected
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/RejectDeliveryRequestResponse"
+            example:
+              success: true
+              message: Delivery request rejected
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverDeliveries:
+  get:
+    tags:
+      - Drivers
+
+    summary: List own deliveries
+
+    description: |
+      Returns the deliveries assigned to the driver, newest first. By default only deliveries still in
+      progress (`accepted`) are listed; use `status` to see others. Completed deliveries are listed
+      under `GET /driver/deliveries/history`.
+
+    operationId: listDeliveries
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: Only deliveries whose assignment has this status.
+        schema:
+          type: string
+          enum:
+            - accepted
+            - rejected
+            - cancelled
+          default: accepted
+        example: accepted
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Deliveries retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ListDeliveriesResponse"
+            example:
+              success: true
+              message: Deliveries retrieved successfully
+              data:
+                deliveries:
+                  - id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    orderStatus: ready_for_pickup
+                    status: accepted
+                    restaurantName: Nile Grill House
+                    branchLabel: Ramses Branch
+                    dropoffCity: Cairo
+                    assignedAt: "2024-10-05T18:33:00.000Z"
+                    acceptedAt: "2024-10-05T18:33:00.000Z"
+                    completedAt: null
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverDeliveryHistory:
+  get:
+    tags:
+      - Drivers
+
+    summary: Completed delivery history
+
+    description: |
+      Returns the deliveries the driver has completed, newest first, optionally limited to a date
+      range.
+
+    operationId: listDeliveryHistory
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: from
+        in: query
+        required: false
+        description: Only deliveries completed on or after this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Only deliveries completed on or before this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Delivery history retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ListDeliveriesResponse"
+            example:
+              success: true
+              message: Delivery history retrieved successfully
+              data:
+                deliveries:
+                  - id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    orderStatus: delivered
+                    status: completed
+                    restaurantName: Nile Grill House
+                    branchLabel: Ramses Branch
+                    dropoffCity: Cairo
+                    assignedAt: "2024-10-05T18:33:00.000Z"
+                    acceptedAt: "2024-10-05T18:33:00.000Z"
+                    completedAt: "2024-10-05T19:20:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverDelivery:
+  parameters:
+    - name: assignmentId
+      in: path
+      required: true
+      description: Unique identifier of the delivery (assignment).
+      schema:
+        type: string
+        format: uuid
+      example: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+
+  get:
+    tags:
+      - Drivers
+
+    summary: View delivery details
+
+    description: |
+      Returns everything the driver needs for an accepted delivery: the pickup branch with its
+      coordinates, the customer's delivery address snapshot with the recipient's name and phone, the
+      items, and the payment (for `cash`, the amount to collect).
+
+    operationId: getDelivery
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/GetDeliveryResponse"
+            example:
+              success: true
+              message: Delivery retrieved successfully
+              data:
+                delivery:
+                  id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  orderStatus: ready_for_pickup
+                  status: accepted
+                  restaurantName: Nile Grill House
+                  branchLabel: Ramses Branch
+                  dropoffCity: Cairo
+                  assignedAt: "2024-10-05T18:33:00.000Z"
+                  acceptedAt: "2024-10-05T18:33:00.000Z"
+                  completedAt: null
+                  pickup:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  dropoff:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  customerNote: Please ring the bell
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: cash
+                    status: pending
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: null
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+pickupDelivery:
+  parameters:
+    - name: assignmentId
+      in: path
+      required: true
+      description: Unique identifier of the delivery (assignment).
+      schema:
+        type: string
+        format: uuid
+      example: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+
+  post:
+    tags:
+      - Drivers
+
+    summary: Confirm order pickup
+
+    description: |
+      Confirms that the driver collected the order from the branch. The order must be
+      `ready_for_pickup`; it moves to `picked_up` and the change is added to the order's status
+      history (`409` if the order is in any other status).
+
+    operationId: pickupDelivery
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/UpdateDeliveryResponse"
+            example:
+              success: true
+              message: Delivery updated successfully
+              data:
+                delivery:
+                  id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  orderStatus: picked_up
+                  status: accepted
+                  restaurantName: Nile Grill House
+                  branchLabel: Ramses Branch
+                  dropoffCity: Cairo
+                  assignedAt: "2024-10-05T18:33:00.000Z"
+                  acceptedAt: "2024-10-05T18:33:00.000Z"
+                  completedAt: null
+                  pickup:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  dropoff:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  customerNote: Please ring the bell
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: cash
+                    status: pending
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: null
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+startDelivery:
+  parameters:
+    - name: assignmentId
+      in: path
+      required: true
+      description: Unique identifier of the delivery (assignment).
+      schema:
+        type: string
+        format: uuid
+      example: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+
+  post:
+    tags:
+      - Drivers
+
+    summary: Start the delivery
+
+    description: |
+      Marks that the driver is on the way to the customer. The order must be `picked_up`; it moves to
+      `out_for_delivery` (`409` otherwise).
+
+    operationId: startDelivery
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/UpdateDeliveryResponse"
+            example:
+              success: true
+              message: Delivery updated successfully
+              data:
+                delivery:
+                  id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  orderStatus: out_for_delivery
+                  status: accepted
+                  restaurantName: Nile Grill House
+                  branchLabel: Ramses Branch
+                  dropoffCity: Cairo
+                  assignedAt: "2024-10-05T18:33:00.000Z"
+                  acceptedAt: "2024-10-05T18:33:00.000Z"
+                  completedAt: null
+                  pickup:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  dropoff:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  customerNote: Please ring the bell
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: cash
+                    status: pending
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: null
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+completeDelivery:
+  parameters:
+    - name: assignmentId
+      in: path
+      required: true
+      description: Unique identifier of the delivery (assignment).
+      schema:
+        type: string
+        format: uuid
+      example: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+
+  post:
+    tags:
+      - Drivers
+
+    summary: Confirm delivery
+
+    description: |
+      Confirms that the order reached the customer. The order must be `out_for_delivery`. In one step
+      the order moves to `delivered`, the assignment becomes `completed`, the driver's completed-
+      delivery count goes up, an earning is recorded as `pending`, and the driver becomes `available`
+      again (`409` if the order is in any other status).
+
+    operationId: completeDelivery
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Delivery updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/UpdateDeliveryResponse"
+            example:
+              success: true
+              message: Delivery updated successfully
+              data:
+                delivery:
+                  id: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  orderStatus: delivered
+                  status: completed
+                  restaurantName: Nile Grill House
+                  branchLabel: Ramses Branch
+                  dropoffCity: Cairo
+                  assignedAt: "2024-10-05T18:33:00.000Z"
+                  acceptedAt: "2024-10-05T18:33:00.000Z"
+                  completedAt: "2024-10-05T19:20:00.000Z"
+                  pickup:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  dropoff:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  customerNote: Please ring the bell
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: cash
+                    status: pending
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: null
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverEarnings:
+  get:
+    tags:
+      - Drivers
+
+    summary: List earnings
+
+    description: |
+      Returns the driver's earnings, one per delivered order, newest first. An earning is `pending`
+      until a payout settles it.
+
+    operationId: listEarnings
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: Only earnings with this status.
+        schema:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+            - on_hold
+            - cancelled
+        example: pending
+      - name: from
+        in: query
+        required: false
+        description: Only earnings recorded on or after this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Only earnings recorded on or before this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Earnings retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ListEarningsResponse"
+            example:
+              success: true
+              message: Earnings retrieved successfully
+              data:
+                earnings:
+                  - id: e5e31669-fa69-5b42-8ddb-c31707eb989c
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    baseFee: 30
+                    bonus: 5
+                    tip: 10
+                    deduction: 0
+                    netAmount: 45
+                    status: pending
+                    payoutId: null
+                    createdAt: "2024-10-05T19:20:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverEarningsSummary:
+  get:
+    tags:
+      - Drivers
+
+    summary: Earnings summary for a period
+
+    description: |
+      Totals the driver's earnings for a period and splits the net amount by status, so unpaid money
+      is visible. Without dates the current calendar month is used.
+
+    operationId: getEarningsSummary
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: from
+        in: query
+        required: false
+        description: First day of the period.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Last day of the period.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+
+    responses:
+      "200":
+        description: Earnings summary retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/GetEarningsSummaryResponse"
+            example:
+              success: true
+              message: Earnings summary retrieved successfully
+              data:
+                summary:
+                  periodStart: "2024-10-01"
+                  periodEnd: "2024-10-31"
+                  deliveries: 48
+                  baseFee: 1440
+                  bonus: 120
+                  tip: 360
+                  deduction: 20
+                  netAmount: 1900
+                  byStatus:
+                    pending: 450
+                    processing: 0
+                    completed: 1450
+                    failed: 0
+                    on_hold: 0
+                    cancelled: 0
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverDailyEarnings:
+  get:
+    tags:
+      - Drivers
+
+    summary: Daily earnings
+
+    description: |
+      Returns the driver's earnings grouped by day for a period. Without dates the last 7 days are
+      returned.
+
+    operationId: listDailyEarnings
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: from
+        in: query
+        required: false
+        description: First day to include.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Last day to include.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-07"
+
+    responses:
+      "200":
+        description: Daily earnings retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ListDailyEarningsResponse"
+            example:
+              success: true
+              message: Daily earnings retrieved successfully
+              data:
+                days:
+                  - date: "2024-10-05"
+                    deliveries: 9
+                    tip: 70
+                    netAmount: 410
+                  - date: "2024-10-06"
+                    deliveries: 7
+                    tip: 40
+                    netAmount: 325
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverPayouts:
+  get:
+    tags:
+      - Drivers
+
+    summary: Payout history
+
+    description: Returns the payouts made to the driver, newest first.
+
+    operationId: listPayouts
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: Only payouts with this status.
+        schema:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+            - on_hold
+            - cancelled
+        example: completed
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Payouts retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ListPayoutsResponse"
+            example:
+              success: true
+              message: Payouts retrieved successfully
+              data:
+                payouts:
+                  - id: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+                    periodStart: "2024-09-29"
+                    periodEnd: "2024-10-05"
+                    amount: 1450
+                    status: completed
+                    paidAt: "2024-10-07T10:00:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverPayout:
+  parameters:
+    - name: payoutId
+      in: path
+      required: true
+      description: Unique identifier of the payout.
+      schema:
+        type: string
+        format: uuid
+      example: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+
+  get:
+    tags:
+      - Drivers
+
+    summary: View a payout
+
+    description: Returns one payout together with the earnings it settled.
+
+    operationId: getPayout
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Payout retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/GetPayoutResponse"
+            example:
+              success: true
+              message: Payout retrieved successfully
+              data:
+                payout:
+                  id: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+                  periodStart: "2024-09-29"
+                  periodEnd: "2024-10-05"
+                  amount: 1450
+                  status: completed
+                  paidAt: "2024-10-07T10:00:00.000Z"
+                earnings:
+                  - id: e5e31669-fa69-5b42-8ddb-c31707eb989c
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    baseFee: 30
+                    bonus: 5
+                    tip: 10
+                    deduction: 0
+                    netAmount: 45
+                    status: completed
+                    payoutId: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+                    createdAt: "2024-10-05T19:20:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverStatistics:
+  get:
+    tags:
+      - Drivers
+
+    summary: Delivery statistics
+
+    description: |
+      Returns performance figures: the cached rating and lifetime delivery count, what happened to the
+      offers the driver received in the period, and the resulting acceptance rate. Without dates the
+      current calendar month is used.
+
+    operationId: getDriverStatistics
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: from
+        in: query
+        required: false
+        description: First day of the period.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Last day of the period.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+
+    responses:
+      "200":
+        description: Statistics retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/GetDriverStatisticsResponse"
+            example:
+              success: true
+              message: Statistics retrieved successfully
+              data:
+                statistics:
+                  period:
+                    from: "2024-10-01"
+                    to: "2024-10-31"
+                  rating: 4.8
+                  totalDeliveries: 312
+                  completedDeliveries: 48
+                  cancelledDeliveries: 1
+                  offers:
+                    received: 60
+                    accepted: 48
+                    rejected: 7
+                    expired: 5
+                  acceptanceRate: 0.8
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverReviews:
+  get:
+    tags:
+      - Drivers
+
+    summary: View own reviews
+
+    description: |
+      Returns the reviews customers wrote about the driver. Only reviews an administrator has
+      published are shown, newest first.
+
+    operationId: listDriverReviews
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Reviews retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/driver.yaml#/ListDriverReviewsResponse"
+            example:
+              success: true
+              message: Reviews retrieved successfully
+              data:
+                reviews:
+                  - id: 05d4f94b-3812-570d-848c-c7db2eeef83f
+                    orderNumber: ORD-1001
+                    rating: 5
+                    title: Fast and polite
+                    comment: Arrived early and the food was still hot.
+                    isEdited: false
+                    createdAt: "2024-10-05T20:00:00.000Z"
+                    publishedAt: "2024-10-05T21:00:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

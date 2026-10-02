@@ -10,11 +10,15 @@ listRestaurants:
 
       Supports free-text search by restaurant name via the `search`
       parameter (FR-CUS-009: Search Restaurants), and filtering by
-      city, availability status, minimum rating, and maximum delivery
+      city, branch availability, minimum rating, and maximum delivery
       fee, along with sorting (FR-CUS-010: Filter Restaurants).
 
-      Only restaurants with `approved` status are returned. Publicly
-      accessible; no authentication required.
+      A restaurant is returned once, even if it has several branches.
+      It is included when at least one of its active branches matches
+      the filters, and with `cityId` set its `branches` list contains
+      only the branches in that city. Only restaurants with `approved`
+      status are returned. Publicly accessible; no authentication
+      required.
 
     operationId: listRestaurants
 
@@ -29,18 +33,30 @@ listRestaurants:
           type: string
         example: grill
 
-      - name: city
+      - name: cityId
         in: query
         required: false
-        description: Filter restaurants located in this city.
+        description: |
+          Only restaurants with an active branch in this city, from `GET /cities`.
         schema:
           type: string
-        example: Cairo
+          format: uuid
+        example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+      - name: cuisine
+        in: query
+        required: false
+        description: Only restaurants tagged with this cuisine. Names come from `GET /cuisines`.
+        schema:
+          type: string
+        example: Grills
 
       - name: availabilityStatus
         in: query
         required: false
-        description: Filter restaurants by current availability.
+        description: |
+          Only restaurants with at least one matching active branch (in the requested city, if `cityId` is set)
+          whose current availability is this value.
         schema:
           type: string
           enum:
@@ -122,19 +138,23 @@ listRestaurants:
                     description: Authentic Egyptian grills and mezze.
                     logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
                     coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
-                    availabilityStatus: open
                     minimumOrderAmount: 100
                     deliveryFee: 25
                     estimatedDeliveryTime: 35
                     ratingAverage: 4.5
                     ratingCount: 128
-                    address:
-                      country: Egypt
-                      city: Cairo
-                      street: 15 Ramses St
-                      building: Building 4
-                      latitude: 30.0561
-                      longitude: 31.2394
+                    branches:
+                      - id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                        label: Ramses Branch
+                        city:
+                          id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                          name: Cairo
+                          country: Egypt
+                        street: 15 Ramses St
+                        building: Building 4
+                        latitude: 30.0561
+                        longitude: 31.2394
+                        availabilityStatus: open
                 pagination:
                   page: 1
                   limit: 20
@@ -155,8 +175,12 @@ getRestaurant:
     summary: View restaurant details
     description: |
       Returns detailed information for a single restaurant, identified
-      by `restaurantId`, including address, operating hours, and
-      currently active promotions (FR-CUS-011).
+      by `restaurantId`, including its active branches (each with its
+      address and operating hours) and currently active promotions
+      (FR-CUS-011).
+
+      Only restaurants with `approved` status are visible; any other
+      restaurant is reported as `404`.
 
       Publicly accessible; no authentication required.
 
@@ -189,32 +213,34 @@ getRestaurant:
                   id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
                   name: Nile Grill House
                   description: Authentic Egyptian grills and mezze.
-                  phoneNumber: "+201234567890"
-                  email: contact@nilegrill.example.com
                   logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
                   coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
-                  availabilityStatus: open
                   minimumOrderAmount: 100
                   deliveryFee: 25
                   estimatedDeliveryTime: 35
                   ratingAverage: 4.5
                   ratingCount: 128
-                  address:
-                    country: Egypt
-                    city: Cairo
-                    street: 15 Ramses St
-                    building: Building 4
-                    latitude: 30.0561
-                    longitude: 31.2394
-                  operatingHours:
-                    - dayOfWeek: 0
-                      opensAt: "09:00"
-                      closesAt: "23:00"
-                      isClosed: false
-                    - dayOfWeek: 1
-                      opensAt: "09:00"
-                      closesAt: "23:00"
-                      isClosed: false
+                  branches:
+                    - id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                      label: Ramses Branch
+                      city:
+                        id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                        name: Cairo
+                        country: Egypt
+                      street: 15 Ramses St
+                      building: Building 4
+                      latitude: 30.0561
+                      longitude: 31.2394
+                      availabilityStatus: open
+                      operatingHours:
+                        - dayOfWeek: 0
+                          opensAt: "09:00"
+                          closesAt: "23:00"
+                          isClosed: false
+                        - dayOfWeek: 1
+                          opensAt: "09:00"
+                          closesAt: "23:00"
+                          isClosed: false
                   activePromotions:
                     - id: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f
                       title: 20% off orders over 200 EGP
@@ -239,7 +265,8 @@ getRestaurantMenu:
     description: |
       Returns the menu of a single restaurant, identified by
       `restaurantId`, grouped by category (FR-CUS-012). Only active
-      categories and active menu items are included.
+      categories and active menu items are included. The restaurant
+      must have `approved` status; otherwise the response is `404`.
 
       Publicly accessible; no authentication required.
 
@@ -301,9 +328,10 @@ registerRestaurant:
 
       Validates the supplied information, verifies email uniqueness,
       creates the underlying user identity, and creates the restaurant
-      profile together with its address. The new restaurant is created
-      with `pending` status and cannot receive orders until an
-      administrator approves it.
+      profile together with its first branch. The new restaurant is
+      created with `pending` status and cannot receive orders until an
+      administrator approves it. The first branch is created `closed`;
+      more branches are added with the branch endpoints.
 
     operationId: registerRestaurant
 
@@ -321,9 +349,9 @@ registerRestaurant:
             password: StrongPassword123!
             phoneNumber: "+201234567890"
             description: Authentic Egyptian grills and mezze.
-            address:
-              country: Egypt
-              city: Cairo
+            branch:
+              label: Ramses Branch
+              cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
               street: 15 Ramses St
               building: Building 4
               latitude: 30.0561
@@ -347,6 +375,21 @@ registerRestaurant:
                   phoneNumber: "+201234567890"
                   status: pending
                   createdAt: "2024-01-15T10:30:00.000Z"
+                branch:
+                  id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  label: Ramses Branch
+                  city:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  street: 15 Ramses St
+                  building: Building 4
+                  latitude: 30.0561
+                  longitude: 31.2394
+                  availabilityStatus: closed
+                  isActive: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+                  updatedAt: null
 
       "400":
         $ref: "../responses/common.yaml#/ValidationError"
@@ -366,10 +409,18 @@ loginRestaurant:
     description: |
       Authenticates a restaurant using its email and password (FR-RES-002).
 
-      On success, issues a JWT access token and a refresh token. A
+      On success, issues a JWT access token in the response body and a
+      refresh token in an `HttpOnly` cookie (`Set-Cookie`); the refresh
+      token is never returned in the body. A
       restaurant may log in regardless of its approval `status`, but
       other endpoints may reject actions until the restaurant is
       `approved`.
+
+      Only accounts whose `account_status` is `active` can log in.
+      A `suspended`, `locked` or `inactive` account is rejected with
+      `403`, and only after the email and password have been verified,
+      so the response does not reveal whether an email is registered.
+      Suspension is an account-level state, not a restaurant `status`.
 
     operationId: loginRestaurant
 
@@ -388,6 +439,14 @@ loginRestaurant:
     responses:
       "200":
         description: Restaurant logged in successfully
+        headers:
+          Set-Cookie:
+            description: |
+              Sets the `refreshToken` cookie. It is `HttpOnly`, `Secure` and `SameSite=Strict`, so scripts cannot read it
+              and the browser sends it back on its own. It is never returned in the response body.
+            schema:
+              type: string
+            example: refreshToken=9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6; HttpOnly; Secure; SameSite=Strict
         content:
           application/json:
             schema:
@@ -405,29 +464,38 @@ loginRestaurant:
                   logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
                   coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
                   status: approved
-                  availabilityStatus: open
                   minimumOrderAmount: 100
                   deliveryFee: 25
                   estimatedDeliveryTime: 35
                   ratingAverage: 4.5
                   ratingCount: 128
-                  address:
-                    country: Egypt
-                    city: Cairo
-                    street: 15 Ramses St
-                    building: Building 4
-                    latitude: 30.0561
-                    longitude: 31.2394
+                  branches:
+                    - id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                      label: Ramses Branch
+                      city:
+                        id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                        name: Cairo
+                        country: Egypt
+                      street: 15 Ramses St
+                      building: Building 4
+                      latitude: 30.0561
+                      longitude: 31.2394
+                      availabilityStatus: open
+                      isActive: true
+                      createdAt: "2023-11-10T08:00:00.000Z"
+                      updatedAt: null
                   createdAt: "2023-11-10T08:00:00.000Z"
                   updatedAt: null
-                accessToken: "******"
-                refreshToken: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZjVlNmQ3YyJ9.def456signature
 
       "400":
         $ref: "../responses/common.yaml#/ValidationError"
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
@@ -444,16 +512,32 @@ logoutRestaurant:
 
       The refresh token is read from the `refreshToken` HttpOnly cookie
       set during login — it is not accepted in the request body or as
-      a query parameter.
+      a query parameter. The response clears the cookie.
 
     operationId: logoutRestaurant
 
     security:
       - bearerAuth: []
 
+    parameters:
+      - name: refreshToken
+        in: cookie
+        required: true
+        description: |
+          Refresh token set by the restaurant login response. The browser sends it automatically. It is not
+          accepted in the request body or as a query parameter.
+        schema:
+          type: string
+
     responses:
       "200":
         description: Restaurant logged out successfully
+        headers:
+          Set-Cookie:
+            description: Expires the `refreshToken` cookie so the browser discards it.
+            schema:
+              type: string
+            example: refreshToken=; Max-Age=0; HttpOnly; Secure; SameSite=Strict
         content:
           application/json:
             schema:
@@ -465,6 +549,77 @@ logoutRestaurant:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+refreshRestaurant:
+  post:
+    tags:
+      - Auth
+
+    summary: Refresh a restaurant access token
+    description: |
+      Issues a new JWT access token for a restaurant whose access token has
+      expired, using the `refreshToken` cookie set at login. Supports
+      the session started by FR-RES-002.
+
+      The refresh token is rotated on every call: the presented token
+      is revoked, a new one is issued in a fresh `HttpOnly` cookie
+      (`Set-Cookie`), and the new access token is returned in the
+      body. If a token that was already rotated or revoked is
+      presented again, the whole token chain for that session is
+      revoked and the caller must log in again.
+
+      The cookie is the credential, so no `Authorization` header is
+      needed (the access token is usually expired by now). The call is
+      rejected with `401` if the cookie is missing, unknown, expired
+      or revoked, with `403` if the token belongs to a non-restaurant account or
+      the account's `account_status` is no longer `active`.
+
+    operationId: refreshRestaurant
+
+    security: []
+
+    parameters:
+      - name: refreshToken
+        in: cookie
+        required: true
+        description: |
+          Refresh token set by the restaurant login response. The browser sends it automatically. It is not
+          accepted in the request body or as a query parameter.
+        schema:
+          type: string
+
+    responses:
+      "200":
+        description: Access token refreshed successfully
+        headers:
+          Set-Cookie:
+            description: |
+              Replaces the `refreshToken` cookie with the rotated token. It is `HttpOnly`, `Secure` and
+              `SameSite=Strict`, and is never returned in the response body.
+            schema:
+              type: string
+            example: refreshToken=3b2a1c0d-9e8f-4a7b-8c6d-5e4f3a2b1c0d; HttpOnly; Secure; SameSite=Strict
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/RefreshRestaurantResponse"
+            example:
+              success: true
+              message: Access token refreshed successfully
+              data:
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+      "401":
+        $ref: "../responses/common.yaml#/InvalidRefreshToken"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
@@ -603,24 +758,34 @@ restaurantProfile:
                   logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
                   coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
                   status: approved
-                  availabilityStatus: open
                   minimumOrderAmount: 100
                   deliveryFee: 25
                   estimatedDeliveryTime: 35
                   ratingAverage: 4.5
                   ratingCount: 128
-                  address:
-                    country: Egypt
-                    city: Cairo
-                    street: 15 Ramses St
-                    building: Building 4
-                    latitude: 30.0561
-                    longitude: 31.2394
+                  branches:
+                    - id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                      label: Ramses Branch
+                      city:
+                        id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                        name: Cairo
+                        country: Egypt
+                      street: 15 Ramses St
+                      building: Building 4
+                      latitude: 30.0561
+                      longitude: 31.2394
+                      availabilityStatus: open
+                      isActive: true
+                      createdAt: "2023-11-10T08:00:00.000Z"
+                      updatedAt: null
                   createdAt: "2023-11-10T08:00:00.000Z"
                   updatedAt: "2024-02-01T09:00:00.000Z"
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
@@ -633,8 +798,13 @@ restaurantProfile:
     description: |
       Updates the profile information of the currently authenticated
       restaurant (FR-RES-005.2). Only the supplied fields are updated;
-      omitted fields remain unchanged. The address, if supplied, is
-      also updated as a partial patch.
+      omitted fields remain unchanged. Addresses belong to branches,
+      so they are changed with the branch endpoints, not here.
+
+      A restaurant has no contact details of its own: its email and
+      phone number belong to its user account. `phoneNumber` can be
+      changed here and must stay unique (`409` otherwise). The login
+      email cannot be changed through this endpoint.
 
     operationId: updateRestaurantProfile
 
@@ -654,9 +824,6 @@ restaurantProfile:
             minimumOrderAmount: 120
             deliveryFee: 30
             estimatedDeliveryTime: 40
-            address:
-              street: 20 Ramses St
-              building: Building 4
 
     responses:
       "200":
@@ -678,19 +845,26 @@ restaurantProfile:
                   logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
                   coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
                   status: approved
-                  availabilityStatus: open
                   minimumOrderAmount: 120
                   deliveryFee: 30
                   estimatedDeliveryTime: 40
                   ratingAverage: 4.5
                   ratingCount: 128
-                  address:
-                    country: Egypt
-                    city: Cairo
-                    street: 20 Ramses St
-                    building: Building 4
-                    latitude: 30.0561
-                    longitude: 31.2394
+                  branches:
+                    - id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                      label: Ramses Branch
+                      city:
+                        id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                        name: Cairo
+                        country: Egypt
+                      street: 20 Ramses St
+                      building: Building 4
+                      latitude: 30.0561
+                      longitude: 31.2394
+                      availabilityStatus: open
+                      isActive: true
+                      createdAt: "2023-11-10T08:00:00.000Z"
+                      updatedAt: null
                   createdAt: "2023-11-10T08:00:00.000Z"
                   updatedAt: "2024-02-05T12:15:00.000Z"
 
@@ -699,6 +873,9 @@ restaurantProfile:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "409":
         $ref: "../responses/common.yaml#/Conflict"
@@ -754,20 +931,309 @@ uploadRestaurantLogo:
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
 
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
 
+restaurantBranches:
+  get:
+    tags:
+      - Restaurants
+
+    summary: List own branches
+    description: |
+      Returns every branch of the currently authenticated restaurant,
+      including inactive ones. A restaurant trades through its branches:
+      each has its own address, opening hours and availability. No
+      requirement names branches directly; they extend the restaurant
+      profile (FR-RES-005.1).
+
+    operationId: listBranches
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Branches retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/ListBranchesResponse"
+            example:
+              success: true
+              message: Branches retrieved successfully
+              data:
+                branches:
+                  - id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                    availabilityStatus: open
+                    isActive: true
+                    createdAt: "2023-11-10T08:00:00.000Z"
+                    updatedAt: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Restaurants
+
+    summary: Add a branch
+    description: |
+      Adds a branch to the currently authenticated restaurant
+      (FR-RES-005.2). A branch is an address in one city, with its own
+      opening hours and availability. It is created active and `closed`,
+      so it takes no orders until the restaurant opens it and sets its
+      hours.
+
+      Customers see the restaurant in every city where it has an active
+      branch, and an order is fulfilled by the nearest active, open
+      branch to the customer's delivery address. The label must be
+      unique within the restaurant (`409` otherwise).
+
+    operationId: createBranch
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/CreateBranchRequest"
+          example:
+            label: Ramses Branch
+            cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+            street: 15 Ramses St
+            building: Building 4
+            latitude: 30.0561
+            longitude: 31.2394
+
+    responses:
+      "201":
+        description: Branch created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/CreateBranchResponse"
+            example:
+              success: true
+              message: Branch created successfully
+              data:
+                branch:
+                  id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  label: Ramses Branch
+                  city:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  street: 15 Ramses St
+                  building: Building 4
+                  latitude: 30.0561
+                  longitude: 31.2394
+                  availabilityStatus: closed
+                  isActive: true
+                  createdAt: "2023-11-10T08:00:00.000Z"
+                  updatedAt: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantBranch:
+  parameters:
+    - name: branchId
+      in: path
+      required: true
+      description: Unique identifier of the branch.
+      schema:
+        type: string
+        format: uuid
+      example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
+  get:
+    tags:
+      - Restaurants
+
+    summary: View one own branch
+    description: |
+      Returns a single branch of the currently authenticated
+      restaurant, identified by `branchId` (FR-RES-005.1).
+
+    operationId: getBranch
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Branch retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/GetBranchResponse"
+            example:
+              success: true
+              message: Branch retrieved successfully
+              data:
+                branch:
+                  id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  label: Ramses Branch
+                  city:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  street: 15 Ramses St
+                  building: Building 4
+                  latitude: 30.0561
+                  longitude: 31.2394
+                  availabilityStatus: open
+                  isActive: true
+                  createdAt: "2023-11-10T08:00:00.000Z"
+                  updatedAt: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Restaurants
+
+    summary: Update or deactivate a branch
+    description: |
+      Updates a single branch of the currently authenticated
+      restaurant (FR-RES-005.2). Only the supplied fields are updated;
+      omitted fields remain unchanged. Opening hours and availability
+      have their own endpoints.
+
+      Branches are never deleted. Send `isActive: false` to take one
+      out of service: it is hidden from customers and no new order is
+      routed to it, while orders it already received are unaffected. If
+      the restaurant's last active branch is deactivated, the restaurant
+      is no longer visible to customers. The label must stay unique
+      within the restaurant (`409` otherwise).
+
+    operationId: updateBranch
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/UpdateBranchRequest"
+          example:
+            street: 20 Ramses St
+            isActive: true
+
+    responses:
+      "200":
+        description: Branch updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/UpdateBranchResponse"
+            example:
+              success: true
+              message: Branch updated successfully
+              data:
+                branch:
+                  id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  label: Ramses Branch
+                  city:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  street: 20 Ramses St
+                  building: Building 4
+                  latitude: 30.0561
+                  longitude: 31.2394
+                  availabilityStatus: open
+                  isActive: true
+                  createdAt: "2023-11-10T08:00:00.000Z"
+                  updatedAt: "2024-02-05T12:15:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+
 restaurantOperatingHours:
+  parameters:
+    - name: branchId
+      in: path
+      required: true
+      description: Unique identifier of the branch.
+      schema:
+        type: string
+        format: uuid
+      example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
   get:
     tags:
       - Restaurants
 
     summary: View operating hours
     description: |
-      Returns the weekly operating hours schedule of the currently
-      authenticated restaurant (FR-RES-006).
+      Returns the weekly operating hours schedule of one branch of the
+      currently authenticated restaurant (FR-RES-006). Hours are set
+      per branch.
 
-    operationId: listRestaurantOperatingHours
+    operationId: listBranchOperatingHours
 
     security:
       - bearerAuth: []
@@ -798,6 +1264,12 @@ restaurantOperatingHours:
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
 
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
 
@@ -807,11 +1279,16 @@ restaurantOperatingHours:
 
     summary: Replace the weekly operating hours schedule
     description: |
-      Replaces the entire weekly operating hours schedule of the
-      currently authenticated restaurant with the supplied entries,
-      one per day of the week (FR-RES-006.1, FR-RES-006.2, FR-RES-006.3).
+      Replaces the entire weekly operating hours schedule of one branch
+      of the currently authenticated restaurant with the supplied
+      entries, one per day of the week (FR-RES-006.1, FR-RES-006.2, FR-RES-006.3).
 
-    operationId: replaceRestaurantOperatingHours
+      The request must contain exactly one entry for each `dayOfWeek`
+      (0-6, no duplicates). Every entry with `isClosed: false` must
+      include both `opensAt` and `closesAt`; closed days may omit
+      them. A request that breaks these rules is rejected with `400`.
+
+    operationId: replaceBranchOperatingHours
 
     security:
       - bearerAuth: []
@@ -882,11 +1359,25 @@ restaurantOperatingHours:
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
 
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
 
 restaurantOperatingHour:
   parameters:
+    - name: branchId
+      in: path
+      required: true
+      description: Unique identifier of the branch.
+      schema:
+        type: string
+        format: uuid
+      example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
     - name: operatingHourId
       in: path
       required: true
@@ -903,11 +1394,15 @@ restaurantOperatingHour:
     summary: Update operating hours for a specific day
     description: |
       Updates the operating hours for a single day, identified by
-      `operatingHourId`, belonging to the currently authenticated
-      restaurant (FR-RES-006.3). Only the supplied fields are updated;
+      `operatingHourId`, belonging to a branch of the currently
+      authenticated restaurant (FR-RES-006.3). Only the supplied fields are updated;
       omitted fields remain unchanged.
 
-    operationId: updateRestaurantOperatingHour
+      The day must still be valid after the update: if it ends up with
+      `isClosed: false`, it must have both `opensAt` and `closesAt`;
+      otherwise the request is rejected with `400`.
+
+    operationId: updateBranchOperatingHour
 
     security:
       - bearerAuth: []
@@ -947,25 +1442,39 @@ restaurantOperatingHour:
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
 
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
       "404":
         $ref: "../responses/common.yaml#/NotFound"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
 
-restaurantAvailability:
+branchAvailability:
+  parameters:
+    - name: branchId
+      in: path
+      required: true
+      description: Unique identifier of the branch.
+      schema:
+        type: string
+        format: uuid
+      example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
   patch:
     tags:
       - Restaurants
 
-    summary: Change restaurant availability
+    summary: Change branch availability
     description: |
-      Updates the real-time availability status of the currently
-      authenticated restaurant (FR-RES-007.1, FR-RES-007.2), used to
-      mark the restaurant as `open`, `closed`, or temporarily `busy`
-      independent of its scheduled operating hours.
+      Updates the real-time availability status of one branch of the
+      currently authenticated restaurant (FR-RES-007.1, FR-RES-007.2),
+      used to mark the branch as `open`, `closed`, or temporarily `busy`
+      independent of its scheduled operating hours. A new branch starts
+      as `closed`.
 
-    operationId: updateRestaurantAvailability
+    operationId: updateBranchAvailability
 
     security:
       - bearerAuth: []
@@ -975,21 +1484,22 @@ restaurantAvailability:
       content:
         application/json:
           schema:
-            $ref: "../schemas/restaurant.yaml#/UpdateAvailabilityRequest"
+            $ref: "../schemas/restaurant.yaml#/UpdateBranchAvailabilityRequest"
           example:
             availabilityStatus: closed
 
     responses:
       "200":
-        description: Restaurant availability updated successfully
+        description: Branch availability updated successfully
         content:
           application/json:
             schema:
-              $ref: "../schemas/restaurant.yaml#/UpdateAvailabilityResponse"
+              $ref: "../schemas/restaurant.yaml#/UpdateBranchAvailabilityResponse"
             example:
               success: true
-              message: Restaurant availability updated successfully
+              message: Branch availability updated successfully
               data:
+                branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
                 availabilityStatus: closed
 
       "400":
@@ -997,6 +1507,12 @@ restaurantAvailability:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
@@ -1043,6 +1559,9 @@ restaurantMenuCategories:
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
 
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
 
@@ -1055,6 +1574,10 @@ restaurantMenuCategories:
       Creates a new menu category for the currently authenticated
       restaurant (FR-RES-008.1). Menu items are later assigned to this
       category (FR-RES-009.6).
+
+      Category names must be unique among the restaurant's active
+      categories (`409` otherwise). An inactive category does not
+      reserve its name.
 
     operationId: createRestaurantMenuCategory
 
@@ -1095,6 +1618,9 @@ restaurantMenuCategories:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "409":
         $ref: "../responses/common.yaml#/Conflict"
@@ -1148,6 +1674,9 @@ restaurantMenuCategory:
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
 
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
       "404":
         $ref: "../responses/common.yaml#/NotFound"
 
@@ -1164,6 +1693,12 @@ restaurantMenuCategory:
       authenticated restaurant, identified by `categoryId`
       (FR-RES-008.2). Only the supplied fields are updated; omitted
       fields remain unchanged.
+
+      Category names must be unique among the restaurant's active
+      categories (`409` otherwise). An inactive category does not
+      reserve its name.
+      Reactivating a category is rejected with `409` if an active
+      category already uses its name.
 
     operationId: updateRestaurantMenuCategory
 
@@ -1204,6 +1739,9 @@ restaurantMenuCategory:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "404":
         $ref: "../responses/common.yaml#/NotFound"
@@ -1247,11 +1785,569 @@ restaurantMenuCategory:
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
 
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
       "404":
         $ref: "../responses/common.yaml#/NotFound"
 
       "409":
         $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+listCuisines:
+  get:
+    tags:
+      - Restaurants
+
+    summary: List cuisines
+
+    description: |
+      Returns the distinct cuisine names offered by approved restaurants, for building a filter. Use a
+      name as the `cuisine` filter of `GET /restaurants`. Publicly accessible; no authentication
+      required.
+
+    operationId: listPublicCuisines
+
+    security: []
+
+    responses:
+      "200":
+        description: Cuisines retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/ListPublicCuisinesResponse"
+            example:
+              success: true
+              message: Cuisines retrieved successfully
+              data:
+                cuisines:
+                  - Burgers
+                  - Desserts
+                  - Grills
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantCuisines:
+  get:
+    tags:
+      - Restaurants
+
+    summary: List own cuisine tags
+
+    description: |
+      Returns the restaurant's cuisine tags, including hidden ones. They describe what the restaurant
+      serves and are separate from menu categories.
+
+    operationId: listCuisines
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Cuisines retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/ListCuisinesResponse"
+            example:
+              success: true
+              message: Cuisines retrieved successfully
+              data:
+                cuisines:
+                  - id: be039fa3-0f24-5823-9892-d9f50ffb70ed
+                    name: Grills
+                    isActive: true
+                    createdAt: "2023-11-10T08:30:00.000Z"
+                    updatedAt: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Restaurants
+
+    summary: Add a cuisine tag
+
+    description: Adds a cuisine tag. The name must be unique among the restaurant's tags (`409`).
+
+    operationId: createCuisine
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/CreateCuisineRequest"
+          example:
+            name: Grills
+
+    responses:
+      "201":
+        description: Cuisine created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/CreateCuisineResponse"
+            example:
+              success: true
+              message: Cuisine created successfully
+              data:
+                cuisine:
+                  id: be039fa3-0f24-5823-9892-d9f50ffb70ed
+                  name: Grills
+                  isActive: true
+                  createdAt: "2023-11-10T08:30:00.000Z"
+                  updatedAt: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantCuisine:
+  parameters:
+    - name: cuisineId
+      in: path
+      required: true
+      description: Unique identifier of the cuisine tag.
+      schema:
+        type: string
+        format: uuid
+      example: be039fa3-0f24-5823-9892-d9f50ffb70ed
+
+  patch:
+    tags:
+      - Restaurants
+
+    summary: Update a cuisine tag
+
+    description: |
+      Renames a tag or shows or hides it. The name must stay unique among the restaurant's tags
+      (`409`).
+
+    operationId: updateCuisine
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/UpdateCuisineRequest"
+          example:
+            name: Grilled meats
+
+    responses:
+      "200":
+        description: Cuisine updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/UpdateCuisineResponse"
+            example:
+              success: true
+              message: Cuisine updated successfully
+              data:
+                cuisine:
+                  id: be039fa3-0f24-5823-9892-d9f50ffb70ed
+                  name: Grilled meats
+                  isActive: true
+                  createdAt: "2023-11-10T08:30:00.000Z"
+                  updatedAt: "2024-03-01T09:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Restaurants
+
+    summary: Delete a cuisine tag
+
+    description: Permanently removes a cuisine tag.
+
+    operationId: deleteCuisine
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Cuisine deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/DeleteCuisineResponse"
+            example:
+              success: true
+              message: Cuisine deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+changePasswordRestaurant:
+  post:
+    tags:
+      - Restaurants
+
+    summary: Change own password
+
+    description: |
+      Changes the password of the currently authenticated restaurant. The current password must be
+      supplied. Existing refresh tokens are revoked.
+
+    operationId: changePasswordRestaurant
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/restaurant.yaml#/ChangePasswordRestaurantRequest"
+          example:
+            currentPassword: StrongPassword123!
+            newPassword: NewStrongPassword123!
+            confirmPassword: NewStrongPassword123!
+
+    responses:
+      "200":
+        description: Password changed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/ChangePasswordRestaurantResponse"
+            example:
+              success: true
+              message: Password changed successfully
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantDashboard:
+  get:
+    tags:
+      - Restaurants
+
+    summary: Dashboard overview
+
+    description: |
+      Returns headline numbers: today's orders by status, revenue (the total of delivered orders), the
+      cached rating, and how many branches are active and open.
+
+    operationId: getRestaurantDashboard
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: branchId
+        in: query
+        required: false
+        description: Only this branch. Without it all branches are included.
+        schema:
+          type: string
+          format: uuid
+        example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
+    responses:
+      "200":
+        description: Dashboard retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/GetRestaurantDashboardResponse"
+            example:
+              success: true
+              message: Dashboard retrieved successfully
+              data:
+                dashboard:
+                  orders:
+                    today: 64
+                    pending: 3
+                    inProgress: 11
+                    todayByStatus:
+                      pending: 3
+                      accepted: 4
+                      preparing: 5
+                      ready_for_pickup: 2
+                      picked_up: 1
+                      out_for_delivery: 3
+                      delivered: 45
+                      cancelled: 1
+                      rejected: 0
+                  revenue:
+                    today: 9800
+                    last7Days: 61200
+                    last30Days: 248000
+                  rating:
+                    average: 4.5
+                    count: 128
+                  branches:
+                    total: 3
+                    active: 3
+                    open: 2
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantSalesStats:
+  get:
+    tags:
+      - Restaurants
+
+    summary: Sales statistics
+
+    description: |
+      Totals the money from the restaurant's delivered orders per day, week or month: subtotals,
+      delivery fees, tax, discounts and order totals.
+
+    operationId: getRestaurantSalesStats
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: from
+        in: query
+        required: true
+        description: First day of the period.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: true
+        description: Last day of the period.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-07"
+      - name: groupBy
+        in: query
+        required: false
+        description: How rows are grouped.
+        schema:
+          type: string
+          enum:
+            - day
+            - week
+            - month
+          default: day
+        example: day
+      - name: branchId
+        in: query
+        required: false
+        description: Only this branch. Without it all branches are included.
+        schema:
+          type: string
+          format: uuid
+        example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
+    responses:
+      "200":
+        description: Sales statistics retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/GetRestaurantSalesStatsResponse"
+            example:
+              success: true
+              message: Sales statistics retrieved successfully
+              data:
+                stats:
+                  groupBy: day
+                  from: "2024-10-01"
+                  to: "2024-10-07"
+                  rows:
+                    - period: "2024-10-05"
+                      orders: 45
+                      subtotal: 13500
+                      deliveryFees: 1125
+                      tax: 2025
+                      discounts: 400
+                      total: 16250
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantOrderStats:
+  get:
+    tags:
+      - Restaurants
+
+    summary: Order statistics
+
+    description: |
+      Counts the restaurant's orders per day, week or month: how many were placed, delivered,
+      cancelled and rejected.
+
+    operationId: getRestaurantOrderStats
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: from
+        in: query
+        required: true
+        description: First day of the period.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: true
+        description: Last day of the period.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-07"
+      - name: groupBy
+        in: query
+        required: false
+        description: How rows are grouped.
+        schema:
+          type: string
+          enum:
+            - day
+            - week
+            - month
+          default: day
+        example: day
+      - name: branchId
+        in: query
+        required: false
+        description: Only this branch. Without it all branches are included.
+        schema:
+          type: string
+          format: uuid
+        example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
+    responses:
+      "200":
+        description: Order statistics retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/restaurant.yaml#/GetRestaurantOrderStatsResponse"
+            example:
+              success: true
+              message: Order statistics retrieved successfully
+              data:
+                stats:
+                  groupBy: day
+                  from: "2024-10-01"
+                  to: "2024-10-07"
+                  rows:
+                    - period: "2024-10-05"
+                      orders: 64
+                      delivered: 45
+                      cancelled: 1
+                      rejected: 0
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"

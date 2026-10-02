@@ -1,21 +1,28 @@
-RestaurantAddress:
+BranchSummary:
   type: object
   required:
-    - country
+    - id
+    - label
     - city
     - street
     - latitude
     - longitude
+    - availabilityStatus
   properties:
-    country:
+    id:
       type: string
-      description: Country where the restaurant is located.
-      example: Egypt
+      format: uuid
+      description: Unique branch identifier.
+      example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
+    label:
+      type: string
+      maxLength: 100
+      description: Branch name shown to customers and drivers.
+      example: Ramses Branch
 
     city:
-      type: string
-      description: City where the restaurant is located.
-      example: Cairo
+      $ref: "./city.yaml#/City"
 
     street:
       type: string
@@ -31,14 +38,68 @@ RestaurantAddress:
     latitude:
       type: number
       format: double
-      description: Latitude coordinate of the restaurant.
+      minimum: -90
+      maximum: 90
+      description: Latitude coordinate of the branch.
       example: 30.0561
 
     longitude:
       type: number
       format: double
-      description: Longitude coordinate of the restaurant.
+      minimum: -180
+      maximum: 180
+      description: Longitude coordinate of the branch.
       example: 31.2394
+
+    availabilityStatus:
+      type: string
+      enum:
+        - open
+        - closed
+        - busy
+      description: Real-time status of this branch, independent of its scheduled operating hours.
+      example: open
+
+Branch:
+  description: A branch with its weekly opening hours, as shown on the public restaurant page.
+  allOf:
+    - $ref: "#/BranchSummary"
+    - type: object
+      required:
+        - operatingHours
+      properties:
+        operatingHours:
+          type: array
+          description: Weekly schedule of this branch.
+          items:
+            $ref: "#/OperatingHour"
+
+RestaurantBranch:
+  description: A branch as seen by its own restaurant, including whether it is active.
+  allOf:
+    - $ref: "#/BranchSummary"
+    - type: object
+      required:
+        - isActive
+        - createdAt
+      properties:
+        isActive:
+          type: boolean
+          description: |
+            Whether the branch is in service. An inactive branch is hidden from customers and never chosen
+            for an order.
+          example: true
+
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-11-10T08:00:00.000Z"
+
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
 
 OperatingHour:
   type: object
@@ -124,12 +185,11 @@ RestaurantSummary:
   required:
     - id
     - name
-    - availabilityStatus
     - minimumOrderAmount
     - deliveryFee
     - ratingAverage
     - ratingCount
-    - address
+    - branches
   properties:
     id:
       type: string
@@ -162,15 +222,6 @@ RestaurantSummary:
       description: URL of the restaurant's cover image.
       example: https://cdn.example.com/restaurants/nile-grill/cover.jpg
 
-    availabilityStatus:
-      type: string
-      enum:
-        - open
-        - closed
-        - busy
-      description: Current real-time availability of the restaurant.
-      example: open
-
     minimumOrderAmount:
       type: number
       format: double
@@ -192,29 +243,44 @@ RestaurantSummary:
     ratingAverage:
       type: number
       format: double
+      minimum: 0
+      maximum: 5
       description: Average customer rating (0-5).
       example: 4.5
 
     ratingCount:
       type: integer
+      minimum: 0
       description: Total number of ratings received.
       example: 128
 
-    address:
-      $ref: "#/RestaurantAddress"
+    cuisines:
+      type: array
+      description: Cuisine tags of the restaurant, such as "Grills".
+      items:
+        type: string
+      example:
+        - Grills
+        - Mezze
+
+    branches:
+      type: array
+      description: |
+        The restaurant's active branches. When the list was filtered by `cityId`, only the branches in that city
+        are included.
+      items:
+        $ref: "#/BranchSummary"
 
 Restaurant:
   type: object
   required:
     - id
     - name
-    - availabilityStatus
     - minimumOrderAmount
     - deliveryFee
     - ratingAverage
     - ratingCount
-    - address
-    - operatingHours
+    - branches
     - activePromotions
     - createdAt
   properties:
@@ -235,19 +301,6 @@ Restaurant:
       description: Description of the restaurant.
       example: Authentic Egyptian grills and mezze.
 
-    phoneNumber:
-      type: string
-      nullable: true
-      description: Restaurant contact phone number.
-      example: "+201234567890"
-
-    email:
-      type: string
-      format: email
-      nullable: true
-      description: Restaurant contact email address.
-      example: contact@nilegrill.example.com
-
     logoUrl:
       type: string
       format: uri
@@ -261,15 +314,6 @@ Restaurant:
       nullable: true
       description: URL of the restaurant's cover image.
       example: https://cdn.example.com/restaurants/nile-grill/cover.jpg
-
-    availabilityStatus:
-      type: string
-      enum:
-        - open
-        - closed
-        - busy
-      description: Current real-time availability of the restaurant.
-      example: open
 
     minimumOrderAmount:
       type: number
@@ -292,22 +336,31 @@ Restaurant:
     ratingAverage:
       type: number
       format: double
+      minimum: 0
+      maximum: 5
       description: Average customer rating (0-5).
       example: 4.5
 
     ratingCount:
       type: integer
+      minimum: 0
       description: Total number of ratings received.
       example: 128
 
-    address:
-      $ref: "#/RestaurantAddress"
-
-    operatingHours:
+    cuisines:
       type: array
-      description: Weekly operating hours, one entry per day of the week.
+      description: Cuisine tags of the restaurant, such as "Grills".
       items:
-        $ref: "#/OperatingHour"
+        type: string
+      example:
+        - Grills
+        - Mezze
+
+    branches:
+      type: array
+      description: The restaurant's active branches, each with its own opening hours.
+      items:
+        $ref: "#/Branch"
 
     activePromotions:
       type: array
@@ -380,28 +433,30 @@ RegisterRestaurantRequest:
     - email
     - password
     - phoneNumber
-    - address
+    - branch
   properties:
     name:
       type: string
+      maxLength: 150
       description: Restaurant name.
       example: Nile Grill House
 
     email:
       type: string
       format: email
-      description: Restaurant contact email address, also used to log in.
+      description: Login email of the new account. Must be unique across all accounts.
       example: contact@nilegrill.example.com
 
     password:
       type: string
       format: password
+      minLength: 8
       description: Account password.
       example: StrongPassword123!
 
     phoneNumber:
       type: string
-      description: Restaurant contact phone number.
+      description: Phone number of the new account. Must be unique across all accounts.
       example: "+201234567890"
 
     description:
@@ -410,8 +465,8 @@ RegisterRestaurantRequest:
       description: Short description of the restaurant.
       example: Authentic Egyptian grills and mezze.
 
-    address:
-      $ref: "#/RestaurantAddress"
+    branch:
+      $ref: "#/CreateBranchRequest"
 
 RegisterRestaurantResponse:
   type: object
@@ -432,7 +487,11 @@ RegisterRestaurantResponse:
       type: object
       required:
         - restaurant
+        - branch
       properties:
+        branch:
+          $ref: "#/RestaurantBranch"
+
         restaurant:
           type: object
           required:
@@ -467,7 +526,6 @@ RegisterRestaurantResponse:
                 - pending
                 - approved
                 - rejected
-                - suspended
               description: Restaurant onboarding/approval status.
               example: pending
 
@@ -512,7 +570,6 @@ LoginRestaurantResponse:
       required:
         - restaurant
         - accessToken
-        - refreshToken
       properties:
         restaurant:
           $ref: "#/RestaurantProfile"
@@ -520,13 +577,32 @@ LoginRestaurantResponse:
         accessToken:
           type: string
           description: JWT access token used to authenticate subsequent requests.
-          example: "******"
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZjVlNmQ3YyJ9.def456signature
 
-        refreshToken:
+RefreshRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Access token refreshed successfully
+
+    data:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
           type: string
-          format: uuid
-          description: Opaque refresh token used to obtain new access tokens.
-          example: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+          description: New JWT access token. The rotated refresh token is sent only in the `Set-Cookie` header.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
 
 LogoutRestaurantResponse:
   type: object
@@ -587,17 +663,21 @@ ResetPasswordRestaurantRequest:
   properties:
     token:
       type: string
-      format: uuid
+      description: Password reset token received via email.
       example: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
 
     newPassword:
       type: string
       format: password
+      minLength: 8
+      description: New account password.
       example: NewStrongPassword123!
 
     confirmPassword:
       type: string
       format: password
+      minLength: 8
+      description: Must match `newPassword` exactly.
       example: NewStrongPassword123!
 
 ResetPasswordRestaurantResponse:
@@ -625,13 +705,14 @@ RestaurantProfile:
   required:
     - id
     - name
+    - email
+    - phoneNumber
     - status
-    - availabilityStatus
     - minimumOrderAmount
     - deliveryFee
     - ratingAverage
     - ratingCount
-    - address
+    - branches
     - createdAt
   properties:
     id:
@@ -653,15 +734,13 @@ RestaurantProfile:
 
     phoneNumber:
       type: string
-      nullable: true
-      description: Restaurant contact phone number.
+      description: Phone number of the restaurant's user account (login identity, unique across all accounts).
       example: "+201234567890"
 
     email:
       type: string
       format: email
-      nullable: true
-      description: Restaurant contact email address.
+      description: Login email of the restaurant's user account. Not editable through the profile endpoint.
       example: contact@nilegrill.example.com
 
     logoUrl:
@@ -684,18 +763,8 @@ RestaurantProfile:
         - pending
         - approved
         - rejected
-        - suspended
       description: Restaurant onboarding/approval status, managed by the platform administrator.
       example: approved
-
-    availabilityStatus:
-      type: string
-      enum:
-        - open
-        - closed
-        - busy
-      description: Current real-time availability of the restaurant.
-      example: open
 
     minimumOrderAmount:
       type: number
@@ -718,16 +787,22 @@ RestaurantProfile:
     ratingAverage:
       type: number
       format: double
+      minimum: 0
+      maximum: 5
       description: Average customer rating (0-5).
       example: 4.5
 
     ratingCount:
       type: integer
+      minimum: 0
       description: Total number of ratings received.
       example: 128
 
-    address:
-      $ref: "#/RestaurantAddress"
+    branches:
+      type: array
+      description: All of the restaurant's branches, including inactive ones.
+      items:
+        $ref: "#/RestaurantBranch"
 
     createdAt:
       type: string
@@ -770,6 +845,7 @@ UpdateRestaurantProfileRequest:
   properties:
     name:
       type: string
+      maxLength: 150
       description: Restaurant name.
       example: Nile Grill House
 
@@ -781,57 +857,28 @@ UpdateRestaurantProfileRequest:
 
     phoneNumber:
       type: string
-      description: Restaurant contact phone number.
+      description: New phone number of the account. Must be unique across all accounts.
       example: "+201234567890"
-
-    email:
-      type: string
-      format: email
-      description: Restaurant contact email address.
-      example: contact@nilegrill.example.com
 
     minimumOrderAmount:
       type: number
       format: double
+      minimum: 0
       description: Minimum order amount accepted by the restaurant.
       example: 120
 
     deliveryFee:
       type: number
       format: double
+      minimum: 0
       description: Delivery fee charged by the restaurant.
       example: 30
 
     estimatedDeliveryTime:
       type: integer
+      minimum: 0
       description: Estimated delivery time, in minutes.
       example: 40
-
-    address:
-      type: object
-      description: Partial update of the restaurant's address. Only supplied fields are updated.
-      properties:
-        country:
-          type: string
-          example: Egypt
-        city:
-          type: string
-          example: Cairo
-        street:
-          type: string
-          example: 15 Ramses St
-        building:
-          type: string
-          nullable: true
-          example: Building 4
-        latitude:
-          type: number
-          format: double
-          example: 30.0561
-        longitude:
-          type: number
-          format: double
-          example: 31.2394
 
 UpdateRestaurantProfileResponse:
   type: object
@@ -951,7 +998,9 @@ ReplaceOperatingHoursRequest:
   properties:
     operatingHours:
       type: array
-      description: Full weekly schedule. Replaces all existing entries for the restaurant.
+      description: |
+        Full weekly schedule, exactly one entry per `dayOfWeek` (0-6, no duplicates). Replaces all existing entries for the
+        restaurant. An entry with `isClosed: false` must include both `opensAt` and `closesAt`.
       minItems: 7
       maxItems: 7
       items:
@@ -1045,7 +1094,7 @@ UpdateOperatingHourResponse:
         operatingHour:
           $ref: "#/RestaurantOperatingHour"
 
-UpdateAvailabilityRequest:
+UpdateBranchAvailabilityRequest:
   type: object
   required:
     - availabilityStatus
@@ -1056,10 +1105,10 @@ UpdateAvailabilityRequest:
         - open
         - closed
         - busy
-      description: New real-time availability status for the restaurant (FR-RES-007).
+      description: New real-time availability status for the branch (FR-RES-007).
       example: closed
 
-UpdateAvailabilityResponse:
+UpdateBranchAvailabilityResponse:
   type: object
   required:
     - success
@@ -1072,13 +1121,19 @@ UpdateAvailabilityResponse:
 
     message:
       type: string
-      example: Restaurant availability updated successfully
+      example: Branch availability updated successfully
 
     data:
       type: object
       required:
+        - branchId
         - availabilityStatus
       properties:
+        branchId:
+          type: string
+          format: uuid
+          example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
         availabilityStatus:
           type: string
           enum:
@@ -1086,3 +1141,771 @@ UpdateAvailabilityResponse:
             - closed
             - busy
           example: closed
+
+CreateBranchRequest:
+  type: object
+  required:
+    - label
+    - cityId
+    - street
+    - latitude
+    - longitude
+  properties:
+    label:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Branch name, unique within the restaurant.
+      example: Ramses Branch
+
+    cityId:
+      type: string
+      format: uuid
+      description: Identifier of the city the branch is in, from `GET /cities`.
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+    street:
+      type: string
+      description: Street address.
+      example: 15 Ramses St
+
+    building:
+      type: string
+      nullable: true
+      description: Building name or number.
+      example: Building 4
+
+    latitude:
+      type: number
+      format: double
+      minimum: -90
+      maximum: 90
+      description: Latitude coordinate of the branch.
+      example: 30.0561
+
+    longitude:
+      type: number
+      format: double
+      minimum: -180
+      maximum: 180
+      description: Longitude coordinate of the branch.
+      example: 31.2394
+
+UpdateBranchRequest:
+  type: object
+  minProperties: 1
+  properties:
+    label:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Branch name, unique within the restaurant.
+      example: Ramses Branch
+
+    cityId:
+      type: string
+      format: uuid
+      description: Identifier of the city the branch is in, from `GET /cities`.
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+    street:
+      type: string
+      example: 20 Ramses St
+
+    building:
+      type: string
+      nullable: true
+      example: Building 4
+
+    latitude:
+      type: number
+      format: double
+      minimum: -90
+      maximum: 90
+      description: Latitude coordinate of the branch.
+      example: 30.0561
+
+    longitude:
+      type: number
+      format: double
+      minimum: -180
+      maximum: 180
+      description: Longitude coordinate of the branch.
+      example: 31.2394
+
+    isActive:
+      type: boolean
+      description: |
+        Set to `false` to take the branch out of service. It is hidden from customers and no new order is routed to
+        it. Orders it already received are not affected.
+      example: true
+
+ListBranchesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Branches retrieved successfully
+
+    data:
+      type: object
+      required:
+        - branches
+      properties:
+        branches:
+          type: array
+          items:
+            $ref: "#/RestaurantBranch"
+
+CreateBranchResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Branch created successfully
+
+    data:
+      type: object
+      required:
+        - branch
+      properties:
+        branch:
+          $ref: "#/RestaurantBranch"
+
+GetBranchResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Branch retrieved successfully
+
+    data:
+      type: object
+      required:
+        - branch
+      properties:
+        branch:
+          $ref: "#/RestaurantBranch"
+
+UpdateBranchResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Branch updated successfully
+
+    data:
+      type: object
+      required:
+        - branch
+      properties:
+        branch:
+          $ref: "#/RestaurantBranch"
+
+Cuisine:
+  type: object
+  description: |
+    A cuisine tag describing what the restaurant serves. These are separate from the menu categories
+    that organise the menu.
+  required:
+    - id
+    - name
+    - isActive
+    - createdAt
+    - updatedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique cuisine tag identifier.
+      example: be039fa3-0f24-5823-9892-d9f50ffb70ed
+
+    name:
+      type: string
+      maxLength: 150
+      description: Tag shown to customers, such as "Grills".
+      example: Grills
+
+    isActive:
+      type: boolean
+      description: Whether customers see the tag.
+      example: true
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the tag was created.
+      example: "2023-11-10T08:30:00.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Last change.
+      example: null
+
+ListCuisinesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cuisines retrieved successfully
+
+    data:
+      type: object
+      required:
+        - cuisines
+      properties:
+        cuisines:
+          type: array
+          items:
+            $ref: "#/Cuisine"
+
+CreateCuisineRequest:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 150
+      description: Tag name. Must be unique among the restaurant's tags.
+      example: Grills
+
+    isActive:
+      type: boolean
+      default: true
+      description: Whether customers see the tag.
+      example: true
+
+UpdateCuisineRequest:
+  type: object
+  minProperties: 1
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 150
+      description: Tag name.
+      example: Grilled meats
+
+    isActive:
+      type: boolean
+      description: Show or hide the tag.
+      example: true
+
+CreateCuisineResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cuisine created successfully
+
+    data:
+      type: object
+      required:
+        - cuisine
+      properties:
+        cuisine:
+          $ref: "#/Cuisine"
+
+UpdateCuisineResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cuisine updated successfully
+
+    data:
+      type: object
+      required:
+        - cuisine
+      properties:
+        cuisine:
+          $ref: "#/Cuisine"
+
+DeleteCuisineResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cuisine deleted successfully
+
+    data:
+      type: object
+      nullable: true
+
+ListPublicCuisinesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Cuisines retrieved successfully
+
+    data:
+      type: object
+      required:
+        - cuisines
+      properties:
+        cuisines:
+          type: array
+          description: Distinct cuisine names that at least one approved restaurant offers.
+          items:
+            type: string
+            example: Grills
+
+ChangePasswordRestaurantRequest:
+  type: object
+  required:
+    - currentPassword
+    - newPassword
+    - confirmPassword
+  properties:
+    currentPassword:
+      type: string
+      format: password
+      description: The restaurant's current password.
+      example: StrongPassword123!
+
+    newPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: New account password.
+      example: NewStrongPassword123!
+
+    confirmPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: Must match `newPassword` exactly.
+      example: NewStrongPassword123!
+
+ChangePasswordRestaurantResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Password changed successfully
+
+    data:
+      type: object
+      nullable: true
+
+RestaurantDashboard:
+  type: object
+  description: Headline numbers for the restaurant, across all branches or one branch when `branchId` is given.
+  required:
+    - orders
+    - revenue
+    - rating
+    - branches
+  properties:
+    orders:
+      type: object
+      required:
+        - today
+        - pending
+        - inProgress
+        - todayByStatus
+      properties:
+        today:
+          type: integer
+          minimum: 0
+          example: 64
+
+        pending:
+          type: integer
+          minimum: 0
+          description: Orders waiting to be accepted.
+          example: 3
+
+        inProgress:
+          type: integer
+          minimum: 0
+          description: Accepted, preparing or ready for pickup.
+          example: 11
+
+        todayByStatus:
+          type: object
+          description: Today's orders by status.
+          additionalProperties:
+            type: integer
+            minimum: 0
+          example:
+            pending: 3
+            accepted: 4
+            preparing: 5
+            ready_for_pickup: 2
+            picked_up: 1
+            out_for_delivery: 3
+            delivered: 45
+            cancelled: 1
+            rejected: 0
+
+    revenue:
+      type: object
+      description: Sum of `totalAmount` of delivered orders.
+      required:
+        - today
+        - last7Days
+        - last30Days
+      properties:
+        today:
+          type: number
+          format: double
+          minimum: 0
+          example: 9800
+
+        last7Days:
+          type: number
+          format: double
+          minimum: 0
+          example: 61200
+
+        last30Days:
+          type: number
+          format: double
+          minimum: 0
+          example: 248000
+
+    rating:
+      type: object
+      required:
+        - average
+        - count
+      properties:
+        average:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 5
+          example: 4.5
+
+        count:
+          type: integer
+          minimum: 0
+          example: 128
+
+    branches:
+      type: object
+      required:
+        - total
+        - active
+        - open
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          example: 3
+
+        active:
+          type: integer
+          minimum: 0
+          example: 3
+
+        open:
+          type: integer
+          minimum: 0
+          description: Active branches that are open right now.
+          example: 2
+
+GetRestaurantDashboardResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Dashboard retrieved successfully
+
+    data:
+      type: object
+      required:
+        - dashboard
+      properties:
+        dashboard:
+          $ref: "#/RestaurantDashboard"
+
+RestaurantSalesStats:
+  type: object
+  required:
+    - groupBy
+    - from
+    - to
+    - rows
+  properties:
+    groupBy:
+      type: string
+      enum:
+        - day
+        - week
+        - month
+      description: How rows are grouped.
+      example: day
+
+    from:
+      type: string
+      format: date
+      description: First day.
+      example: "2024-10-01"
+
+    to:
+      type: string
+      format: date
+      description: Last day.
+      example: "2024-10-07"
+
+    rows:
+      type: array
+      description: Only delivered orders are counted.
+      items:
+        type: object
+        required:
+          - period
+          - orders
+          - subtotal
+          - deliveryFees
+          - tax
+          - discounts
+          - total
+        properties:
+          period:
+            type: string
+            description: Start of the group.
+            example: "2024-10-05"
+
+          orders:
+            type: integer
+            minimum: 0
+            description: Delivered orders.
+            example: 45
+
+          subtotal:
+            type: number
+            format: double
+            minimum: 0
+            example: 13500
+
+          deliveryFees:
+            type: number
+            format: double
+            minimum: 0
+            example: 1125
+
+          tax:
+            type: number
+            format: double
+            minimum: 0
+            example: 2025
+
+          discounts:
+            type: number
+            format: double
+            minimum: 0
+            example: 400
+
+          total:
+            type: number
+            format: double
+            minimum: 0
+            example: 16250
+
+GetRestaurantSalesStatsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Sales statistics retrieved successfully
+
+    data:
+      type: object
+      required:
+        - stats
+      properties:
+        stats:
+          $ref: "#/RestaurantSalesStats"
+
+RestaurantOrderStats:
+  type: object
+  required:
+    - groupBy
+    - from
+    - to
+    - rows
+  properties:
+    groupBy:
+      type: string
+      enum:
+        - day
+        - week
+        - month
+      description: How rows are grouped.
+      example: day
+
+    from:
+      type: string
+      format: date
+      description: First day.
+      example: "2024-10-01"
+
+    to:
+      type: string
+      format: date
+      description: Last day.
+      example: "2024-10-07"
+
+    rows:
+      type: array
+      items:
+        type: object
+        required:
+          - period
+          - orders
+          - delivered
+          - cancelled
+          - rejected
+        properties:
+          period:
+            type: string
+            description: Start of the group.
+            example: "2024-10-05"
+
+          orders:
+            type: integer
+            minimum: 0
+            description: Orders placed.
+            example: 64
+
+          delivered:
+            type: integer
+            minimum: 0
+            example: 45
+
+          cancelled:
+            type: integer
+            minimum: 0
+            example: 1
+
+          rejected:
+            type: integer
+            minimum: 0
+            example: 0
+
+GetRestaurantOrderStatsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order statistics retrieved successfully
+
+    data:
+      type: object
+      required:
+        - stats
+      properties:
+        stats:
+          $ref: "#/RestaurantOrderStats"

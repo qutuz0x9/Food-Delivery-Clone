@@ -5,11 +5,12 @@ registerCustomer:
 
     summary: Register a customer
     description: |
-      Creates a new customer account.
+      Creates a new customer account (FR-CUS-002).
 
-      The registration process validates the supplied information,
-      verifies email uniqueness, creates the user identity, and
-      creates the associated customer profile.
+      The registration process validates the supplied information
+      (FR-CUS-002.2), verifies email uniqueness (FR-CUS-002.3, `409`
+      if the email is taken), creates the user identity, and creates
+      the associated customer profile (FR-CUS-002.4).
 
     operationId: registerCustomer
 
@@ -62,10 +63,18 @@ loginCustomer:
 
     summary: Log in a customer
     description: |
-      Authenticates a customer using their email and password.
+      Authenticates a customer using their email and password
+      (FR-CUS-003.2, FR-CUS-003.3, FR-CUS-003.4).
 
       On success, the system validates the credentials and grants
-      access by issuing a JWT access token and a refresh token.
+      access by issuing a JWT access token in the response body and a
+      refresh token in an `HttpOnly` cookie (`Set-Cookie`). The refresh
+      token is never returned in the body.
+
+      Only accounts whose `account_status` is `active` can log in.
+      A `suspended`, `locked` or `inactive` account is rejected with
+      `403`, and only after the email and password have been verified,
+      so the response does not reveal whether an email is registered.
 
     operationId: loginCustomer
 
@@ -84,6 +93,14 @@ loginCustomer:
     responses:
       "200":
         description: Customer logged in successfully
+        headers:
+          Set-Cookie:
+            description: |
+              Sets the `refreshToken` cookie. It is `HttpOnly`, `Secure` and `SameSite=Strict`, so scripts cannot read it
+              and the browser sends it back on its own. It is never returned in the response body.
+            schema:
+              type: string
+            example: refreshToken=9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6; HttpOnly; Secure; SameSite=Strict
         content:
           application/json:
             schema:
@@ -99,13 +116,83 @@ loginCustomer:
                   lastName: Doe
                   phoneNumber: "+201234567890"
                 accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.abc123signature
-                refreshToken: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
 
       "400":
         $ref: "../responses/common.yaml#/ValidationError"
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+refreshCustomer:
+  post:
+    tags:
+      - Auth
+
+    summary: Refresh a customer access token
+    description: |
+      Issues a new JWT access token for a customer whose access token has
+      expired, using the `refreshToken` cookie set at login. Supports
+      the session started by FR-CUS-003.
+
+      The refresh token is rotated on every call: the presented token
+      is revoked, a new one is issued in a fresh `HttpOnly` cookie
+      (`Set-Cookie`), and the new access token is returned in the
+      body. If a token that was already rotated or revoked is
+      presented again, the whole token chain for that session is
+      revoked and the caller must log in again.
+
+      The cookie is the credential, so no `Authorization` header is
+      needed (the access token is usually expired by now). The call is
+      rejected with `401` if the cookie is missing, unknown, expired
+      or revoked, with `403` if the token belongs to a non-customer account or
+      the account's `account_status` is no longer `active`.
+
+    operationId: refreshCustomer
+
+    security: []
+
+    parameters:
+      - name: refreshToken
+        in: cookie
+        required: true
+        description: |
+          Refresh token set by the customer login response. The browser sends it automatically. It is not
+          accepted in the request body or as a query parameter.
+        schema:
+          type: string
+
+    responses:
+      "200":
+        description: Access token refreshed successfully
+        headers:
+          Set-Cookie:
+            description: |
+              Replaces the `refreshToken` cookie with the rotated token. It is `HttpOnly`, `Secure` and
+              `SameSite=Strict`, and is never returned in the response body.
+            schema:
+              type: string
+            example: refreshToken=3b2a1c0d-9e8f-4a7b-8c6d-5e4f3a2b1c0d; HttpOnly; Secure; SameSite=Strict
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/customer.yaml#/RefreshCustomerResponse"
+            example:
+              success: true
+              message: Access token refreshed successfully
+              data:
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+      "401":
+        $ref: "../responses/common.yaml#/InvalidRefreshToken"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
@@ -217,20 +304,36 @@ logoutCustomer:
     summary: Log out a customer
     description: |
       Logs out the currently authenticated customer by revoking the
-      refresh token, ending the session securely.
+      refresh token, ending the session securely (FR-CUS-004).
 
       The refresh token is read from the `refreshToken` HttpOnly cookie
-      set during login/registration — it is not accepted in the request
-      body or as a query parameter.
+      set during login — it is not accepted in the request body or as
+      a query parameter. The response clears the cookie.
 
     operationId: logoutCustomer
 
     security:
       - bearerAuth: []
 
+    parameters:
+      - name: refreshToken
+        in: cookie
+        required: true
+        description: |
+          Refresh token set by the customer login response. The browser sends it automatically. It is not
+          accepted in the request body or as a query parameter.
+        schema:
+          type: string
+
     responses:
       "200":
         description: Customer logged out successfully
+        headers:
+          Set-Cookie:
+            description: Expires the `refreshToken` cookie so the browser discards it.
+            schema:
+              type: string
+            example: refreshToken=; Max-Age=0; HttpOnly; Secure; SameSite=Strict
         content:
           application/json:
             schema:
@@ -242,6 +345,9 @@ logoutCustomer:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
@@ -286,6 +392,9 @@ customerProfile:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
@@ -347,6 +456,9 @@ customerProfile:
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
 
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
       "409":
         $ref: "../responses/common.yaml#/Conflict"
 
@@ -399,6 +511,9 @@ changePasswordCustomer:
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
 
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
 
@@ -434,7 +549,10 @@ deliveryAddresses:
                     recipientName: John Doe
                     phoneNumber: "+201234567890"
                     streetAddress: 12 Nile Corniche St, Apt 5
-                    city: Cairo
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
                     state: Cairo Governorate
                     postalCode: "11511"
                     latitude: 30.0444
@@ -447,7 +565,10 @@ deliveryAddresses:
                     recipientName: John Doe
                     phoneNumber: "+201234567890"
                     streetAddress: 45 Tahrir Square
-                    city: Cairo
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
                     state: Cairo Governorate
                     postalCode: "11512"
                     latitude: 30.0455
@@ -458,6 +579,9 @@ deliveryAddresses:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
@@ -470,6 +594,11 @@ deliveryAddresses:
     description: |
       Creates a new delivery address for the currently authenticated
       customer (FR-CUS-007.1).
+
+      A customer has at most one default address. Sending
+      `isDefault: true` makes this address the default and, in the
+      same transaction, clears the flag on the customer's previous
+      default.
 
     operationId: createDeliveryAddress
 
@@ -487,7 +616,7 @@ deliveryAddresses:
             recipientName: John Doe
             phoneNumber: "+201234567890"
             streetAddress: 12 Nile Corniche St, Apt 5
-            city: Cairo
+            cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
             state: Cairo Governorate
             postalCode: "11511"
             latitude: 30.0444
@@ -511,7 +640,10 @@ deliveryAddresses:
                   recipientName: John Doe
                   phoneNumber: "+201234567890"
                   streetAddress: 12 Nile Corniche St, Apt 5
-                  city: Cairo
+                  city:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
                   state: Cairo Governorate
                   postalCode: "11511"
                   latitude: 30.0444
@@ -525,6 +657,9 @@ deliveryAddresses:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
@@ -571,7 +706,10 @@ deliveryAddress:
                   recipientName: John Doe
                   phoneNumber: "+201234567890"
                   streetAddress: 12 Nile Corniche St, Apt 5
-                  city: Cairo
+                  city:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
                   state: Cairo Governorate
                   postalCode: "11511"
                   latitude: 30.0444
@@ -582,6 +720,9 @@ deliveryAddress:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "404":
         $ref: "../responses/common.yaml#/NotFound"
@@ -600,6 +741,13 @@ deliveryAddress:
       Only the supplied fields are updated; omitted fields remain
       unchanged.
 
+      A customer has at most one default address. Sending
+      `isDefault: true` makes this address the default and, in the
+      same transaction, clears the flag on the customer's previous
+      default.
+      Sending `isDefault: false` on the current default leaves the
+      customer with no default address; no other address is promoted.
+
     operationId: updateDeliveryAddress
 
     security:
@@ -616,7 +764,7 @@ deliveryAddress:
             recipientName: John Doe
             phoneNumber: "+201234567890"
             streetAddress: 12 Nile Corniche St, Apt 5
-            city: Cairo
+            cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
             state: Cairo Governorate
             postalCode: "11511"
             isDefault: true
@@ -638,7 +786,10 @@ deliveryAddress:
                   recipientName: John Doe
                   phoneNumber: "+201234567890"
                   streetAddress: 12 Nile Corniche St, Apt 5
-                  city: Cairo
+                  city:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
                   state: Cairo Governorate
                   postalCode: "11511"
                   latitude: 30.0444
@@ -652,6 +803,9 @@ deliveryAddress:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "404":
         $ref: "../responses/common.yaml#/NotFound"
@@ -693,6 +847,9 @@ deliveryAddress:
 
       "401":
         $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
 
       "404":
         $ref: "../responses/common.yaml#/NotFound"

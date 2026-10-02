@@ -1,0 +1,4113 @@
+loginAdmin:
+  post:
+    tags:
+      - Auth
+
+    summary: Log in an administrator
+
+    description: |
+      Authenticates an administrator using their email and password.
+
+      On success, issues a JWT access token in the response body and a refresh token in an `HttpOnly` cookie (`Set-Cookie`); the refresh token is never returned in the body.
+
+      Only accounts whose `account_status` is `active` can log in. A `suspended`, `locked` or `inactive` account is rejected with `403`, and only after the email and password have been verified, so the response does not reveal whether an email is registered.
+
+    operationId: loginAdmin
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/LoginAdminRequest"
+          example:
+            email: sara.mostafa@example.com
+            password: StrongPassword123!
+
+    responses:
+      "200":
+        description: Administrator logged in successfully
+        headers:
+          Set-Cookie:
+            description: |
+              Sets the `refreshToken` cookie. It is `HttpOnly`, `Secure` and `SameSite=Strict`, so scripts cannot read it
+              and the browser sends it back on its own. It is never returned in the response body.
+            schema:
+              type: string
+            example: refreshToken=9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6; HttpOnly; Secure; SameSite=Strict
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/LoginAdminResponse"
+            example:
+              success: true
+              message: Logged in successfully
+              data:
+                admin:
+                  id: 383e47af-52e5-51be-b66f-057bcb14629c
+                  firstName: Sara
+                  lastName: Mostafa
+                  email: sara.mostafa@example.com
+                  phoneNumber: "+201112223334"
+                  profileImageUrl: null
+                  createdAt: "2024-01-02T08:00:00.000Z"
+                  updatedAt: null
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+logoutAdmin:
+  post:
+    tags:
+      - Auth
+
+    summary: Log out an administrator
+
+    description: |
+      Logs out the currently authenticated administrator by revoking the refresh token.
+
+      The refresh token is read from the `refreshToken` HttpOnly cookie set during login. The response clears the cookie.
+
+    operationId: logoutAdmin
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: refreshToken
+        in: cookie
+        required: true
+        description: |
+          Refresh token set by the administrator login response. The browser sends it automatically. It is not
+          accepted in the request body or as a query parameter.
+        schema:
+          type: string
+
+    responses:
+      "200":
+        description: Administrator logged out successfully
+        headers:
+          Set-Cookie:
+            description: Expires the `refreshToken` cookie so the browser discards it.
+            schema:
+              type: string
+            example: refreshToken=; Max-Age=0; HttpOnly; Secure; SameSite=Strict
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/LogoutAdminResponse"
+            example:
+              success: true
+              message: Logged out successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+refreshAdmin:
+  post:
+    tags:
+      - Auth
+
+    summary: Refresh an administrator access token
+
+    description: |
+      Issues a new JWT access token using the `refreshToken` cookie set at login.
+
+      The refresh token is rotated on every call, and presenting an already-rotated or revoked token revokes the whole chain. The cookie is the credential, so no `Authorization` header is needed. Rejected with `401` if the cookie is missing, unknown, expired or revoked, and with `403` if the token does not belong to an administrator or the account is no longer `active`.
+
+    operationId: refreshAdmin
+
+    security: []
+
+    parameters:
+      - name: refreshToken
+        in: cookie
+        required: true
+        description: |
+          Refresh token set by the administrator login response. The browser sends it automatically. It is not
+          accepted in the request body or as a query parameter.
+        schema:
+          type: string
+
+    responses:
+      "200":
+        description: Access token refreshed successfully
+        headers:
+          Set-Cookie:
+            description: |
+              Sets the `refreshToken` cookie. It is `HttpOnly`, `Secure` and `SameSite=Strict`, so scripts cannot read it
+              and the browser sends it back on its own. It is never returned in the response body.
+            schema:
+              type: string
+            example: refreshToken=9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6; HttpOnly; Secure; SameSite=Strict
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/RefreshAdminResponse"
+            example:
+              success: true
+              message: Access token refreshed successfully
+              data:
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+      "401":
+        $ref: "../responses/common.yaml#/InvalidRefreshToken"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+forgotPasswordAdmin:
+  post:
+    tags:
+      - Auth
+
+    summary: Request an administrator password reset
+
+    description: |
+      Starts password recovery. If the email matches an administrator account, a reset token is
+      emailed. The response is always the same generic message, whether or not the email is
+      registered.
+
+    operationId: forgotPasswordAdmin
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/ForgotPasswordAdminRequest"
+          example:
+            email: sara.mostafa@example.com
+
+    responses:
+      "200":
+        description: Request accepted
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ForgotPasswordAdminResponse"
+            example:
+              success: true
+              message: If an account with that email exists, a password reset link has been sent.
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+resetPasswordAdmin:
+  post:
+    tags:
+      - Auth
+
+    summary: Reset an administrator password
+
+    description: |
+      Completes password recovery with the emailed token. The token must be unused and unexpired; on
+      success it is marked as used and all the account's refresh tokens are revoked.
+
+    operationId: resetPasswordAdmin
+
+    security: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/ResetPasswordAdminRequest"
+          example:
+            token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+            newPassword: NewStrongPassword123!
+            confirmPassword: NewStrongPassword123!
+
+    responses:
+      "200":
+        description: Password reset successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ResetPasswordAdminResponse"
+            example:
+              success: true
+              message: Password reset successfully. Please log in again.
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "422":
+        $ref: "../responses/common.yaml#/InvalidResetToken"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminProfile:
+  get:
+    tags:
+      - Admin Management
+
+    summary: View own administrator profile
+
+    description: Returns the profile of the currently authenticated administrator.
+
+    operationId: getAdminProfile
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Profile retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAdminProfileResponse"
+            example:
+              success: true
+              message: Profile retrieved successfully
+              data:
+                admin:
+                  id: 383e47af-52e5-51be-b66f-057bcb14629c
+                  firstName: Sara
+                  lastName: Mostafa
+                  email: sara.mostafa@example.com
+                  phoneNumber: "+201112223334"
+                  profileImageUrl: null
+                  createdAt: "2024-01-02T08:00:00.000Z"
+                  updatedAt: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Update own administrator profile
+
+    description: |
+      Updates the profile of the currently authenticated administrator. Only the supplied fields
+      change. The phone number belongs to the user account and must stay unique (`409` otherwise); the
+      login email cannot be changed here.
+
+    operationId: updateAdminProfile
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateAdminProfileRequest"
+          example:
+            firstName: Sara
+            phoneNumber: "+201112223334"
+
+    responses:
+      "200":
+        description: Profile updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateAdminProfileResponse"
+            example:
+              success: true
+              message: Profile updated successfully
+              data:
+                admin:
+                  id: 383e47af-52e5-51be-b66f-057bcb14629c
+                  firstName: Sara
+                  lastName: Mostafa
+                  email: sara.mostafa@example.com
+                  phoneNumber: "+201112223334"
+                  profileImageUrl: null
+                  createdAt: "2024-01-02T08:00:00.000Z"
+                  updatedAt: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+changePasswordAdmin:
+  post:
+    tags:
+      - Admin Management
+
+    summary: Change own password
+
+    description: |
+      Changes the password of the currently authenticated administrator. The current password must be
+      supplied. Existing refresh tokens are revoked.
+
+    operationId: changePasswordAdmin
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/ChangePasswordAdminRequest"
+          example:
+            currentPassword: StrongPassword123!
+            newPassword: NewStrongPassword123!
+            confirmPassword: NewStrongPassword123!
+
+    responses:
+      "200":
+        description: Password changed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ChangePasswordAdminResponse"
+            example:
+              success: true
+              message: Password changed successfully
+              data: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminCities:
+  get:
+    tags:
+      - Admin Management
+
+    summary: List all cities
+
+    description: |
+      Returns every city, including inactive ones. The public `GET /cities` returns active cities
+      only.
+
+    operationId: listAdminCities
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Cities retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminCitiesResponse"
+            example:
+              success: true
+              message: Cities retrieved successfully
+              data:
+                cities:
+                  - id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                    isActive: true
+                    createdAt: "2024-01-01T00:00:00.000Z"
+                  - id: 7a4c1e92-0d5b-4b3f-9e68-1f2a3b4c5d6e
+                    name: Giza
+                    country: Egypt
+                    isActive: true
+                    createdAt: "2024-01-01T00:00:00.000Z"
+                  - id: 0aae3b6d-0c04-58f1-b1f8-19a93a590e95
+                    name: Suez
+                    country: Egypt
+                    isActive: false
+                    createdAt: "2024-01-01T00:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Admin Management
+
+    summary: Add a city
+
+    description: |
+      Adds a city the platform operates in. Cities are unique by name and country (`409` otherwise). Restaurants, drivers and customers refer to a city by its id.
+
+      The change is recorded in the audit log.
+
+    operationId: createCity
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/CreateCityRequest"
+          example:
+            name: Alexandria
+            country: Egypt
+
+    responses:
+      "201":
+        description: City created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/CreateCityResponse"
+            example:
+              success: true
+              message: City created successfully
+              data:
+                city:
+                  id: fb5ea528-dd50-572f-92e9-a515a0a99af1
+                  name: Alexandria
+                  country: Egypt
+                  isActive: true
+                  createdAt: "2024-01-01T00:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminCity:
+  parameters:
+    - name: cityId
+      in: path
+      required: true
+      description: Unique identifier of the city.
+      schema:
+        type: string
+        format: uuid
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Update or deactivate a city
+
+    description: |
+      Updates a city. Cities are never deleted: set `isActive` to `false` to take one out of service. It then disappears from `GET /cities`, while branches, drivers and addresses that already refer to it keep working. The name and country must stay unique (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: updateCity
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateCityRequest"
+          example:
+            isActive: false
+
+    responses:
+      "200":
+        description: City updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateCityResponse"
+            example:
+              success: true
+              message: City updated successfully
+              data:
+                city:
+                  id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                  name: Cairo
+                  country: Egypt
+                  isActive: false
+                  createdAt: "2024-01-01T00:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminCustomers:
+  get:
+    tags:
+      - Admin Management
+
+    summary: List and search customers
+
+    description: |
+      Returns a paginated list of customer accounts, newest first. Accounts that were deleted are not
+      listed.
+
+    operationId: listAdminCustomers
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: search
+        in: query
+        required: false
+        description: Free-text search on name, email or phone number.
+        schema:
+          type: string
+        example: john
+      - name: accountStatus
+        in: query
+        required: false
+        description: Only accounts with this login state.
+        schema:
+          $ref: "../schemas/admin.yaml#/AccountStatus"
+        example: active
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Customers retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminCustomersResponse"
+            example:
+              success: true
+              message: Customers retrieved successfully
+              data:
+                customers:
+                  - id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    userId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                    firstName: John
+                    lastName: Doe
+                    email: john@example.com
+                    phoneNumber: "+201234567890"
+                    accountStatus: active
+                    emailVerified: true
+                    createdAt: "2024-01-15T10:30:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminCustomer:
+  parameters:
+    - name: customerId
+      in: path
+      required: true
+      description: Unique identifier of the customer.
+      schema:
+        type: string
+        format: uuid
+      example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+
+  get:
+    tags:
+      - Admin Management
+
+    summary: View a customer
+
+    description: Returns a customer's profile, account state, number of orders and saved delivery addresses.
+
+    operationId: getAdminCustomer
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Customer retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAdminCustomerResponse"
+            example:
+              success: true
+              message: Customer retrieved successfully
+              data:
+                customer:
+                  id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  userId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                  firstName: John
+                  lastName: Doe
+                  email: john@example.com
+                  phoneNumber: "+201234567890"
+                  accountStatus: active
+                  emailVerified: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+                  profileImageUrl: null
+                  dateOfBirth: "1990-05-20"
+                  gender: male
+                  orderCount: 14
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+                  deliveryAddresses:
+                    - id: deebf84a-2ed2-579a-80d7-b820d7e655c4
+                      label: Home
+                      recipientName: John Doe
+                      phoneNumber: "+201234567890"
+                      streetAddress: 12 Nile Corniche St, Apt 5
+                      city:
+                        id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                        name: Cairo
+                        country: Egypt
+                      state: Cairo Governorate
+                      postalCode: "11511"
+                      latitude: 30.0444
+                      longitude: 31.2357
+                      isDefault: true
+                      createdAt: "2024-01-15T10:30:00.000Z"
+                      updatedAt: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Update a customer
+
+    description: |
+      Updates a customer's profile. Only the supplied fields change. The phone number belongs to the user account and must stay unique (`409`). The login email cannot be changed here.
+
+      The change is recorded in the audit log.
+
+    operationId: updateAdminCustomer
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateAdminCustomerRequest"
+          example:
+            firstName: Johnny
+            phoneNumber: "+201234567891"
+
+    responses:
+      "200":
+        description: Customer updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateAdminCustomerResponse"
+            example:
+              success: true
+              message: Customer updated successfully
+              data:
+                customer:
+                  id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  userId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                  firstName: Johnny
+                  lastName: Doe
+                  email: john@example.com
+                  phoneNumber: "+201234567891"
+                  accountStatus: active
+                  emailVerified: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+                  profileImageUrl: null
+                  dateOfBirth: "1990-05-20"
+                  gender: male
+                  orderCount: 14
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+                  deliveryAddresses:
+                    - id: deebf84a-2ed2-579a-80d7-b820d7e655c4
+                      label: Home
+                      recipientName: John Doe
+                      phoneNumber: "+201234567890"
+                      streetAddress: 12 Nile Corniche St, Apt 5
+                      city:
+                        id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                        name: Cairo
+                        country: Egypt
+                      state: Cairo Governorate
+                      postalCode: "11511"
+                      latitude: 30.0444
+                      longitude: 31.2357
+                      isDefault: true
+                      createdAt: "2024-01-15T10:30:00.000Z"
+                      updatedAt: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Admin Management
+
+    summary: Delete a customer
+
+    description: |
+      Soft-deletes the customer: the user account is marked deleted and can no longer log in, while orders, payments and reviews are kept. To block an account without deleting it, set its account status instead.
+
+      The change is recorded in the audit log.
+
+    operationId: deleteAdminCustomer
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Customer deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/DeleteAdminCustomerResponse"
+            example:
+              success: true
+              message: Customer deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminCustomerAccountStatus:
+  parameters:
+    - name: customerId
+      in: path
+      required: true
+      description: Unique identifier of the customer.
+      schema:
+        type: string
+        format: uuid
+      example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Change a customer's account status
+
+    description: |
+      Sets the login state of the customer's user account (`active`, `inactive`, `locked` or `suspended`). Only `active` accounts can log in. Moving an account out of `active` revokes its refresh tokens, so the user is signed out once their access token expires.
+
+      The change is recorded in the audit log.
+
+    operationId: updateCustomerAccountStatus
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateAccountStatusRequest"
+          example:
+            accountStatus: suspended
+
+    responses:
+      "200":
+        description: Account status updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateCustomerAccountStatusResponse"
+            example:
+              success: true
+              message: Account status updated successfully
+              data:
+                customer:
+                  id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  userId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                  firstName: John
+                  lastName: Doe
+                  email: john@example.com
+                  phoneNumber: "+201234567890"
+                  accountStatus: suspended
+                  emailVerified: true
+                  createdAt: "2024-01-15T10:30:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminRestaurants:
+  get:
+    tags:
+      - Admin Management
+
+    summary: List and search restaurants
+
+    description: |
+      Returns a paginated list of restaurants, newest first. Deleted restaurants are not listed. Use
+      `status=pending` to find registrations waiting for approval.
+
+    operationId: listAdminRestaurants
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: search
+        in: query
+        required: false
+        description: Free-text search on restaurant name or login email.
+        schema:
+          type: string
+        example: john
+      - name: status
+        in: query
+        required: false
+        description: Only restaurants with this approval state.
+        schema:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+        example: pending
+      - name: accountStatus
+        in: query
+        required: false
+        description: Only accounts with this login state.
+        schema:
+          $ref: "../schemas/admin.yaml#/AccountStatus"
+        example: active
+      - name: cityId
+        in: query
+        required: false
+        description: Only restaurants with a branch in this city.
+        schema:
+          type: string
+          format: uuid
+        example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Restaurants retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminRestaurantsResponse"
+            example:
+              success: true
+              message: Restaurants retrieved successfully
+              data:
+                restaurants:
+                  - id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    userId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                    name: Nile Grill House
+                    email: contact@nilegrill.example.com
+                    phoneNumber: "+201234567890"
+                    status: approved
+                    accountStatus: active
+                    branchCount: 2
+                    ratingAverage: 4.5
+                    ratingCount: 128
+                    createdAt: "2023-11-10T08:00:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminRestaurant:
+  parameters:
+    - name: restaurantId
+      in: path
+      required: true
+      description: Unique identifier of the restaurant.
+      schema:
+        type: string
+        format: uuid
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+  get:
+    tags:
+      - Admin Management
+
+    summary: View a restaurant
+
+    description: |
+      Returns a restaurant's profile, approval state, account state and all of its branches, active or
+      not.
+
+    operationId: getAdminRestaurant
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Restaurant retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAdminRestaurantResponse"
+            example:
+              success: true
+              message: Restaurant retrieved successfully
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  userId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                  name: Nile Grill House
+                  email: contact@nilegrill.example.com
+                  phoneNumber: "+201234567890"
+                  status: approved
+                  accountStatus: active
+                  branchCount: 2
+                  ratingAverage: 4.5
+                  ratingCount: 128
+                  createdAt: "2023-11-10T08:00:00.000Z"
+                  description: Authentic Egyptian grills and mezze.
+                  logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+                  coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
+                  minimumOrderAmount: 100
+                  deliveryFee: 25
+                  estimatedDeliveryTime: 35
+                  branches:
+                    - id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                      label: Ramses Branch
+                      city:
+                        id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                        name: Cairo
+                        country: Egypt
+                      street: 15 Ramses St
+                      building: Building 4
+                      latitude: 30.0561
+                      longitude: 31.2394
+                      availabilityStatus: open
+                      isActive: true
+                      createdAt: "2023-11-10T08:00:00.000Z"
+                      updatedAt: null
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Update a restaurant
+
+    description: |
+      Updates a restaurant's profile. Only the supplied fields change. Branches, hours and availability are managed by the restaurant itself.
+
+      The change is recorded in the audit log.
+
+    operationId: updateAdminRestaurant
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateAdminRestaurantRequest"
+          example:
+            minimumOrderAmount: 120
+            deliveryFee: 30
+
+    responses:
+      "200":
+        description: Restaurant updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateAdminRestaurantResponse"
+            example:
+              success: true
+              message: Restaurant updated successfully
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  userId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                  name: Nile Grill House
+                  email: contact@nilegrill.example.com
+                  phoneNumber: "+201234567890"
+                  status: approved
+                  accountStatus: active
+                  branchCount: 2
+                  ratingAverage: 4.5
+                  ratingCount: 128
+                  createdAt: "2023-11-10T08:00:00.000Z"
+                  description: Authentic Egyptian grills and mezze.
+                  logoUrl: https://cdn.example.com/restaurants/nile-grill/logo.jpg
+                  coverImageUrl: https://cdn.example.com/restaurants/nile-grill/cover.jpg
+                  minimumOrderAmount: 120
+                  deliveryFee: 30
+                  estimatedDeliveryTime: 35
+                  branches:
+                    - id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                      label: Ramses Branch
+                      city:
+                        id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                        name: Cairo
+                        country: Egypt
+                      street: 15 Ramses St
+                      building: Building 4
+                      latitude: 30.0561
+                      longitude: 31.2394
+                      availabilityStatus: open
+                      isActive: true
+                      createdAt: "2023-11-10T08:00:00.000Z"
+                      updatedAt: null
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Admin Management
+
+    summary: Delete a restaurant
+
+    description: |
+      Soft-deletes the restaurant: the user account is marked deleted and can no longer log in, and the restaurant disappears from customers. Orders, payments and reviews are kept. A restaurant with orders still in progress cannot be deleted (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: deleteAdminRestaurant
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Restaurant deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/DeleteAdminRestaurantResponse"
+            example:
+              success: true
+              message: Restaurant deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+approveRestaurant:
+  parameters:
+    - name: restaurantId
+      in: path
+      required: true
+      description: Unique identifier of the restaurant.
+      schema:
+        type: string
+        format: uuid
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+  post:
+    tags:
+      - Admin Management
+
+    summary: Approve a restaurant registration
+
+    description: |
+      Sets the restaurant's approval state to `approved`, so customers can see it and place orders. Registrations start as `pending`. A restaurant that is already `approved` cannot be approved again (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: approveRestaurant
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Restaurant status updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateRestaurantStatusResponse"
+            example:
+              success: true
+              message: Restaurant status updated successfully
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  userId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                  name: Nile Grill House
+                  email: contact@nilegrill.example.com
+                  phoneNumber: "+201234567890"
+                  status: approved
+                  accountStatus: active
+                  branchCount: 2
+                  ratingAverage: 4.5
+                  ratingCount: 128
+                  createdAt: "2023-11-10T08:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+rejectRestaurant:
+  parameters:
+    - name: restaurantId
+      in: path
+      required: true
+      description: Unique identifier of the restaurant.
+      schema:
+        type: string
+        format: uuid
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+  post:
+    tags:
+      - Admin Management
+
+    summary: Reject a restaurant registration
+
+    description: |
+      Sets the restaurant's approval state to `rejected`, which hides it from customers. A restaurant that is already `rejected` cannot be rejected again (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: rejectRestaurant
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Restaurant status updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateRestaurantStatusResponse"
+            example:
+              success: true
+              message: Restaurant status updated successfully
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  userId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                  name: Nile Grill House
+                  email: contact@nilegrill.example.com
+                  phoneNumber: "+201234567890"
+                  status: rejected
+                  accountStatus: active
+                  branchCount: 2
+                  ratingAverage: 4.5
+                  ratingCount: 128
+                  createdAt: "2023-11-10T08:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminRestaurantAccountStatus:
+  parameters:
+    - name: restaurantId
+      in: path
+      required: true
+      description: Unique identifier of the restaurant.
+      schema:
+        type: string
+        format: uuid
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Change a restaurant's account status
+
+    description: |
+      Sets the login state of the restaurant's user account (`active`, `inactive`, `locked` or `suspended`). This is separate from the approval state. Only `active` accounts can log in. Moving an account out of `active` revokes its refresh tokens, so the user is signed out once their access token expires.
+
+      The change is recorded in the audit log.
+
+    operationId: updateRestaurantAccountStatus
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateAccountStatusRequest"
+          example:
+            accountStatus: suspended
+
+    responses:
+      "200":
+        description: Account status updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateRestaurantAccountStatusResponse"
+            example:
+              success: true
+              message: Account status updated successfully
+              data:
+                restaurant:
+                  id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  userId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                  name: Nile Grill House
+                  email: contact@nilegrill.example.com
+                  phoneNumber: "+201234567890"
+                  status: approved
+                  accountStatus: suspended
+                  branchCount: 2
+                  ratingAverage: 4.5
+                  ratingCount: 128
+                  createdAt: "2023-11-10T08:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminDrivers:
+  get:
+    tags:
+      - Admin Management
+
+    summary: List and search drivers
+
+    description: |
+      Returns a paginated list of drivers, newest first. Deleted drivers are not listed. Use
+      `status=pending` to find registrations waiting for approval.
+
+    operationId: listAdminDrivers
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: search
+        in: query
+        required: false
+        description: Free-text search on name, email, phone number, national id or licence number.
+        schema:
+          type: string
+        example: john
+      - name: status
+        in: query
+        required: false
+        description: Only drivers with this approval state.
+        schema:
+          type: string
+          enum:
+            - pending
+            - active
+            - inactive
+        example: pending
+      - name: availabilityStatus
+        in: query
+        required: false
+        description: Only drivers with this availability.
+        schema:
+          type: string
+          enum:
+            - available
+            - busy
+            - offline
+            - on_break
+        example: available
+      - name: accountStatus
+        in: query
+        required: false
+        description: Only accounts with this login state.
+        schema:
+          $ref: "../schemas/admin.yaml#/AccountStatus"
+        example: active
+      - name: cityId
+        in: query
+        required: false
+        description: Only drivers whose working city is this city.
+        schema:
+          type: string
+          format: uuid
+        example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Drivers retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminDriversResponse"
+            example:
+              success: true
+              message: Drivers retrieved successfully
+              data:
+                drivers:
+                  - id: e035c191-7d58-52be-9f78-c9a9351192dd
+                    firstName: Omar
+                    lastName: Hassan
+                    email: omar.hassan@example.com
+                    phoneNumber: "+201001234567"
+                    workingCity:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    status: active
+                    availabilityStatus: available
+                    rating: 4.8
+                    totalDeliveries: 312
+                    createdAt: "2024-01-10T09:00:00.000Z"
+                    userId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                    accountStatus: active
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminDriver:
+  parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Unique identifier of the driver.
+      schema:
+        type: string
+        format: uuid
+      example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+  get:
+    tags:
+      - Admin Management
+
+    summary: View a driver
+
+    description: |
+      Returns a driver's full profile, working city, active vehicle and every uploaded document with
+      its review status.
+
+    operationId: getAdminDriver
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Driver retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAdminDriverResponse"
+            example:
+              success: true
+              message: Driver retrieved successfully
+              data:
+                driver:
+                  id: e035c191-7d58-52be-9f78-c9a9351192dd
+                  firstName: Omar
+                  lastName: Hassan
+                  email: omar.hassan@example.com
+                  phoneNumber: "+201001234567"
+                  workingCity:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  status: active
+                  availabilityStatus: available
+                  rating: 4.8
+                  totalDeliveries: 312
+                  createdAt: "2024-01-10T09:00:00.000Z"
+                  userId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                  accountStatus: active
+                  dateOfBirth: "1992-04-18"
+                  profileImageUrl: https://cdn.example.com/drivers/omar/profile.jpg
+                  nationalId: "29204180101234"
+                  licenseNumber: LIC-559213
+                  licenseExpiryDate: "2027-08-30"
+                  vehicle:
+                    id: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+                    vehicleType: motorcycle
+                    brand: Honda
+                    model: CB125
+                    color: Red
+                    plateNumber: ABC 1234
+                    manufactureYear: 2021
+                    insuranceExpiryDate: "2025-12-31"
+                    isActive: true
+                    createdAt: "2024-01-10T09:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+                  documents:
+                    - id: 75488f9f-8635-539a-9d05-8e7c88db41e1
+                      documentType: driver_license
+                      fileUrl: https://cdn.example.com/drivers/omar/license.jpg
+                      status: verified
+                      expiryDate: "2027-08-30"
+                      verifiedAt: "2024-01-12T11:00:00.000Z"
+                      createdAt: "2024-01-10T09:05:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Update a driver
+
+    description: |
+      Updates a driver's profile. Only the supplied fields change. The phone number must stay unique across all accounts, and the national id and licence number across drivers (`409`). A new working city must be active.
+
+      The change is recorded in the audit log.
+
+    operationId: updateAdminDriver
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateAdminDriverRequest"
+          example:
+            licenseExpiryDate: "2028-08-30"
+
+    responses:
+      "200":
+        description: Driver updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateAdminDriverResponse"
+            example:
+              success: true
+              message: Driver updated successfully
+              data:
+                driver:
+                  id: e035c191-7d58-52be-9f78-c9a9351192dd
+                  firstName: Omar
+                  lastName: Hassan
+                  email: omar.hassan@example.com
+                  phoneNumber: "+201001234567"
+                  workingCity:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  status: active
+                  availabilityStatus: available
+                  rating: 4.8
+                  totalDeliveries: 312
+                  createdAt: "2024-01-10T09:00:00.000Z"
+                  userId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                  accountStatus: active
+                  dateOfBirth: "1992-04-18"
+                  profileImageUrl: https://cdn.example.com/drivers/omar/profile.jpg
+                  nationalId: "29204180101234"
+                  licenseNumber: LIC-559213
+                  licenseExpiryDate: "2028-08-30"
+                  vehicle:
+                    id: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+                    vehicleType: motorcycle
+                    brand: Honda
+                    model: CB125
+                    color: Red
+                    plateNumber: ABC 1234
+                    manufactureYear: 2021
+                    insuranceExpiryDate: "2025-12-31"
+                    isActive: true
+                    createdAt: "2024-01-10T09:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+                  documents:
+                    - id: 75488f9f-8635-539a-9d05-8e7c88db41e1
+                      documentType: driver_license
+                      fileUrl: https://cdn.example.com/drivers/omar/license.jpg
+                      status: verified
+                      expiryDate: "2027-08-30"
+                      verifiedAt: "2024-01-12T11:00:00.000Z"
+                      createdAt: "2024-01-10T09:05:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Admin Management
+
+    summary: Delete a driver
+
+    description: |
+      Soft-deletes the driver: the user account is marked deleted and can no longer log in. Deliveries, earnings and reviews are kept. A driver with a delivery in progress cannot be deleted (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: deleteAdminDriver
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Driver deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/DeleteAdminDriverResponse"
+            example:
+              success: true
+              message: Driver deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminDriverStatus:
+  parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Unique identifier of the driver.
+      schema:
+        type: string
+        format: uuid
+      example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Approve or deactivate a driver
+
+    description: |
+      Sets the driver's approval state. `active` approves the driver, who can then go available and receive delivery requests. `inactive` takes the driver out of service. There is no `rejected` value for drivers: a registration that should not go ahead is set to `inactive`. Login is controlled separately by the account status.
+
+      The change is recorded in the audit log.
+
+    operationId: updateDriverStatus
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateDriverStatusRequest"
+          example:
+            status: active
+
+    responses:
+      "200":
+        description: Driver status updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateDriverStatusResponse"
+            example:
+              success: true
+              message: Driver status updated successfully
+              data:
+                driver:
+                  id: e035c191-7d58-52be-9f78-c9a9351192dd
+                  firstName: Omar
+                  lastName: Hassan
+                  email: omar.hassan@example.com
+                  phoneNumber: "+201001234567"
+                  workingCity:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  status: active
+                  availabilityStatus: available
+                  rating: 4.8
+                  totalDeliveries: 312
+                  createdAt: "2024-01-10T09:00:00.000Z"
+                  userId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                  accountStatus: active
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminDriverAccountStatus:
+  parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Unique identifier of the driver.
+      schema:
+        type: string
+        format: uuid
+      example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Change a driver's account status
+
+    description: |
+      Sets the login state of the driver's user account (`active`, `inactive`, `locked` or `suspended`). This is separate from the approval state. Only `active` accounts can log in. Moving an account out of `active` revokes its refresh tokens, so the user is signed out once their access token expires.
+
+      The change is recorded in the audit log.
+
+    operationId: updateDriverAccountStatus
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateAccountStatusRequest"
+          example:
+            accountStatus: suspended
+
+    responses:
+      "200":
+        description: Account status updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateDriverAccountStatusResponse"
+            example:
+              success: true
+              message: Account status updated successfully
+              data:
+                driver:
+                  id: e035c191-7d58-52be-9f78-c9a9351192dd
+                  firstName: Omar
+                  lastName: Hassan
+                  email: omar.hassan@example.com
+                  phoneNumber: "+201001234567"
+                  workingCity:
+                    id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    name: Cairo
+                    country: Egypt
+                  status: active
+                  availabilityStatus: available
+                  rating: 4.8
+                  totalDeliveries: 312
+                  createdAt: "2024-01-10T09:00:00.000Z"
+                  userId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                  accountStatus: suspended
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminDriverDocument:
+  parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Unique identifier of the driver.
+      schema:
+        type: string
+        format: uuid
+      example: e035c191-7d58-52be-9f78-c9a9351192dd
+    - name: documentId
+      in: path
+      required: true
+      description: Unique identifier of the document.
+      schema:
+        type: string
+        format: uuid
+      example: 75488f9f-8635-539a-9d05-8e7c88db41e1
+
+  patch:
+    tags:
+      - Admin Management
+
+    summary: Review a driver document
+
+    description: |
+      Records the outcome of reviewing a document the driver uploaded: `verified` (which also records when), `rejected` or `expired`.
+
+      The change is recorded in the audit log.
+
+    operationId: reviewDriverDocument
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/ReviewDriverDocumentRequest"
+          example:
+            status: verified
+
+    responses:
+      "200":
+        description: Document reviewed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ReviewDriverDocumentResponse"
+            example:
+              success: true
+              message: Document reviewed successfully
+              data:
+                document:
+                  id: 75488f9f-8635-539a-9d05-8e7c88db41e1
+                  documentType: driver_license
+                  fileUrl: https://cdn.example.com/drivers/omar/license.jpg
+                  status: verified
+                  expiryDate: "2027-08-30"
+                  verifiedAt: "2024-01-12T11:00:00.000Z"
+                  createdAt: "2024-01-10T09:05:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminOrders:
+  get:
+    tags:
+      - Admin Operations
+
+    summary: List, search and filter orders
+
+    description: Returns a paginated list of orders across the whole platform, newest first.
+
+    operationId: listAdminOrders
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: search
+        in: query
+        required: false
+        description: Free-text search on order number, customer name or phone number.
+        schema:
+          type: string
+        example: john
+      - name: status
+        in: query
+        required: false
+        description: Only orders in this status.
+        schema:
+          $ref: "../schemas/order.yaml#/OrderStatus"
+        example: delivered
+      - name: customerId
+        in: query
+        required: false
+        description: Only this customer's orders.
+        schema:
+          type: string
+          format: uuid
+        example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+      - name: restaurantId
+        in: query
+        required: false
+        description: Only this restaurant's orders.
+        schema:
+          type: string
+          format: uuid
+        example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+      - name: branchId
+        in: query
+        required: false
+        description: Only orders fulfilled by this branch.
+        schema:
+          type: string
+          format: uuid
+        example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+      - name: cityId
+        in: query
+        required: false
+        description: Only orders fulfilled by a branch in this city.
+        schema:
+          type: string
+          format: uuid
+        example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+      - name: from
+        in: query
+        required: false
+        description: Only orders placed on or after this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Only orders placed on or before this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Orders retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminOrdersResponse"
+            example:
+              success: true
+              message: Orders retrieved successfully
+              data:
+                orders:
+                  - id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    status: delivered
+                    customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    customerName: John Doe
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    branchLabel: Ramses Branch
+                    itemCount: 2
+                    totalAmount: 350
+                    placedAt: "2024-10-05T18:30:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminOrder:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  get:
+    tags:
+      - Admin Operations
+
+    summary: View an order
+
+    description: |
+      Returns everything about an order: its items and options, the delivery address snapshot, the
+      fulfilling branch, totals, every timestamp, the status history, the payment and the delivering
+      driver.
+
+    operationId: getAdminOrder
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Order retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAdminOrderResponse"
+            example:
+              success: true
+              message: Order retrieved successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: delivered
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  customer:
+                    id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    firstName: John
+                    lastName: Doe
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  deliveryAddress:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: "2024-10-05T18:32:00.000Z"
+                  rejectedAt: null
+                  preparedAt: "2024-10-05T18:50:00.000Z"
+                  readyForPickupAt: "2024-10-05T18:55:00.000Z"
+                  pickedUpAt: "2024-10-05T19:00:00.000Z"
+                  outForDeliveryAt: "2024-10-05T19:02:00.000Z"
+                  deliveredAt: "2024-10-05T19:20:00.000Z"
+                  cancelledAt: null
+                  createdAt: "2024-10-05T18:30:00.000Z"
+                  updatedAt: "2024-10-05T19:20:00.000Z"
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: accepted
+                      changedAt: "2024-10-05T18:32:00.000Z"
+                      changedByUserId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                      note: null
+                    - status: delivered
+                      changedAt: "2024-10-05T19:20:00.000Z"
+                      changedByUserId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                      note: null
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: credit_card
+                    status: paid
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: "2024-10-05T18:31:00.000Z"
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+                  delivery:
+                    assignmentId: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                    driverId: e035c191-7d58-52be-9f78-c9a9351192dd
+                    driverName: Omar Hassan
+                    assignmentStatus: completed
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminOrderStatus:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  patch:
+    tags:
+      - Admin Operations
+
+    summary: Change an order's status
+
+    description: |
+      Moves an order to another status when an administrator has to step in. The change is appended to the order's status history together with the administrator and the optional `note`, and the timestamp that matches the new status (for example `cancelledAt`) is set. Setting the status the order already has is rejected with `409`.
+
+      The change is recorded in the audit log.
+
+    operationId: updateOrderStatus
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateOrderStatusRequest"
+          example:
+            status: cancelled
+            note: Restaurant could not fulfil the order
+
+    responses:
+      "200":
+        description: Order status updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateOrderStatusResponse"
+            example:
+              success: true
+              message: Order status updated successfully
+              data:
+                order:
+                  id: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: cancelled
+                  customerId: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                  customerName: John Doe
+                  restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                  restaurantName: Nile Grill House
+                  branchId: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                  branchLabel: Ramses Branch
+                  itemCount: 2
+                  totalAmount: 350
+                  placedAt: "2024-10-05T18:30:00.000Z"
+                  customer:
+                    id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    firstName: John
+                    lastName: Doe
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  branch:
+                    id: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+                    label: Ramses Branch
+                    restaurantId: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    restaurantName: Nile Grill House
+                    city:
+                      id: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                      name: Cairo
+                      country: Egypt
+                    street: 15 Ramses St
+                    building: Building 4
+                    latitude: 30.0561
+                    longitude: 31.2394
+                  deliveryAddress:
+                    label: Home
+                    recipientName: John Doe
+                    phoneNumber: "+201234567890"
+                    streetAddress: 12 Nile Corniche St, Apt 5
+                    cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                    city: Cairo
+                    state: Cairo Governorate
+                    postalCode: "11511"
+                    latitude: 30.0444
+                    longitude: 31.2357
+                  items:
+                    - id: c87b9255-1270-5684-9acf-3aaae45f5b94
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      specialInstructions: No onions
+                      options:
+                        - optionGroupName: Size
+                          optionValueName: Large
+                          priceAdjustment: 0
+                  totals:
+                    subtotal: 300
+                    deliveryFee: 25
+                    taxAmount: 45
+                    discountAmount: 20
+                    totalAmount: 350
+                  customerNote: Please ring the bell
+                  acceptedAt: "2024-10-05T18:32:00.000Z"
+                  rejectedAt: null
+                  preparedAt: "2024-10-05T18:50:00.000Z"
+                  readyForPickupAt: "2024-10-05T18:55:00.000Z"
+                  pickedUpAt: "2024-10-05T19:00:00.000Z"
+                  outForDeliveryAt: "2024-10-05T19:02:00.000Z"
+                  deliveredAt: "2024-10-05T19:20:00.000Z"
+                  cancelledAt: "2024-10-05T19:40:00.000Z"
+                  createdAt: "2024-10-05T18:30:00.000Z"
+                  updatedAt: "2024-10-05T19:20:00.000Z"
+                  statusHistory:
+                    - status: pending
+                      changedAt: "2024-10-05T18:30:00.000Z"
+                      changedByUserId: 1f89c291-94ac-59fd-a6b3-23578af30f0f
+                      note: null
+                    - status: accepted
+                      changedAt: "2024-10-05T18:32:00.000Z"
+                      changedByUserId: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+                      note: null
+                    - status: delivered
+                      changedAt: "2024-10-05T19:20:00.000Z"
+                      changedByUserId: 0611da80-d0d0-535a-8bf9-6503cef2f460
+                      note: null
+                  payment:
+                    id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: credit_card
+                    status: paid
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: "2024-10-05T18:31:00.000Z"
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+                  delivery:
+                    assignmentId: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+                    driverId: e035c191-7d58-52be-9f78-c9a9351192dd
+                    driverName: Omar Hassan
+                    assignmentStatus: completed
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminPayments:
+  get:
+    tags:
+      - Admin Operations
+
+    summary: List payments
+
+    description: Returns a paginated list of payments, newest first.
+
+    operationId: listAdminPayments
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: Only payments in this state.
+        schema:
+          $ref: "../schemas/payment.yaml#/PaymentStatus"
+        example: paid
+      - name: paymentMethod
+        in: query
+        required: false
+        description: Only payments made this way.
+        schema:
+          $ref: "../schemas/payment.yaml#/PaymentMethod"
+        example: credit_card
+      - name: orderId
+        in: query
+        required: false
+        description: Only the payment(s) of this order.
+        schema:
+          type: string
+          format: uuid
+        example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+      - name: from
+        in: query
+        required: false
+        description: Only payments created on or after this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: false
+        description: Only payments created on or before this day.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-31"
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Payments retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminPaymentsResponse"
+            example:
+              success: true
+              message: Payments retrieved successfully
+              data:
+                payments:
+                  - id: 9b186018-751f-5f05-89e0-896252cd46cf
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    paymentMethod: credit_card
+                    status: paid
+                    transactionReference: txn_9f8e7d6c
+                    amount: 350
+                    currency: EGP
+                    paidAt: "2024-10-05T18:31:00.000Z"
+                    failureReason: null
+                    createdAt: "2024-10-05T18:30:30.000Z"
+                    updatedAt: "2024-10-05T18:31:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminPayment:
+  parameters:
+    - name: paymentId
+      in: path
+      required: true
+      description: Unique identifier of the payment.
+      schema:
+        type: string
+        format: uuid
+      example: 9b186018-751f-5f05-89e0-896252cd46cf
+
+  get:
+    tags:
+      - Admin Operations
+
+    summary: View a payment
+
+    description: |
+      Returns a payment with its refunds and the total already refunded. Use it to verify the payment
+      status.
+
+    operationId: getAdminPayment
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Payment retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAdminPaymentResponse"
+            example:
+              success: true
+              message: Payment retrieved successfully
+              data:
+                payment:
+                  id: 9b186018-751f-5f05-89e0-896252cd46cf
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  paymentMethod: credit_card
+                  status: paid
+                  transactionReference: txn_9f8e7d6c
+                  amount: 350
+                  currency: EGP
+                  paidAt: "2024-10-05T18:31:00.000Z"
+                  failureReason: null
+                  createdAt: "2024-10-05T18:30:30.000Z"
+                  updatedAt: "2024-10-05T18:31:00.000Z"
+                  refundedAmount: 50
+                  refunds:
+                    - id: 4dcf6b09-1985-5814-a1d4-73cad05922c4
+                      paymentId: 9b186018-751f-5f05-89e0-896252cd46cf
+                      amount: 50
+                      reason: Missing item
+                      status: completed
+                      processedAt: "2024-10-06T10:00:00.000Z"
+                      createdAt: "2024-10-06T09:30:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminPaymentRefunds:
+  parameters:
+    - name: paymentId
+      in: path
+      required: true
+      description: Unique identifier of the payment.
+      schema:
+        type: string
+        format: uuid
+      example: 9b186018-751f-5f05-89e0-896252cd46cf
+
+  post:
+    tags:
+      - Admin Operations
+
+    summary: Refund a payment
+
+    description: |
+      Creates a refund for a payment. The payment must be `paid` or `partially_refunded`, and the amount cannot exceed what is still refundable (the payment amount minus refunds that are pending or completed); otherwise the call is rejected with `409`. The refund starts `pending`; when it is completed the payment becomes `partially_refunded`, or `refunded` once the whole amount is returned.
+
+      The change is recorded in the audit log.
+
+    operationId: createRefund
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/CreateRefundRequest"
+          example:
+            amount: 50
+            reason: Missing item
+
+    responses:
+      "201":
+        description: Refund created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/CreateRefundResponse"
+            example:
+              success: true
+              message: Refund created successfully
+              data:
+                refund:
+                  id: 4dcf6b09-1985-5814-a1d4-73cad05922c4
+                  paymentId: 9b186018-751f-5f05-89e0-896252cd46cf
+                  amount: 50
+                  reason: Missing item
+                  status: pending
+                  processedAt: null
+                  createdAt: "2024-10-06T09:30:00.000Z"
+                payment:
+                  id: 9b186018-751f-5f05-89e0-896252cd46cf
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  paymentMethod: credit_card
+                  status: paid
+                  transactionReference: txn_9f8e7d6c
+                  amount: 350
+                  currency: EGP
+                  paidAt: "2024-10-05T18:31:00.000Z"
+                  failureReason: null
+                  createdAt: "2024-10-05T18:30:30.000Z"
+                  updatedAt: "2024-10-05T18:31:00.000Z"
+                  refundedAmount: 0
+                  refunds:
+                    - id: 4dcf6b09-1985-5814-a1d4-73cad05922c4
+                      paymentId: 9b186018-751f-5f05-89e0-896252cd46cf
+                      amount: 50
+                      reason: Missing item
+                      status: pending
+                      processedAt: null
+                      createdAt: "2024-10-06T09:30:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminPaymentRefund:
+  parameters:
+    - name: paymentId
+      in: path
+      required: true
+      description: Unique identifier of the payment.
+      schema:
+        type: string
+        format: uuid
+      example: 9b186018-751f-5f05-89e0-896252cd46cf
+    - name: refundId
+      in: path
+      required: true
+      description: Unique identifier of the refund.
+      schema:
+        type: string
+        format: uuid
+      example: 4dcf6b09-1985-5814-a1d4-73cad05922c4
+
+  patch:
+    tags:
+      - Admin Operations
+
+    summary: Update a refund's status
+
+    description: |
+      Records how a refund ended: `completed` (which also records when it was processed), `failed` or `cancelled`. The payment's state is recalculated from the completed refunds. A refund that already finished cannot be changed (`409`).
+
+      The change is recorded in the audit log.
+
+    operationId: updateRefund
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdateRefundRequest"
+          example:
+            status: completed
+
+    responses:
+      "200":
+        description: Refund updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdateRefundResponse"
+            example:
+              success: true
+              message: Refund updated successfully
+              data:
+                refund:
+                  id: 4dcf6b09-1985-5814-a1d4-73cad05922c4
+                  paymentId: 9b186018-751f-5f05-89e0-896252cd46cf
+                  amount: 50
+                  reason: Missing item
+                  status: completed
+                  processedAt: "2024-10-06T10:00:00.000Z"
+                  createdAt: "2024-10-06T09:30:00.000Z"
+                payment:
+                  id: 9b186018-751f-5f05-89e0-896252cd46cf
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  paymentMethod: credit_card
+                  status: paid
+                  transactionReference: txn_9f8e7d6c
+                  amount: 350
+                  currency: EGP
+                  paidAt: "2024-10-05T18:31:00.000Z"
+                  failureReason: null
+                  createdAt: "2024-10-05T18:30:30.000Z"
+                  updatedAt: "2024-10-05T18:31:00.000Z"
+                  refundedAmount: 50
+                  refunds:
+                    - id: 4dcf6b09-1985-5814-a1d4-73cad05922c4
+                      paymentId: 9b186018-751f-5f05-89e0-896252cd46cf
+                      amount: 50
+                      reason: Missing item
+                      status: completed
+                      processedAt: "2024-10-06T10:00:00.000Z"
+                      createdAt: "2024-10-06T09:30:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminRestaurantReviews:
+  get:
+    tags:
+      - Admin Operations
+
+    summary: List restaurant reviews
+
+    description: |
+      Returns a paginated list of customers' reviews of restaurants, newest first, in every moderation
+      state. New reviews start as `pending`.
+
+    operationId: listAdminRestaurantReviews
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: Only reviews in this moderation state.
+        schema:
+          $ref: "../schemas/admin.yaml#/ReviewStatus"
+        example: pending
+      - name: rating
+        in: query
+        required: false
+        description: Only reviews with this rating.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 5
+        example: 1
+      - name: restaurantId
+        in: query
+        required: false
+        description: Only reviews about this restaurant.
+        schema:
+          type: string
+          format: uuid
+        example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Reviews retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminRestaurantReviewsResponse"
+            example:
+              success: true
+              message: Reviews retrieved successfully
+              data:
+                reviews:
+                  - id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    customer:
+                      id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                      name: John Doe
+                    restaurant:
+                      id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                      name: Nile Grill House
+                    rating: 4
+                    title: Great grills
+                    comment: Tasty food, a bit late.
+                    status: pending
+                    isEdited: false
+                    images:
+                      - https://cdn.example.com/reviews/1/photo1.jpg
+                    reply:
+                      reply: Thank you, we are working on delivery times.
+                      createdAt: "2024-10-06T09:00:00.000Z"
+                      updatedAt: "2024-10-06T09:00:00.000Z"
+                    createdAt: "2024-10-05T20:00:00.000Z"
+                    updatedAt: "2024-10-05T20:00:00.000Z"
+                    publishedAt: null
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminModerateRestaurantReview:
+  parameters:
+    - name: reviewId
+      in: path
+      required: true
+      description: Unique identifier of the review.
+      schema:
+        type: string
+        format: uuid
+      example: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+
+  patch:
+    tags:
+      - Admin Operations
+
+    summary: Moderate a restaurant review
+
+    description: |
+      Sets the moderation state of a review: `published` shows it publicly (and records when), `hidden` removes it from view but keeps it, `deleted` removes it for good from the public side. Publishing or unpublishing a review recalculates the restaurant's cached rating.
+
+      The change is recorded in the audit log.
+
+    operationId: moderateRestaurantReview
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/ModerateReviewRequest"
+          example:
+            status: published
+
+    responses:
+      "200":
+        description: Review moderated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ModerateRestaurantReviewResponse"
+            example:
+              success: true
+              message: Review moderated successfully
+              data:
+                review:
+                  id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  customer:
+                    id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    name: John Doe
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  rating: 4
+                  title: Great grills
+                  comment: Tasty food, a bit late.
+                  status: published
+                  isEdited: false
+                  images:
+                    - https://cdn.example.com/reviews/1/photo1.jpg
+                  reply:
+                    reply: Thank you, we are working on delivery times.
+                    createdAt: "2024-10-06T09:00:00.000Z"
+                    updatedAt: "2024-10-06T09:00:00.000Z"
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  updatedAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminDriverReviews:
+  get:
+    tags:
+      - Admin Operations
+
+    summary: List driver reviews
+
+    description: |
+      Returns a paginated list of customers' reviews of drivers, newest first, in every moderation
+      state. New reviews start as `pending`.
+
+    operationId: listAdminDriverReviews
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: Only reviews in this moderation state.
+        schema:
+          $ref: "../schemas/admin.yaml#/ReviewStatus"
+        example: pending
+      - name: rating
+        in: query
+        required: false
+        description: Only reviews with this rating.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 5
+        example: 1
+      - name: driverId
+        in: query
+        required: false
+        description: Only reviews about this driver.
+        schema:
+          type: string
+          format: uuid
+        example: e035c191-7d58-52be-9f78-c9a9351192dd
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Reviews retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminDriverReviewsResponse"
+            example:
+              success: true
+              message: Reviews retrieved successfully
+              data:
+                reviews:
+                  - id: 05d4f94b-3812-570d-848c-c7db2eeef83f
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    customer:
+                      id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                      name: John Doe
+                    driver:
+                      id: e035c191-7d58-52be-9f78-c9a9351192dd
+                      name: Omar Hassan
+                    rating: 5
+                    title: Fast and polite
+                    comment: Arrived early and the food was still hot.
+                    status: pending
+                    isEdited: false
+                    createdAt: "2024-10-05T20:00:00.000Z"
+                    updatedAt: "2024-10-05T20:00:00.000Z"
+                    publishedAt: null
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminModerateDriverReview:
+  parameters:
+    - name: reviewId
+      in: path
+      required: true
+      description: Unique identifier of the review.
+      schema:
+        type: string
+        format: uuid
+      example: 05d4f94b-3812-570d-848c-c7db2eeef83f
+
+  patch:
+    tags:
+      - Admin Operations
+
+    summary: Moderate a driver review
+
+    description: |
+      Sets the moderation state of a review: `published` shows it publicly (and records when), `hidden` removes it from view but keeps it, `deleted` removes it for good from the public side. Publishing or unpublishing a review recalculates the driver's cached rating.
+
+      The change is recorded in the audit log.
+
+    operationId: moderateDriverReview
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/ModerateReviewRequest"
+          example:
+            status: published
+
+    responses:
+      "200":
+        description: Review moderated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ModerateDriverReviewResponse"
+            example:
+              success: true
+              message: Review moderated successfully
+              data:
+                review:
+                  id: 05d4f94b-3812-570d-848c-c7db2eeef83f
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  customer:
+                    id: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+                    name: John Doe
+                  driver:
+                    id: e035c191-7d58-52be-9f78-c9a9351192dd
+                    name: Omar Hassan
+                  rating: 5
+                  title: Fast and polite
+                  comment: Arrived early and the food was still hot.
+                  status: published
+                  isEdited: false
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  updatedAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminPayouts:
+  get:
+    tags:
+      - Admin Operations
+
+    summary: List driver payouts
+
+    description: Returns a paginated list of driver payouts, newest first.
+
+    operationId: listAdminPayouts
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: driverId
+        in: query
+        required: false
+        description: Only this driver's payouts.
+        schema:
+          type: string
+          format: uuid
+        example: e035c191-7d58-52be-9f78-c9a9351192dd
+      - name: status
+        in: query
+        required: false
+        description: Only payouts in this state.
+        schema:
+          $ref: "../schemas/driver.yaml#/PayoutStatus"
+        example: pending
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Payouts retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAdminPayoutsResponse"
+            example:
+              success: true
+              message: Payouts retrieved successfully
+              data:
+                payouts:
+                  - id: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+                    driver:
+                      id: e035c191-7d58-52be-9f78-c9a9351192dd
+                      name: Omar Hassan
+                    periodStart: "2024-09-29"
+                    periodEnd: "2024-10-05"
+                    amount: 1450
+                    status: completed
+                    paidAt: "2024-10-07T10:00:00.000Z"
+                    earningCount: 38
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Admin Operations
+
+    summary: Create a driver payout
+
+    description: |
+      Creates a payout for a driver and a period. It gathers the driver's `pending` earnings recorded in the period that no payout has settled yet, links them to the payout, and sets the amount to the sum of their net amounts. The payout starts `pending`. If there is nothing to pay the call is rejected with `409`.
+
+      The change is recorded in the audit log.
+
+    operationId: createPayout
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/CreatePayoutRequest"
+          example:
+            driverId: e035c191-7d58-52be-9f78-c9a9351192dd
+            periodStart: "2024-09-29"
+            periodEnd: "2024-10-05"
+
+    responses:
+      "201":
+        description: Payout created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/CreatePayoutResponse"
+            example:
+              success: true
+              message: Payout created successfully
+              data:
+                payout:
+                  id: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+                  driver:
+                    id: e035c191-7d58-52be-9f78-c9a9351192dd
+                    name: Omar Hassan
+                  periodStart: "2024-09-29"
+                  periodEnd: "2024-10-05"
+                  amount: 1450
+                  status: pending
+                  paidAt: null
+                  earningCount: 38
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminPayout:
+  parameters:
+    - name: payoutId
+      in: path
+      required: true
+      description: Unique identifier of the payout.
+      schema:
+        type: string
+        format: uuid
+      example: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+
+  get:
+    tags:
+      - Admin Operations
+
+    summary: View a payout
+
+    description: Returns a payout together with the earnings it settles.
+
+    operationId: getAdminPayout
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Payout retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAdminPayoutResponse"
+            example:
+              success: true
+              message: Payout retrieved successfully
+              data:
+                payout:
+                  id: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+                  driver:
+                    id: e035c191-7d58-52be-9f78-c9a9351192dd
+                    name: Omar Hassan
+                  periodStart: "2024-09-29"
+                  periodEnd: "2024-10-05"
+                  amount: 1450
+                  status: completed
+                  paidAt: "2024-10-07T10:00:00.000Z"
+                  earningCount: 38
+                earnings:
+                  - id: e5e31669-fa69-5b42-8ddb-c31707eb989c
+                    orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    orderNumber: ORD-1001
+                    baseFee: 30
+                    bonus: 5
+                    tip: 10
+                    deduction: 0
+                    netAmount: 45
+                    status: completed
+                    payoutId: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+                    createdAt: "2024-10-05T19:20:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Admin Operations
+
+    summary: Update a payout's status
+
+    description: |
+      Moves a payout through its states (`pending`, `processing`, `completed`, `failed`, `on_hold`, `cancelled`). Completing a payout requires a paid-at time and uses the current time if none is given. The earnings it settles take the payout's status.
+
+      The change is recorded in the audit log.
+
+    operationId: updatePayout
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/admin.yaml#/UpdatePayoutRequest"
+          example:
+            status: completed
+            paidAt: "2024-10-07T10:00:00.000Z"
+
+    responses:
+      "200":
+        description: Payout updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/UpdatePayoutResponse"
+            example:
+              success: true
+              message: Payout updated successfully
+              data:
+                payout:
+                  id: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+                  driver:
+                    id: e035c191-7d58-52be-9f78-c9a9351192dd
+                    name: Omar Hassan
+                  periodStart: "2024-09-29"
+                  periodEnd: "2024-10-05"
+                  amount: 1450
+                  status: completed
+                  paidAt: "2024-10-07T10:00:00.000Z"
+                  earningCount: 38
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminAuditLogs:
+  get:
+    tags:
+      - Admin Insights
+
+    summary: Search the audit log
+
+    description: Returns a paginated list of recorded actions, newest first. The log is read-only.
+
+    operationId: listAuditLogs
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: userId
+        in: query
+        required: false
+        description: Only actions by this user account.
+        schema:
+          type: string
+          format: uuid
+        example: 97cb9ca6-a304-5227-956d-e9b0bf0f83cc
+      - name: action
+        in: query
+        required: false
+        description: Only this action.
+        schema:
+          type: string
+        example: order.status.update
+      - name: entityName
+        in: query
+        required: false
+        description: Only changes to this kind of record.
+        schema:
+          type: string
+        example: orders
+      - name: entityId
+        in: query
+        required: false
+        description: Only changes to this record.
+        schema:
+          type: string
+          format: uuid
+        example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+      - name: status
+        in: query
+        required: false
+        description: Only actions with this outcome.
+        schema:
+          type: string
+        example: success
+      - name: from
+        in: query
+        required: false
+        description: Only actions on or after this time.
+        schema:
+          type: string
+          format: date-time
+        example: "2024-10-01T00:00:00.000Z"
+      - name: to
+        in: query
+        required: false
+        description: Only actions on or before this time.
+        schema:
+          type: string
+          format: date-time
+        example: "2024-10-31T23:59:59.000Z"
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Audit log retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/ListAuditLogsResponse"
+            example:
+              success: true
+              message: Audit log retrieved successfully
+              data:
+                entries:
+                  - id: 50ae95e4-d466-5172-81c9-3bf14f3dd388
+                    userId: 97cb9ca6-a304-5227-956d-e9b0bf0f83cc
+                    actorEmail: sara.mostafa@example.com
+                    action: order.status.update
+                    entityName: orders
+                    entityId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                    oldValue:
+                      status: ready_for_pickup
+                    newValue:
+                      status: cancelled
+                    ipAddress: 203.0.113.24
+                    requestId: req_7f3a9c
+                    userAgent: Mozilla/5.0
+                    status: success
+                    createdAt: "2024-10-05T19:40:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminAuditLog:
+  parameters:
+    - name: auditLogId
+      in: path
+      required: true
+      description: Unique identifier of the audit entry.
+      schema:
+        type: string
+        format: uuid
+      example: 50ae95e4-d466-5172-81c9-3bf14f3dd388
+
+  get:
+    tags:
+      - Admin Insights
+
+    summary: View an audit entry
+
+    description: Returns one audit entry with the values before and after the change.
+
+    operationId: getAuditLog
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Audit entry retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAuditLogResponse"
+            example:
+              success: true
+              message: Audit entry retrieved successfully
+              data:
+                entry:
+                  id: 50ae95e4-d466-5172-81c9-3bf14f3dd388
+                  userId: 97cb9ca6-a304-5227-956d-e9b0bf0f83cc
+                  actorEmail: sara.mostafa@example.com
+                  action: order.status.update
+                  entityName: orders
+                  entityId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  oldValue:
+                    status: ready_for_pickup
+                  newValue:
+                    status: cancelled
+                  ipAddress: 203.0.113.24
+                  requestId: req_7f3a9c
+                  userAgent: Mozilla/5.0
+                  status: success
+                  createdAt: "2024-10-05T19:40:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminDashboard:
+  get:
+    tags:
+      - Admin Insights
+
+    summary: View the dashboard
+
+    description: |
+      Returns headline numbers: customers, restaurants by approval state, drivers by state and
+      availability, today's orders by status, and revenue (the total of delivered orders).
+
+    operationId: getAdminDashboard
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Dashboard retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetAdminDashboardResponse"
+            example:
+              success: true
+              message: Dashboard retrieved successfully
+              data:
+                dashboard:
+                  customers:
+                    total: 1250
+                    active: 1198
+                  restaurants:
+                    pending: 4
+                    approved: 63
+                    rejected: 2
+                    activeBranches: 91
+                  drivers:
+                    pending: 6
+                    active: 210
+                    inactive: 12
+                    availableNow: 87
+                  orders:
+                    today: 342
+                    inProgress: 58
+                    todayByStatus:
+                      pending: 5
+                      accepted: 12
+                      preparing: 18
+                      ready_for_pickup: 6
+                      picked_up: 4
+                      out_for_delivery: 13
+                      delivered: 270
+                      cancelled: 14
+                      rejected: 0
+                  revenue:
+                    today: 48200
+                    last7Days: 301450
+                    last30Days: 1290300
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminOrdersReport:
+  get:
+    tags:
+      - Admin Insights
+
+    summary: Orders report
+
+    description: |
+      Counts orders per day, week or month for a period: how many were placed, delivered, cancelled
+      and rejected.
+
+    operationId: getOrdersReport
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: from
+        in: query
+        required: true
+        description: First day of the report.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: true
+        description: Last day of the report.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-07"
+      - name: groupBy
+        in: query
+        required: false
+        description: How rows are grouped.
+        schema:
+          type: string
+          enum:
+            - day
+            - week
+            - month
+          default: day
+        example: day
+      - name: cityId
+        in: query
+        required: false
+        description: Only orders fulfilled by a branch in this city.
+        schema:
+          type: string
+          format: uuid
+        example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+      - name: restaurantId
+        in: query
+        required: false
+        description: Only this restaurant's orders.
+        schema:
+          type: string
+          format: uuid
+        example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    responses:
+      "200":
+        description: Report generated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetOrdersReportResponse"
+            example:
+              success: true
+              message: Report generated successfully
+              data:
+                report:
+                  groupBy: day
+                  from: "2024-10-01"
+                  to: "2024-10-07"
+                  rows:
+                    - period: "2024-10-05"
+                      orders: 342
+                      delivered: 270
+                      cancelled: 14
+                      rejected: 8
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+adminSalesReport:
+  get:
+    tags:
+      - Admin Insights
+
+    summary: Sales report
+
+    description: |
+      Totals the money from delivered orders per day, week or month for a period: subtotals, delivery
+      fees, tax, discounts and order totals.
+
+    operationId: getSalesReport
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: from
+        in: query
+        required: true
+        description: First day of the report.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-01"
+      - name: to
+        in: query
+        required: true
+        description: Last day of the report.
+        schema:
+          type: string
+          format: date
+        example: "2024-10-07"
+      - name: groupBy
+        in: query
+        required: false
+        description: How rows are grouped.
+        schema:
+          type: string
+          enum:
+            - day
+            - week
+            - month
+          default: day
+        example: day
+      - name: cityId
+        in: query
+        required: false
+        description: Only orders fulfilled by a branch in this city.
+        schema:
+          type: string
+          format: uuid
+        example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+      - name: restaurantId
+        in: query
+        required: false
+        description: Only this restaurant's orders.
+        schema:
+          type: string
+          format: uuid
+        example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    responses:
+      "200":
+        description: Report generated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/admin.yaml#/GetSalesReportResponse"
+            example:
+              success: true
+              message: Report generated successfully
+              data:
+                report:
+                  groupBy: day
+                  from: "2024-10-01"
+                  to: "2024-10-07"
+                  rows:
+                    - period: "2024-10-05"
+                      orders: 270
+                      subtotal: 81000
+                      deliveryFees: 6750
+                      tax: 12150
+                      discounts: 3200
+                      total: 96700
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

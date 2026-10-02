@@ -7,7 +7,8 @@ getMenuItem:
     description: |
       Returns detailed information for a single menu item, identified
       by `menuItemId`, including images and customizable option groups
-      (FR-CUS-013).
+      (FR-CUS-013). Only active items of `approved` restaurants are
+      visible; otherwise the response is `404`.
 
       Publicly accessible; no authentication required.
 
@@ -79,9 +80,9 @@ searchMenuItems:
       matching the supplied search term and optional filters
       (FR-CUS-014).
 
-      Only available items (`isAvailable: true`) belonging to
-      approved restaurants are returned. Publicly accessible; no
-      authentication required.
+      Only available (`isAvailable: true`) and active (`isActive: true`)
+      items belonging to approved restaurants are returned. Publicly
+      accessible; no authentication required.
 
     operationId: searchMenuItems
 
@@ -186,6 +187,1068 @@ searchMenuItems:
 
       "400":
         $ref: "../responses/common.yaml#/ValidationError"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuItems:
+  get:
+    tags:
+      - Menu
+
+    summary: List own menu items
+
+    description: |
+      Returns the authenticated restaurant's menu items, including inactive and unavailable ones,
+      ordered by category and name.
+
+    operationId: listRestaurantMenuItems
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: categoryId
+        in: query
+        required: false
+        description: Only items in this menu category.
+        schema:
+          type: string
+          format: uuid
+        example: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+      - name: search
+        in: query
+        required: false
+        description: Free-text search on the item name.
+        schema:
+          type: string
+        example: grill
+      - name: isAvailable
+        in: query
+        required: false
+        description: Only items that can (`true`) or cannot (`false`) be ordered right now.
+        schema:
+          type: boolean
+        example: true
+      - name: isActive
+        in: query
+        required: false
+        description: Only items that are (`true`) or are not (`false`) on the menu.
+        schema:
+          type: boolean
+        example: true
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Menu items retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/ListRestaurantMenuItemsResponse"
+            example:
+              success: true
+              message: Menu items retrieved successfully
+              data:
+                items:
+                  - id: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                    categoryId: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+                    categoryName: Mains
+                    name: Mixed Grill
+                    basePrice: 150
+                    isAvailable: true
+                    isActive: true
+                    preparationTime: 25
+                    imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Menu
+
+    summary: Create a menu item
+
+    description: |
+      Creates a menu item in one of the restaurant's active menu categories (`404` if the category
+      does not exist). The name must be unique among the restaurant's active items (`409` otherwise).
+      Add images and options with their own endpoints afterwards.
+
+    operationId: createMenuItem
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/menu.yaml#/CreateMenuItemRequest"
+          example:
+            categoryId: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+            name: Mixed Grill
+            description: Kofta, kebab and grilled chicken with rice.
+            basePrice: 150
+            preparationTime: 25
+
+    responses:
+      "201":
+        description: Menu item created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/CreateMenuItemResponse"
+            example:
+              success: true
+              message: Menu item created successfully
+              data:
+                item:
+                  id: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                  categoryId: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+                  categoryName: Mains
+                  name: Mixed Grill
+                  description: Kofta, kebab and grilled chicken with rice.
+                  basePrice: 150
+                  isAvailable: true
+                  isActive: true
+                  preparationTime: 25
+                  images: []
+                  optionGroups: []
+                  createdAt: "2023-11-12T09:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuItem:
+  parameters:
+    - name: itemId
+      in: path
+      required: true
+      description: Unique identifier of the menu item.
+      schema:
+        type: string
+        format: uuid
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+  get:
+    tags:
+      - Menu
+
+    summary: View a menu item
+
+    description: Returns one of the restaurant's menu items with its images and option groups.
+
+    operationId: getRestaurantMenuItem
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Menu item retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/GetRestaurantMenuItemResponse"
+            example:
+              success: true
+              message: Menu item retrieved successfully
+              data:
+                item:
+                  id: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                  categoryId: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+                  categoryName: Mains
+                  name: Mixed Grill
+                  description: Kofta, kebab and grilled chicken with rice.
+                  basePrice: 150
+                  isAvailable: true
+                  isActive: true
+                  preparationTime: 25
+                  images:
+                    - id: cbd7cd9e-8db7-5dd1-b283-71ba565d56b4
+                      imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
+                      displayOrder: 0
+                  optionGroups:
+                    - id: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                      name: Size
+                      minSelection: 1
+                      maxSelection: 1
+                      isRequired: true
+                      values:
+                        - id: 68b8d5b2-657f-5de3-a2b7-d1a302199ad7
+                          name: Regular
+                          priceAdjustment: 0
+                          displayOrder: 0
+                        - id: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                          name: Large
+                          priceAdjustment: 20
+                          displayOrder: 1
+                  createdAt: "2023-11-12T09:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Menu
+
+    summary: Update a menu item
+
+    description: |
+      Updates a menu item. Only the supplied fields change. Send `isActive: false` to take the item
+      off the menu while keeping it for past orders. A new category must be one of the restaurant's
+      active categories, and the name must stay unique among active items (`409`).
+
+    operationId: updateMenuItem
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/menu.yaml#/UpdateMenuItemRequest"
+          example:
+            basePrice: 160
+            preparationTime: 30
+
+    responses:
+      "200":
+        description: Menu item updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/UpdateMenuItemResponse"
+            example:
+              success: true
+              message: Menu item updated successfully
+              data:
+                item:
+                  id: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                  categoryId: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+                  categoryName: Mains
+                  name: Mixed Grill
+                  description: Kofta, kebab and grilled chicken with rice.
+                  basePrice: 160
+                  isAvailable: true
+                  isActive: true
+                  preparationTime: 30
+                  images:
+                    - id: cbd7cd9e-8db7-5dd1-b283-71ba565d56b4
+                      imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
+                      displayOrder: 0
+                  optionGroups:
+                    - id: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                      name: Size
+                      minSelection: 1
+                      maxSelection: 1
+                      isRequired: true
+                      values:
+                        - id: 68b8d5b2-657f-5de3-a2b7-d1a302199ad7
+                          name: Regular
+                          priceAdjustment: 0
+                          displayOrder: 0
+                        - id: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                          name: Large
+                          priceAdjustment: 20
+                          displayOrder: 1
+                  createdAt: "2023-11-12T09:00:00.000Z"
+                  updatedAt: "2024-02-01T09:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Menu
+
+    summary: Delete a menu item
+
+    description: |
+      Permanently removes a menu item together with its images and options. An item that appears in
+      any order or cart cannot be deleted (`409`); take it off the menu with `isActive: false`
+      instead.
+
+    operationId: deleteMenuItem
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Menu item deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/DeleteMenuItemResponse"
+            example:
+              success: true
+              message: Menu item deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuItemAvailability:
+  parameters:
+    - name: itemId
+      in: path
+      required: true
+      description: Unique identifier of the menu item.
+      schema:
+        type: string
+        format: uuid
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+  patch:
+    tags:
+      - Menu
+
+    summary: Mark an item available or sold out
+
+    description: |
+      Sets whether customers can order the item right now, for example when it sells out. The item
+      stays on the menu.
+
+    operationId: updateMenuItemAvailability
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/menu.yaml#/UpdateMenuItemAvailabilityRequest"
+          example:
+            isAvailable: false
+
+    responses:
+      "200":
+        description: Availability updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/UpdateMenuItemAvailabilityResponse"
+            example:
+              success: true
+              message: Availability updated successfully
+              data:
+                itemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                isAvailable: false
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuItemImages:
+  parameters:
+    - name: itemId
+      in: path
+      required: true
+      description: Unique identifier of the menu item.
+      schema:
+        type: string
+        format: uuid
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+  post:
+    tags:
+      - Menu
+
+    summary: Add an image to a menu item
+
+    description: |
+      Uploads an image for the item. Images are shown in `displayOrder`; the first one is used as the
+      item's thumbnail.
+
+    operationId: addMenuItemImage
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - image
+            properties:
+              image:
+                type: string
+                format: binary
+                description: Image file (JPEG or PNG).
+
+              displayOrder:
+                type: integer
+                minimum: 0
+                default: 0
+                description: Position among the item's images.
+
+    responses:
+      "201":
+        description: Image added successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/AddMenuItemImageResponse"
+            example:
+              success: true
+              message: Image added successfully
+              data:
+                image:
+                  id: cbd7cd9e-8db7-5dd1-b283-71ba565d56b4
+                  imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
+                  displayOrder: 0
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuItemImage:
+  parameters:
+    - name: itemId
+      in: path
+      required: true
+      description: Unique identifier of the menu item.
+      schema:
+        type: string
+        format: uuid
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+    - name: imageId
+      in: path
+      required: true
+      description: Unique identifier of the image.
+      schema:
+        type: string
+        format: uuid
+      example: cbd7cd9e-8db7-5dd1-b283-71ba565d56b4
+
+  delete:
+    tags:
+      - Menu
+
+    summary: Remove an image from a menu item
+
+    description: Removes one image of the menu item.
+
+    operationId: deleteMenuItemImage
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Image removed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/DeleteMenuItemImageResponse"
+            example:
+              success: true
+              message: Image removed successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuItemOptions:
+  parameters:
+    - name: itemId
+      in: path
+      required: true
+      description: Unique identifier of the menu item.
+      schema:
+        type: string
+        format: uuid
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+  get:
+    tags:
+      - Menu
+
+    summary: List an item's option groups
+
+    description: Returns the item's option groups with their options, for example a required "Size" group.
+
+    operationId: listOptionGroups
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Option groups retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/ListOptionGroupsResponse"
+            example:
+              success: true
+              message: Option groups retrieved successfully
+              data:
+                optionGroups:
+                  - id: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                    name: Size
+                    minSelection: 1
+                    maxSelection: 1
+                    isRequired: true
+                    values:
+                      - id: 68b8d5b2-657f-5de3-a2b7-d1a302199ad7
+                        name: Regular
+                        priceAdjustment: 0
+                        displayOrder: 0
+                      - id: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                        name: Large
+                        priceAdjustment: 20
+                        displayOrder: 1
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Menu
+
+    summary: Create an option group
+
+    description: |
+      Adds an option group to the item, optionally with its first options. `minSelection` must be 0 or
+      more, `maxSelection` at least 1 and not below `minSelection`, and a required group needs a
+      `minSelection` of at least 1 (`400` otherwise). The name must be unique within the item, and
+      option names within the group (`409`).
+
+    operationId: createOptionGroup
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/menu.yaml#/CreateOptionGroupRequest"
+          example:
+            name: Size
+            minSelection: 1
+            maxSelection: 1
+            isRequired: true
+            values:
+              - name: Regular
+                priceAdjustment: 0
+                displayOrder: 0
+              - name: Large
+                priceAdjustment: 20
+                displayOrder: 1
+
+    responses:
+      "201":
+        description: Option group created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/OptionGroupResponse"
+            example:
+              success: true
+              message: Option group saved successfully
+              data:
+                optionGroup:
+                  id: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                  name: Size
+                  minSelection: 1
+                  maxSelection: 1
+                  isRequired: true
+                  values:
+                    - id: 68b8d5b2-657f-5de3-a2b7-d1a302199ad7
+                      name: Regular
+                      priceAdjustment: 0
+                      displayOrder: 0
+                    - id: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                      name: Large
+                      priceAdjustment: 20
+                      displayOrder: 1
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuItemOption:
+  parameters:
+    - name: itemId
+      in: path
+      required: true
+      description: Unique identifier of the menu item.
+      schema:
+        type: string
+        format: uuid
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+    - name: groupId
+      in: path
+      required: true
+      description: Unique identifier of the option group.
+      schema:
+        type: string
+        format: uuid
+      example: 56658202-efc2-556c-97f7-bd7b0ad03a99
+
+  patch:
+    tags:
+      - Menu
+
+    summary: Update an option group
+
+    description: |
+      Updates an option group. Only the supplied fields change, and the selection rules described
+      under group creation must still hold afterwards (`400`).
+
+    operationId: updateOptionGroup
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/menu.yaml#/UpdateOptionGroupRequest"
+          example:
+            maxSelection: 2
+
+    responses:
+      "200":
+        description: Option group updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/OptionGroupResponse"
+            example:
+              success: true
+              message: Option group saved successfully
+              data:
+                optionGroup:
+                  id: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                  name: Size
+                  minSelection: 1
+                  maxSelection: 2
+                  isRequired: true
+                  values:
+                    - id: 68b8d5b2-657f-5de3-a2b7-d1a302199ad7
+                      name: Regular
+                      priceAdjustment: 0
+                      displayOrder: 0
+                    - id: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                      name: Large
+                      priceAdjustment: 20
+                      displayOrder: 1
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Menu
+
+    summary: Delete an option group
+
+    description: |
+      Deletes a group and its options. A group whose options appear in past orders cannot be deleted
+      (`409`).
+
+    operationId: deleteOptionGroup
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Option group deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/DeleteOptionGroupResponse"
+            example:
+              success: true
+              message: Option group deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuItemOptionValues:
+  parameters:
+    - name: itemId
+      in: path
+      required: true
+      description: Unique identifier of the menu item.
+      schema:
+        type: string
+        format: uuid
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+    - name: groupId
+      in: path
+      required: true
+      description: Unique identifier of the option group.
+      schema:
+        type: string
+        format: uuid
+      example: 56658202-efc2-556c-97f7-bd7b0ad03a99
+
+  post:
+    tags:
+      - Menu
+
+    summary: Add an option to a group
+
+    description: Adds an option to the group. The name must be unique within the group (`409`).
+
+    operationId: createOptionValue
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/menu.yaml#/CreateOptionValueRequest"
+          example:
+            name: Extra large
+            priceAdjustment: 35
+            displayOrder: 2
+
+    responses:
+      "201":
+        description: Option created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/OptionValueResponse"
+            example:
+              success: true
+              message: Option saved successfully
+              data:
+                optionValue:
+                  id: b81298f2-9a1c-5c79-bd68-d5942ef923ae
+                  name: Extra large
+                  priceAdjustment: 35
+                  displayOrder: 2
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantMenuItemOptionValue:
+  parameters:
+    - name: itemId
+      in: path
+      required: true
+      description: Unique identifier of the menu item.
+      schema:
+        type: string
+        format: uuid
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+    - name: groupId
+      in: path
+      required: true
+      description: Unique identifier of the option group.
+      schema:
+        type: string
+        format: uuid
+      example: 56658202-efc2-556c-97f7-bd7b0ad03a99
+    - name: valueId
+      in: path
+      required: true
+      description: Unique identifier of the option.
+      schema:
+        type: string
+        format: uuid
+      example: 205313e7-080a-56ba-ae8f-17b29d6058cb
+
+  patch:
+    tags:
+      - Menu
+
+    summary: Update an option
+
+    description: |
+      Updates an option. Only the supplied fields change. The name must stay unique within the group
+      (`409`).
+
+    operationId: updateOptionValue
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/menu.yaml#/UpdateOptionValueRequest"
+          example:
+            priceAdjustment: 25
+
+    responses:
+      "200":
+        description: Option updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/OptionValueResponse"
+            example:
+              success: true
+              message: Option saved successfully
+              data:
+                optionValue:
+                  id: 205313e7-080a-56ba-ae8f-17b29d6058cb
+                  name: Large
+                  priceAdjustment: 25
+                  displayOrder: 1
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Menu
+
+    summary: Delete an option
+
+    description: Deletes an option. One that appears in past orders cannot be deleted (`409`).
+
+    operationId: deleteOptionValue
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Option deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/menu.yaml#/DeleteOptionValueResponse"
+            example:
+              success: true
+              message: Option deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"

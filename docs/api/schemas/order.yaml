@@ -1,0 +1,1220 @@
+OrderStatus:
+  type: string
+  enum:
+    - pending
+    - accepted
+    - rejected
+    - preparing
+    - ready_for_pickup
+    - picked_up
+    - out_for_delivery
+    - delivered
+    - cancelled
+  description: Lifecycle status of an order.
+  example: delivered
+
+OrderAddress:
+  type: object
+  description: |
+    Immutable copy of the delivery address taken when the order was placed. Later edits to the
+    customer's saved address do not change it.
+  required:
+    - label
+    - recipientName
+    - phoneNumber
+    - streetAddress
+    - cityId
+    - city
+    - state
+    - postalCode
+    - latitude
+    - longitude
+  properties:
+    label:
+      type: string
+      description: Label the customer gave the address.
+      example: Home
+
+    recipientName:
+      type: string
+      description: Person receiving the delivery.
+      example: John Doe
+
+    phoneNumber:
+      type: string
+      description: Contact phone number for the delivery.
+      example: "+201234567890"
+
+    streetAddress:
+      type: string
+      description: Street address.
+      example: 12 Nile Corniche St, Apt 5
+
+    cityId:
+      type: string
+      format: uuid
+      description: City the address was in.
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+    city:
+      type: string
+      description: City name as it was when the order was placed.
+      example: Cairo
+
+    state:
+      type: string
+      nullable: true
+      description: State or governorate.
+      example: Cairo Governorate
+
+    postalCode:
+      type: string
+      nullable: true
+      description: Postal code.
+      example: "11511"
+
+    latitude:
+      type: number
+      format: double
+      minimum: -90
+      maximum: 90
+      description: Latitude of the delivery point.
+      example: 30.0444
+
+    longitude:
+      type: number
+      format: double
+      minimum: -180
+      maximum: 180
+      description: Longitude of the delivery point.
+      example: 31.2357
+
+OrderBranch:
+  type: object
+  description: The branch an order is prepared at and collected from.
+  required:
+    - id
+    - label
+    - restaurantId
+    - restaurantName
+    - city
+    - street
+    - latitude
+    - longitude
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Branch that fulfils the order.
+      example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
+    label:
+      type: string
+      description: Branch name.
+      example: Ramses Branch
+
+    restaurantId:
+      type: string
+      format: uuid
+      description: Restaurant the branch belongs to.
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    restaurantName:
+      type: string
+      description: Restaurant name.
+      example: Nile Grill House
+
+    city:
+      $ref: "./city.yaml#/City"
+
+    street:
+      type: string
+      description: Street address of the branch.
+      example: 15 Ramses St
+
+    building:
+      type: string
+      nullable: true
+      description: Building name or number.
+      example: Building 4
+
+    latitude:
+      type: number
+      format: double
+      minimum: -90
+      maximum: 90
+      description: Latitude of the branch (the pickup point).
+      example: 30.0561
+
+    longitude:
+      type: number
+      format: double
+      minimum: -180
+      maximum: 180
+      description: Longitude of the branch (the pickup point).
+      example: 31.2394
+
+OrderItemOption:
+  type: object
+  required:
+    - optionGroupName
+    - optionValueName
+    - priceAdjustment
+  properties:
+    optionGroupName:
+      type: string
+      description: Option group name when the order was placed.
+      example: Size
+
+    optionValueName:
+      type: string
+      description: Chosen option name when the order was placed.
+      example: Large
+
+    priceAdjustment:
+      type: number
+      format: double
+      description: Price change this option added to the item.
+      example: 0
+
+OrderItem:
+  type: object
+  required:
+    - id
+    - menuItemId
+    - name
+    - quantity
+    - unitPrice
+    - totalPrice
+    - specialInstructions
+    - options
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique order item identifier.
+      example: c87b9255-1270-5684-9acf-3aaae45f5b94
+
+    menuItemId:
+      type: string
+      format: uuid
+      description: The menu item that was ordered.
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+    name:
+      type: string
+      description: Current name of the menu item.
+      example: Mixed Grill
+
+    quantity:
+      type: integer
+      minimum: 1
+      description: Quantity ordered.
+      example: 2
+
+    unitPrice:
+      type: number
+      format: double
+      minimum: 0
+      description: Price of one unit when the order was placed.
+      example: 150
+
+    totalPrice:
+      type: number
+      format: double
+      minimum: 0
+      description: Unit price multiplied by quantity.
+      example: 300
+
+    specialInstructions:
+      type: string
+      nullable: true
+      description: Note for this item.
+      example: No onions
+
+    options:
+      type: array
+      description: Options chosen for this item.
+      items:
+        $ref: "#/OrderItemOption"
+
+OrderStatusEntry:
+  type: object
+  required:
+    - status
+    - changedAt
+    - changedByUserId
+    - note
+  properties:
+    status:
+      $ref: "#/OrderStatus"
+
+    changedAt:
+      type: string
+      format: date-time
+      description: When the order moved to this status.
+      example: "2024-10-05T18:32:00.000Z"
+
+    changedByUserId:
+      type: string
+      format: uuid
+      description: User account that made the change.
+      example: 07ec6df2-5235-52c2-9fcb-192cf74ff85c
+
+    note:
+      type: string
+      nullable: true
+      description: Optional note recorded with the change.
+      example: null
+
+OrderTotals:
+  type: object
+  required:
+    - subtotal
+    - deliveryFee
+    - taxAmount
+    - discountAmount
+    - totalAmount
+  properties:
+    subtotal:
+      type: number
+      format: double
+      minimum: 0
+      description: Sum of the item totals.
+      example: 300
+
+    deliveryFee:
+      type: number
+      format: double
+      minimum: 0
+      description: Delivery fee.
+      example: 25
+
+    taxAmount:
+      type: number
+      format: double
+      minimum: 0
+      description: Tax.
+      example: 45
+
+    discountAmount:
+      type: number
+      format: double
+      minimum: 0
+      description: Discount applied.
+      example: 20
+
+    totalAmount:
+      type: number
+      format: double
+      minimum: 0
+      description: Subtotal + delivery fee + tax − discount, always calculated by the server.
+      example: 350
+
+OrderSummary:
+  type: object
+  required:
+    - id
+    - orderNumber
+    - status
+    - customerId
+    - customerName
+    - restaurantId
+    - restaurantName
+    - branchId
+    - branchLabel
+    - itemCount
+    - totalAmount
+    - placedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique order identifier.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Unique, human-readable order number.
+      example: ORD-1001
+
+    status:
+      $ref: "#/OrderStatus"
+
+    customerId:
+      type: string
+      format: uuid
+      description: Customer who placed the order.
+      example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+
+    customerName:
+      type: string
+      description: Customer's full name.
+      example: John Doe
+
+    restaurantId:
+      type: string
+      format: uuid
+      description: Restaurant the order was placed with.
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+    restaurantName:
+      type: string
+      description: Restaurant name.
+      example: Nile Grill House
+
+    branchId:
+      type: string
+      format: uuid
+      description: Branch fulfilling the order.
+      example: 8c1f0a52-3b7d-4e9a-a6c4-2d5e7f9b1a30
+
+    branchLabel:
+      type: string
+      description: Branch name.
+      example: Ramses Branch
+
+    itemCount:
+      type: integer
+      minimum: 0
+      description: Number of order items.
+      example: 2
+
+    totalAmount:
+      type: number
+      format: double
+      minimum: 0
+      description: Order total.
+      example: 350
+
+    placedAt:
+      type: string
+      format: date-time
+      description: When the order was placed.
+      example: "2024-10-05T18:30:00.000Z"
+
+OrderDetail:
+  allOf:
+    - $ref: "#/OrderSummary"
+    - type: object
+      required:
+        - customer
+        - restaurant
+        - branch
+        - deliveryAddress
+        - items
+        - totals
+        - customerNote
+        - acceptedAt
+        - rejectedAt
+        - preparedAt
+        - readyForPickupAt
+        - pickedUpAt
+        - outForDeliveryAt
+        - deliveredAt
+        - cancelledAt
+        - createdAt
+        - updatedAt
+        - statusHistory
+      properties:
+        customer:
+          type: object
+          required:
+            - id
+            - firstName
+            - lastName
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 7d8c5e9a-8b2f-4c1a-9d72-123456789abc
+
+            firstName:
+              type: string
+              example: John
+
+            lastName:
+              type: string
+              example: Doe
+
+        restaurant:
+          type: object
+          required:
+            - id
+            - name
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+            name:
+              type: string
+              example: Nile Grill House
+
+        branch:
+          $ref: "#/OrderBranch"
+
+        deliveryAddress:
+          $ref: "#/OrderAddress"
+
+        items:
+          type: array
+          items:
+            $ref: "#/OrderItem"
+
+        totals:
+          $ref: "#/OrderTotals"
+
+        customerNote:
+          type: string
+          nullable: true
+          description: Note from the customer for the whole order.
+          example: Please ring the bell
+
+        acceptedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the restaurant accepted the order.
+          example: "2024-10-05T18:32:00.000Z"
+
+        rejectedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the restaurant rejected the order.
+          example: null
+
+        preparedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When preparation finished.
+          example: "2024-10-05T18:50:00.000Z"
+
+        readyForPickupAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the order was ready to collect.
+          example: "2024-10-05T18:55:00.000Z"
+
+        pickedUpAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the driver collected the order.
+          example: "2024-10-05T19:00:00.000Z"
+
+        outForDeliveryAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the driver left for the customer.
+          example: "2024-10-05T19:02:00.000Z"
+
+        deliveredAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the order was delivered.
+          example: "2024-10-05T19:20:00.000Z"
+
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the order was cancelled.
+          example: null
+
+        createdAt:
+          type: string
+          format: date-time
+          description: Row creation time.
+          example: "2024-10-05T18:30:00.000Z"
+
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last change time.
+          example: "2024-10-05T19:20:00.000Z"
+
+        statusHistory:
+          type: array
+          description: Every status the order has been in, oldest first.
+          items:
+            $ref: "#/OrderStatusEntry"
+
+        payment:
+          type: object
+          nullable: true
+          description: Payment for the order, once one exists.
+          allOf:
+            - $ref: "./payment.yaml#/PaymentSummary"
+
+        delivery:
+          type: object
+          nullable: true
+          description: The driver delivering the order, once one has accepted it.
+          required:
+            - assignmentId
+            - driverId
+            - driverName
+            - assignmentStatus
+          properties:
+            assignmentId:
+              type: string
+              format: uuid
+              example: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+
+            driverId:
+              type: string
+              format: uuid
+              example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+            driverName:
+              type: string
+              example: Omar Hassan
+
+            assignmentStatus:
+              type: string
+              enum:
+                - pending
+                - accepted
+                - rejected
+                - completed
+                - cancelled
+              example: completed
+
+PlaceOrderItemChoice:
+  type: object
+  required:
+    - cartItemId
+  properties:
+    cartItemId:
+      type: string
+      format: uuid
+      description: The cart item these choices belong to.
+      example: 502199a9-304a-553b-ad69-1bf2baa4391e
+
+    specialInstructions:
+      type: string
+      nullable: true
+      description: Note for this item.
+      example: No onions
+
+    options:
+      type: array
+      description: Chosen options. Each group's minimum, maximum and required rules must be met.
+      items:
+        type: object
+        required:
+          - optionGroupId
+          - optionValueId
+        properties:
+          optionGroupId:
+            type: string
+            format: uuid
+            description: Option group of the menu item.
+            example: 56658202-efc2-556c-97f7-bd7b0ad03a99
+
+          optionValueId:
+            type: string
+            format: uuid
+            description: Chosen value in that group.
+            example: 205313e7-080a-56ba-ae8f-17b29d6058cb
+
+PlaceOrderRequest:
+  type: object
+  required:
+    - deliveryAddressId
+    - paymentMethod
+  properties:
+    deliveryAddressId:
+      type: string
+      format: uuid
+      description: One of the customer's saved delivery addresses.
+      example: deebf84a-2ed2-579a-80d7-b820d7e655c4
+
+    paymentMethod:
+      $ref: "./payment.yaml#/PaymentMethod"
+
+    customerNote:
+      type: string
+      nullable: true
+      description: Note for the whole order.
+      example: Please ring the bell
+
+    items:
+      type: array
+      description: Options and instructions per cart item. Cart items that are not listed are ordered plain.
+      items:
+        $ref: "#/PlaceOrderItemChoice"
+
+PlaceOrderResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order placed successfully
+
+    data:
+      type: object
+      required:
+        - order
+      properties:
+        order:
+          $ref: "#/OrderDetail"
+
+ListOrdersResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Orders retrieved successfully
+
+    data:
+      type: object
+      required:
+        - orders
+        - pagination
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: "#/OrderSummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetOrderResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order retrieved successfully
+
+    data:
+      type: object
+      required:
+        - order
+      properties:
+        order:
+          $ref: "#/OrderDetail"
+
+OrderStatusView:
+  type: object
+  required:
+    - id
+    - orderNumber
+    - status
+    - placedAt
+    - acceptedAt
+    - rejectedAt
+    - preparedAt
+    - readyForPickupAt
+    - pickedUpAt
+    - outForDeliveryAt
+    - deliveredAt
+    - cancelledAt
+    - statusHistory
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Order identifier.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Order number.
+      example: ORD-1001
+
+    status:
+      $ref: "#/OrderStatus"
+
+    placedAt:
+      type: string
+      format: date-time
+      description: When the order was placed.
+      example: "2024-10-05T18:30:00.000Z"
+
+    acceptedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the restaurant accepted the order.
+      example: "2024-10-05T18:32:00.000Z"
+
+    rejectedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the restaurant rejected the order.
+      example: null
+
+    preparedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the restaurant started preparing the order.
+      example: "2024-10-05T18:50:00.000Z"
+
+    readyForPickupAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the order was ready to collect.
+      example: "2024-10-05T18:55:00.000Z"
+
+    pickedUpAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the driver collected the order.
+      example: "2024-10-05T19:00:00.000Z"
+
+    outForDeliveryAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the driver left for the customer.
+      example: "2024-10-05T19:02:00.000Z"
+
+    deliveredAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the order was delivered.
+      example: "2024-10-05T19:20:00.000Z"
+
+    cancelledAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the order was cancelled.
+      example: null
+
+    statusHistory:
+      type: array
+      description: Every status the order has been in, oldest first.
+      items:
+        $ref: "#/OrderStatusEntry"
+
+GetOrderStatusResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order status retrieved successfully
+
+    data:
+      type: object
+      required:
+        - orderStatus
+      properties:
+        orderStatus:
+          $ref: "#/OrderStatusView"
+
+OrderTracking:
+  type: object
+  required:
+    - orderNumber
+    - status
+  properties:
+    orderNumber:
+      type: string
+      description: Order number.
+      example: ORD-1001
+
+    status:
+      $ref: "#/OrderStatus"
+
+    driver:
+      type: object
+      nullable: true
+      description: The delivering driver, once one has accepted.
+      required:
+        - name
+        - vehicle
+      properties:
+        name:
+          type: string
+          example: Omar Hassan
+
+        rating:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 5
+          description: Driver's average rating.
+          example: 4.8
+
+        vehicle:
+          type: object
+          nullable: true
+          properties:
+            vehicleType:
+              type: string
+              example: motorcycle
+
+            brand:
+              type: string
+              example: Honda
+
+            model:
+              type: string
+              example: CB125
+
+            color:
+              type: string
+              nullable: true
+              example: Red
+
+            plateNumber:
+              type: string
+              nullable: true
+              example: ABC 1234
+
+    location:
+      type: object
+      nullable: true
+      description: |
+        The driver's latest position. Only available while the order is `picked_up` or
+        `out_for_delivery`.
+      required:
+        - latitude
+        - longitude
+        - recordedAt
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 30.0501
+
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: 31.24
+
+        heading:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 359
+          example: 90
+
+        speed:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          example: 32.5
+
+        recordedAt:
+          type: string
+          format: date-time
+          example: "2024-10-05T19:10:00.000Z"
+
+GetOrderTrackingResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order tracking retrieved successfully
+
+    data:
+      type: object
+      required:
+        - tracking
+      properties:
+        tracking:
+          $ref: "#/OrderTracking"
+
+CancelOrderRequest:
+  type: object
+  properties:
+    reason:
+      type: string
+      nullable: true
+      description: Why the order is cancelled. Stored in the order's status history.
+      example: Ordered by mistake
+
+CancelOrderResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order cancelled successfully
+
+    data:
+      type: object
+      required:
+        - order
+      properties:
+        order:
+          $ref: "#/OrderDetail"
+
+RestaurantOrderDetail:
+  allOf:
+    - $ref: "#/OrderSummary"
+    - type: object
+      required:
+        - branch
+        - deliveryCity
+        - items
+        - totals
+        - acceptedAt
+        - rejectedAt
+        - preparedAt
+        - readyForPickupAt
+        - pickedUpAt
+        - outForDeliveryAt
+        - deliveredAt
+        - cancelledAt
+        - statusHistory
+      properties:
+        branch:
+          $ref: "#/OrderBranch"
+
+        deliveryCity:
+          type: string
+          description: |
+            City the order is delivered to. The customer's street address and phone number are not shown to
+            the restaurant.
+          example: Cairo
+
+        items:
+          type: array
+          items:
+            $ref: "#/OrderItem"
+
+        totals:
+          $ref: "#/OrderTotals"
+
+        customerNote:
+          type: string
+          nullable: true
+          description: Note from the customer for the whole order.
+          example: Please ring the bell
+
+        acceptedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the restaurant accepted the order.
+          example: "2024-10-05T18:32:00.000Z"
+
+        rejectedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the restaurant rejected the order.
+          example: null
+
+        preparedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the restaurant started preparing the order.
+          example: "2024-10-05T18:50:00.000Z"
+
+        readyForPickupAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the order was ready to collect.
+          example: "2024-10-05T18:55:00.000Z"
+
+        pickedUpAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the driver collected the order.
+          example: "2024-10-05T19:00:00.000Z"
+
+        outForDeliveryAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the driver left for the customer.
+          example: "2024-10-05T19:02:00.000Z"
+
+        deliveredAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the order was delivered.
+          example: "2024-10-05T19:20:00.000Z"
+
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the order was cancelled.
+          example: null
+
+        statusHistory:
+          type: array
+          items:
+            $ref: "#/OrderStatusEntry"
+
+        delivery:
+          type: object
+          nullable: true
+          description: The driver delivering the order, once one has accepted it.
+          required:
+            - driverName
+            - assignmentStatus
+          properties:
+            driverName:
+              type: string
+              example: Omar Hassan
+
+            assignmentStatus:
+              type: string
+              enum:
+                - pending
+                - accepted
+                - rejected
+                - completed
+                - cancelled
+              example: accepted
+
+ListRestaurantOrdersResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Orders retrieved successfully
+
+    data:
+      type: object
+      required:
+        - orders
+        - pagination
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: "#/OrderSummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetRestaurantOrderResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order retrieved successfully
+
+    data:
+      type: object
+      required:
+        - order
+      properties:
+        order:
+          $ref: "#/RestaurantOrderDetail"
+
+RejectOrderRequest:
+  type: object
+  properties:
+    reason:
+      type: string
+      nullable: true
+      description: Why the order is rejected. Stored in the order's status history.
+      example: Kitchen is closed early today
+
+RestaurantOrderActionResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Order updated successfully
+
+    data:
+      type: object
+      required:
+        - order
+      properties:
+        order:
+          $ref: "#/RestaurantOrderDetail"

@@ -19,20 +19,46 @@ security:
 tags:
   - name: Auth
     description: Registration, login, logout, and password recovery for all account types
+  - name: Cities
+    description: Reference list of the cities the platform operates in (used for addresses, branches and drivers)
   - name: Customers
     description: Customer profile and delivery address management
   - name: Restaurants
     description: Restaurant browsing/discovery for customers, and restaurant self-service account, profile, and availability management
   - name: Menu
     description: Restaurant menu browsing, food item search, and restaurant menu/category management
+  - name: Drivers
+    description: Driver profile, vehicles, documents, availability, delivery requests, deliveries, earnings and statistics
+  - name: Admin Management
+    description: Administrator profile and the management of cities, customers, restaurants and drivers
+  - name: Admin Operations
+    description: Administrator tools for orders, payments, driver payouts and review moderation
+  - name: Admin Insights
+    description: Administrator dashboard, reports and the audit log
 
+  - name: Cart
+    description: The customer's shopping cart
+  - name: Orders
+    description: Placing, tracking and cancelling orders as a customer
+  - name: Payments
+    description: Payment methods and paying for an order
+  - name: Restaurant Orders
+    description: Incoming orders as seen and handled by the restaurant
+  - name: Reviews
+    description: "Restaurant and driver reviews: writing, reading and the restaurant's replies"
+  - name: Promotions
+    description: "A restaurant's own promotions"
 paths:
+  /cities:
+    $ref: "./paths/city.yaml#/listCities"
   /auth/register/customer:
     $ref: "./paths/customer.yaml#/registerCustomer"
   /auth/login/customer:
     $ref: "./paths/customer.yaml#/loginCustomer"
   /auth/logout/customer:
     $ref: "./paths/customer.yaml#/logoutCustomer"
+  /auth/refresh/customer:
+    $ref: "./paths/customer.yaml#/refreshCustomer"
   /auth/forgot-password/customer:
     $ref: "./paths/customer.yaml#/forgotPasswordCustomer"
   /auth/reset-password/customer:
@@ -57,6 +83,8 @@ paths:
     $ref: "./paths/restaurant.yaml#/loginRestaurant"
   /restaurants/auth/logout:
     $ref: "./paths/restaurant.yaml#/logoutRestaurant"
+  /restaurants/auth/refresh:
+    $ref: "./paths/restaurant.yaml#/refreshRestaurant"
   /restaurants/auth/password-reset/request:
     $ref: "./paths/restaurant.yaml#/forgotPasswordRestaurant"
   /restaurants/auth/password-reset/confirm:
@@ -65,12 +93,16 @@ paths:
     $ref: "./paths/restaurant.yaml#/restaurantProfile"
   /restaurants/me/logo:
     $ref: "./paths/restaurant.yaml#/uploadRestaurantLogo"
-  /restaurants/me/operating-hours:
+  /restaurants/me/branches:
+    $ref: "./paths/restaurant.yaml#/restaurantBranches"
+  /restaurants/me/branches/{branchId}:
+    $ref: "./paths/restaurant.yaml#/restaurantBranch"
+  /restaurants/me/branches/{branchId}/operating-hours:
     $ref: "./paths/restaurant.yaml#/restaurantOperatingHours"
-  /restaurants/me/operating-hours/{operatingHourId}:
+  /restaurants/me/branches/{branchId}/operating-hours/{operatingHourId}:
     $ref: "./paths/restaurant.yaml#/restaurantOperatingHour"
-  /restaurants/me/availability:
-    $ref: "./paths/restaurant.yaml#/restaurantAvailability"
+  /restaurants/me/branches/{branchId}/availability:
+    $ref: "./paths/restaurant.yaml#/branchAvailability"
   /restaurants/me/categories:
     $ref: "./paths/restaurant.yaml#/restaurantMenuCategories"
   /restaurants/me/categories/{categoryId}:
@@ -79,6 +111,244 @@ paths:
     $ref: "./paths/menu.yaml#/searchMenuItems"
   /menu-items/{menuItemId}:
     $ref: "./paths/menu.yaml#/getMenuItem"
+  /auth/register/driver:
+    $ref: "./paths/driver.yaml#/registerDriver"
+  /auth/login/driver:
+    $ref: "./paths/driver.yaml#/loginDriver"
+  /auth/logout/driver:
+    $ref: "./paths/driver.yaml#/logoutDriver"
+  /auth/refresh/driver:
+    $ref: "./paths/driver.yaml#/refreshDriver"
+  /auth/forgot-password/driver:
+    $ref: "./paths/driver.yaml#/forgotPasswordDriver"
+  /auth/reset-password/driver:
+    $ref: "./paths/driver.yaml#/resetPasswordDriver"
+  /driver/profile:
+    $ref: "./paths/driver.yaml#/driverProfile"
+  /driver/profile/change-password:
+    $ref: "./paths/driver.yaml#/changePasswordDriver"
+  /driver/profile/image:
+    $ref: "./paths/driver.yaml#/driverProfileImage"
+  /driver/vehicles:
+    $ref: "./paths/driver.yaml#/driverVehicles"
+  /driver/vehicles/{vehicleId}:
+    $ref: "./paths/driver.yaml#/driverVehicle"
+  /driver/documents:
+    $ref: "./paths/driver.yaml#/driverDocuments"
+  /driver/documents/{documentId}:
+    $ref: "./paths/driver.yaml#/driverDocument"
+  /driver/availability:
+    $ref: "./paths/driver.yaml#/driverAvailability"
+  /driver/location:
+    $ref: "./paths/driver.yaml#/driverLocation"
+  /driver/delivery-requests:
+    $ref: "./paths/driver.yaml#/driverDeliveryRequests"
+  /driver/delivery-requests/{offerId}:
+    $ref: "./paths/driver.yaml#/driverDeliveryRequest"
+  /driver/delivery-requests/{offerId}/accept:
+    $ref: "./paths/driver.yaml#/acceptDeliveryRequest"
+  /driver/delivery-requests/{offerId}/reject:
+    $ref: "./paths/driver.yaml#/rejectDeliveryRequest"
+  /driver/deliveries:
+    $ref: "./paths/driver.yaml#/driverDeliveries"
+  /driver/deliveries/history:
+    $ref: "./paths/driver.yaml#/driverDeliveryHistory"
+  /driver/deliveries/{assignmentId}:
+    $ref: "./paths/driver.yaml#/driverDelivery"
+  /driver/deliveries/{assignmentId}/pickup:
+    $ref: "./paths/driver.yaml#/pickupDelivery"
+  /driver/deliveries/{assignmentId}/start:
+    $ref: "./paths/driver.yaml#/startDelivery"
+  /driver/deliveries/{assignmentId}/complete:
+    $ref: "./paths/driver.yaml#/completeDelivery"
+  /driver/earnings:
+    $ref: "./paths/driver.yaml#/driverEarnings"
+  /driver/earnings/summary:
+    $ref: "./paths/driver.yaml#/driverEarningsSummary"
+  /driver/earnings/daily:
+    $ref: "./paths/driver.yaml#/driverDailyEarnings"
+  /driver/payouts:
+    $ref: "./paths/driver.yaml#/driverPayouts"
+  /driver/payouts/{payoutId}:
+    $ref: "./paths/driver.yaml#/driverPayout"
+  /driver/statistics:
+    $ref: "./paths/driver.yaml#/driverStatistics"
+  /driver/reviews:
+    $ref: "./paths/driver.yaml#/driverReviews"
+  /auth/login/admin:
+    $ref: "./paths/admin.yaml#/loginAdmin"
+  /auth/logout/admin:
+    $ref: "./paths/admin.yaml#/logoutAdmin"
+  /auth/refresh/admin:
+    $ref: "./paths/admin.yaml#/refreshAdmin"
+  /auth/forgot-password/admin:
+    $ref: "./paths/admin.yaml#/forgotPasswordAdmin"
+  /auth/reset-password/admin:
+    $ref: "./paths/admin.yaml#/resetPasswordAdmin"
+  /admin/me:
+    $ref: "./paths/admin.yaml#/adminProfile"
+  /admin/me/change-password:
+    $ref: "./paths/admin.yaml#/changePasswordAdmin"
+  /admin/cities:
+    $ref: "./paths/admin.yaml#/adminCities"
+  /admin/cities/{cityId}:
+    $ref: "./paths/admin.yaml#/adminCity"
+  /admin/customers:
+    $ref: "./paths/admin.yaml#/adminCustomers"
+  /admin/customers/{customerId}:
+    $ref: "./paths/admin.yaml#/adminCustomer"
+  /admin/customers/{customerId}/account-status:
+    $ref: "./paths/admin.yaml#/adminCustomerAccountStatus"
+  /admin/restaurants:
+    $ref: "./paths/admin.yaml#/adminRestaurants"
+  /admin/restaurants/{restaurantId}:
+    $ref: "./paths/admin.yaml#/adminRestaurant"
+  /admin/restaurants/{restaurantId}/approve:
+    $ref: "./paths/admin.yaml#/approveRestaurant"
+  /admin/restaurants/{restaurantId}/reject:
+    $ref: "./paths/admin.yaml#/rejectRestaurant"
+  /admin/restaurants/{restaurantId}/account-status:
+    $ref: "./paths/admin.yaml#/adminRestaurantAccountStatus"
+  /admin/drivers:
+    $ref: "./paths/admin.yaml#/adminDrivers"
+  /admin/drivers/{driverId}:
+    $ref: "./paths/admin.yaml#/adminDriver"
+  /admin/drivers/{driverId}/status:
+    $ref: "./paths/admin.yaml#/adminDriverStatus"
+  /admin/drivers/{driverId}/account-status:
+    $ref: "./paths/admin.yaml#/adminDriverAccountStatus"
+  /admin/drivers/{driverId}/documents/{documentId}:
+    $ref: "./paths/admin.yaml#/adminDriverDocument"
+  /admin/orders:
+    $ref: "./paths/admin.yaml#/adminOrders"
+  /admin/orders/{orderId}:
+    $ref: "./paths/admin.yaml#/adminOrder"
+  /admin/orders/{orderId}/status:
+    $ref: "./paths/admin.yaml#/adminOrderStatus"
+  /admin/payments:
+    $ref: "./paths/admin.yaml#/adminPayments"
+  /admin/payments/{paymentId}:
+    $ref: "./paths/admin.yaml#/adminPayment"
+  /admin/payments/{paymentId}/refunds:
+    $ref: "./paths/admin.yaml#/adminPaymentRefunds"
+  /admin/payments/{paymentId}/refunds/{refundId}:
+    $ref: "./paths/admin.yaml#/adminPaymentRefund"
+  /admin/restaurant-reviews:
+    $ref: "./paths/admin.yaml#/adminRestaurantReviews"
+  /admin/restaurant-reviews/{reviewId}:
+    $ref: "./paths/admin.yaml#/adminModerateRestaurantReview"
+  /admin/driver-reviews:
+    $ref: "./paths/admin.yaml#/adminDriverReviews"
+  /admin/driver-reviews/{reviewId}:
+    $ref: "./paths/admin.yaml#/adminModerateDriverReview"
+  /admin/payouts:
+    $ref: "./paths/admin.yaml#/adminPayouts"
+  /admin/payouts/{payoutId}:
+    $ref: "./paths/admin.yaml#/adminPayout"
+  /admin/audit-logs:
+    $ref: "./paths/admin.yaml#/adminAuditLogs"
+  /admin/audit-logs/{auditLogId}:
+    $ref: "./paths/admin.yaml#/adminAuditLog"
+  /admin/dashboard:
+    $ref: "./paths/admin.yaml#/adminDashboard"
+  /admin/reports/orders:
+    $ref: "./paths/admin.yaml#/adminOrdersReport"
+  /admin/reports/sales:
+    $ref: "./paths/admin.yaml#/adminSalesReport"
+  /cart:
+    $ref: "./paths/cart.yaml#/cart"
+  /cart/items:
+    $ref: "./paths/cart.yaml#/cartItems"
+  /cart/items/{itemId}:
+    $ref: "./paths/cart.yaml#/cartItem"
+  /orders:
+    $ref: "./paths/order.yaml#/orders"
+  /orders/{orderId}:
+    $ref: "./paths/order.yaml#/order"
+  /orders/{orderId}/status:
+    $ref: "./paths/order.yaml#/orderStatus"
+  /orders/{orderId}/tracking:
+    $ref: "./paths/order.yaml#/orderTracking"
+  /orders/{orderId}/cancellation:
+    $ref: "./paths/order.yaml#/orderCancellation"
+  /restaurants/me/orders:
+    $ref: "./paths/order.yaml#/restaurantOrders"
+  /restaurants/me/orders/active:
+    $ref: "./paths/order.yaml#/restaurantActiveOrders"
+  /restaurants/me/orders/history:
+    $ref: "./paths/order.yaml#/restaurantOrderHistory"
+  /restaurants/me/orders/{orderId}:
+    $ref: "./paths/order.yaml#/restaurantOrder"
+  /restaurants/me/orders/{orderId}/accept:
+    $ref: "./paths/order.yaml#/acceptRestaurantOrder"
+  /restaurants/me/orders/{orderId}/reject:
+    $ref: "./paths/order.yaml#/rejectRestaurantOrder"
+  /restaurants/me/orders/{orderId}/prepare:
+    $ref: "./paths/order.yaml#/prepareRestaurantOrder"
+  /restaurants/me/orders/{orderId}/ready:
+    $ref: "./paths/order.yaml#/readyRestaurantOrder"
+  /payment-methods:
+    $ref: "./paths/payment.yaml#/paymentMethods"
+  /orders/{orderId}/payment:
+    $ref: "./paths/payment.yaml#/orderPayment"
+  /orders/{orderId}/restaurant-review:
+    $ref: "./paths/review.yaml#/orderRestaurantReview"
+  /orders/{orderId}/driver-review:
+    $ref: "./paths/review.yaml#/orderDriverReview"
+  /restaurants/{restaurantId}/reviews:
+    $ref: "./paths/review.yaml#/restaurantReviews"
+  /drivers/{driverId}/reviews:
+    $ref: "./paths/review.yaml#/driverPublicReviews"
+  /restaurant-reviews/{reviewId}:
+    $ref: "./paths/review.yaml#/restaurantReview"
+  /restaurant-reviews/{reviewId}/images:
+    $ref: "./paths/review.yaml#/restaurantReviewImages"
+  /restaurant-reviews/{reviewId}/images/{imageId}:
+    $ref: "./paths/review.yaml#/restaurantReviewImage"
+  /driver-reviews/{reviewId}:
+    $ref: "./paths/review.yaml#/driverReview"
+  /restaurants/me/reviews:
+    $ref: "./paths/review.yaml#/ownerReviews"
+  /restaurants/me/reviews/{reviewId}:
+    $ref: "./paths/review.yaml#/ownerReview"
+  /restaurants/me/reviews/{reviewId}/reply:
+    $ref: "./paths/review.yaml#/ownerReviewReply"
+  /restaurants/me/menu-items:
+    $ref: "./paths/menu.yaml#/restaurantMenuItems"
+  /restaurants/me/menu-items/{itemId}:
+    $ref: "./paths/menu.yaml#/restaurantMenuItem"
+  /restaurants/me/menu-items/{itemId}/availability:
+    $ref: "./paths/menu.yaml#/restaurantMenuItemAvailability"
+  /restaurants/me/menu-items/{itemId}/images:
+    $ref: "./paths/menu.yaml#/restaurantMenuItemImages"
+  /restaurants/me/menu-items/{itemId}/images/{imageId}:
+    $ref: "./paths/menu.yaml#/restaurantMenuItemImage"
+  /restaurants/me/menu-items/{itemId}/options:
+    $ref: "./paths/menu.yaml#/restaurantMenuItemOptions"
+  /restaurants/me/menu-items/{itemId}/options/{groupId}:
+    $ref: "./paths/menu.yaml#/restaurantMenuItemOption"
+  /restaurants/me/menu-items/{itemId}/options/{groupId}/values:
+    $ref: "./paths/menu.yaml#/restaurantMenuItemOptionValues"
+  /restaurants/me/menu-items/{itemId}/options/{groupId}/values/{valueId}:
+    $ref: "./paths/menu.yaml#/restaurantMenuItemOptionValue"
+  /restaurants/me/promotions:
+    $ref: "./paths/promotion.yaml#/restaurantPromotions"
+  /restaurants/me/promotions/{promotionId}:
+    $ref: "./paths/promotion.yaml#/restaurantPromotion"
+  /cuisines:
+    $ref: "./paths/restaurant.yaml#/listCuisines"
+  /restaurants/me/cuisines:
+    $ref: "./paths/restaurant.yaml#/restaurantCuisines"
+  /restaurants/me/cuisines/{cuisineId}:
+    $ref: "./paths/restaurant.yaml#/restaurantCuisine"
+  /restaurants/me/change-password:
+    $ref: "./paths/restaurant.yaml#/changePasswordRestaurant"
+  /restaurants/me/dashboard:
+    $ref: "./paths/restaurant.yaml#/restaurantDashboard"
+  /restaurants/me/dashboard/sales:
+    $ref: "./paths/restaurant.yaml#/restaurantSalesStats"
+  /restaurants/me/dashboard/orders:
+    $ref: "./paths/restaurant.yaml#/restaurantOrderStats"
 
 components:
   schemas:
@@ -92,6 +362,8 @@ components:
       $ref: "./schemas/customer.yaml#/LoginCustomerResponse"
     LogoutCustomerResponse:
       $ref: "./schemas/customer.yaml#/LogoutCustomerResponse"
+    RefreshCustomerResponse:
+      $ref: "./schemas/customer.yaml#/RefreshCustomerResponse"
     ForgotPasswordCustomerRequest:
       $ref: "./schemas/customer.yaml#/ForgotPasswordCustomerRequest"
     ForgotPasswordCustomerResponse:
@@ -130,8 +402,28 @@ components:
       $ref: "./schemas/customer.yaml#/DeleteDeliveryAddressResponse"
     Customer:
       $ref: "./schemas/customer.yaml#/Customer"
-    RestaurantAddress:
-      $ref: "./schemas/restaurant.yaml#/RestaurantAddress"
+    City:
+      $ref: "./schemas/city.yaml#/City"
+    ListCitiesResponse:
+      $ref: "./schemas/city.yaml#/ListCitiesResponse"
+    BranchSummary:
+      $ref: "./schemas/restaurant.yaml#/BranchSummary"
+    Branch:
+      $ref: "./schemas/restaurant.yaml#/Branch"
+    RestaurantBranch:
+      $ref: "./schemas/restaurant.yaml#/RestaurantBranch"
+    CreateBranchRequest:
+      $ref: "./schemas/restaurant.yaml#/CreateBranchRequest"
+    UpdateBranchRequest:
+      $ref: "./schemas/restaurant.yaml#/UpdateBranchRequest"
+    ListBranchesResponse:
+      $ref: "./schemas/restaurant.yaml#/ListBranchesResponse"
+    CreateBranchResponse:
+      $ref: "./schemas/restaurant.yaml#/CreateBranchResponse"
+    GetBranchResponse:
+      $ref: "./schemas/restaurant.yaml#/GetBranchResponse"
+    UpdateBranchResponse:
+      $ref: "./schemas/restaurant.yaml#/UpdateBranchResponse"
     OperatingHour:
       $ref: "./schemas/restaurant.yaml#/OperatingHour"
     RestaurantPromotion:
@@ -152,6 +444,8 @@ components:
       $ref: "./schemas/restaurant.yaml#/LoginRestaurantRequest"
     LoginRestaurantResponse:
       $ref: "./schemas/restaurant.yaml#/LoginRestaurantResponse"
+    RefreshRestaurantResponse:
+      $ref: "./schemas/restaurant.yaml#/RefreshRestaurantResponse"
     LogoutRestaurantResponse:
       $ref: "./schemas/restaurant.yaml#/LogoutRestaurantResponse"
     ForgotPasswordRestaurantRequest:
@@ -184,10 +478,10 @@ components:
       $ref: "./schemas/restaurant.yaml#/UpdateOperatingHourRequest"
     UpdateOperatingHourResponse:
       $ref: "./schemas/restaurant.yaml#/UpdateOperatingHourResponse"
-    UpdateAvailabilityRequest:
-      $ref: "./schemas/restaurant.yaml#/UpdateAvailabilityRequest"
-    UpdateAvailabilityResponse:
-      $ref: "./schemas/restaurant.yaml#/UpdateAvailabilityResponse"
+    UpdateBranchAvailabilityRequest:
+      $ref: "./schemas/restaurant.yaml#/UpdateBranchAvailabilityRequest"
+    UpdateBranchAvailabilityResponse:
+      $ref: "./schemas/restaurant.yaml#/UpdateBranchAvailabilityResponse"
     MenuItemOptionValue:
       $ref: "./schemas/menu.yaml#/MenuItemOptionValue"
     MenuItemOptionGroup:
@@ -228,6 +522,532 @@ components:
       $ref: "./schemas/common.yaml#/ErrorResponse"
     ValidationErrorResponse:
       $ref: "./schemas/common.yaml#/ValidationErrorResponse"
+    OrderStatus:
+      $ref: "./schemas/order.yaml#/OrderStatus"
+    OrderAddress:
+      $ref: "./schemas/order.yaml#/OrderAddress"
+    OrderBranch:
+      $ref: "./schemas/order.yaml#/OrderBranch"
+    OrderItemOption:
+      $ref: "./schemas/order.yaml#/OrderItemOption"
+    OrderItem:
+      $ref: "./schemas/order.yaml#/OrderItem"
+    OrderStatusEntry:
+      $ref: "./schemas/order.yaml#/OrderStatusEntry"
+    OrderTotals:
+      $ref: "./schemas/order.yaml#/OrderTotals"
+    OrderSummary:
+      $ref: "./schemas/order.yaml#/OrderSummary"
+    OrderDetail:
+      $ref: "./schemas/order.yaml#/OrderDetail"
+    PaymentMethod:
+      $ref: "./schemas/payment.yaml#/PaymentMethod"
+    PaymentStatus:
+      $ref: "./schemas/payment.yaml#/PaymentStatus"
+    RefundStatus:
+      $ref: "./schemas/payment.yaml#/RefundStatus"
+    Refund:
+      $ref: "./schemas/payment.yaml#/Refund"
+    PaymentSummary:
+      $ref: "./schemas/payment.yaml#/PaymentSummary"
+    PaymentDetail:
+      $ref: "./schemas/payment.yaml#/PaymentDetail"
+    PayoutStatus:
+      $ref: "./schemas/driver.yaml#/PayoutStatus"
+    DriverVehicle:
+      $ref: "./schemas/driver.yaml#/DriverVehicle"
+    VehicleInput:
+      $ref: "./schemas/driver.yaml#/VehicleInput"
+    DriverDocument:
+      $ref: "./schemas/driver.yaml#/DriverDocument"
+    DriverProfile:
+      $ref: "./schemas/driver.yaml#/DriverProfile"
+    RegisterDriverRequest:
+      $ref: "./schemas/driver.yaml#/RegisterDriverRequest"
+    RegisterDriverResponse:
+      $ref: "./schemas/driver.yaml#/RegisterDriverResponse"
+    LoginDriverRequest:
+      $ref: "./schemas/driver.yaml#/LoginDriverRequest"
+    LoginDriverResponse:
+      $ref: "./schemas/driver.yaml#/LoginDriverResponse"
+    RefreshDriverResponse:
+      $ref: "./schemas/driver.yaml#/RefreshDriverResponse"
+    LogoutDriverResponse:
+      $ref: "./schemas/driver.yaml#/LogoutDriverResponse"
+    ForgotPasswordDriverRequest:
+      $ref: "./schemas/driver.yaml#/ForgotPasswordDriverRequest"
+    ForgotPasswordDriverResponse:
+      $ref: "./schemas/driver.yaml#/ForgotPasswordDriverResponse"
+    ResetPasswordDriverRequest:
+      $ref: "./schemas/driver.yaml#/ResetPasswordDriverRequest"
+    ResetPasswordDriverResponse:
+      $ref: "./schemas/driver.yaml#/ResetPasswordDriverResponse"
+    ChangePasswordDriverRequest:
+      $ref: "./schemas/driver.yaml#/ChangePasswordDriverRequest"
+    ChangePasswordDriverResponse:
+      $ref: "./schemas/driver.yaml#/ChangePasswordDriverResponse"
+    GetDriverProfileResponse:
+      $ref: "./schemas/driver.yaml#/GetDriverProfileResponse"
+    UpdateDriverProfileRequest:
+      $ref: "./schemas/driver.yaml#/UpdateDriverProfileRequest"
+    UpdateDriverProfileResponse:
+      $ref: "./schemas/driver.yaml#/UpdateDriverProfileResponse"
+    UploadDriverImageResponse:
+      $ref: "./schemas/driver.yaml#/UploadDriverImageResponse"
+    ListDriverVehiclesResponse:
+      $ref: "./schemas/driver.yaml#/ListDriverVehiclesResponse"
+    CreateDriverVehicleRequest:
+      $ref: "./schemas/driver.yaml#/CreateDriverVehicleRequest"
+    CreateDriverVehicleResponse:
+      $ref: "./schemas/driver.yaml#/CreateDriverVehicleResponse"
+    UpdateDriverVehicleRequest:
+      $ref: "./schemas/driver.yaml#/UpdateDriverVehicleRequest"
+    UpdateDriverVehicleResponse:
+      $ref: "./schemas/driver.yaml#/UpdateDriverVehicleResponse"
+    ListDriverDocumentsResponse:
+      $ref: "./schemas/driver.yaml#/ListDriverDocumentsResponse"
+    UploadDriverDocumentResponse:
+      $ref: "./schemas/driver.yaml#/UploadDriverDocumentResponse"
+    DeleteDriverDocumentResponse:
+      $ref: "./schemas/driver.yaml#/DeleteDriverDocumentResponse"
+    DriverAvailability:
+      $ref: "./schemas/driver.yaml#/DriverAvailability"
+    GetDriverAvailabilityResponse:
+      $ref: "./schemas/driver.yaml#/GetDriverAvailabilityResponse"
+    UpdateDriverAvailabilityRequest:
+      $ref: "./schemas/driver.yaml#/UpdateDriverAvailabilityRequest"
+    UpdateDriverAvailabilityResponse:
+      $ref: "./schemas/driver.yaml#/UpdateDriverAvailabilityResponse"
+    UpdateDriverLocationRequest:
+      $ref: "./schemas/driver.yaml#/UpdateDriverLocationRequest"
+    UpdateDriverLocationResponse:
+      $ref: "./schemas/driver.yaml#/UpdateDriverLocationResponse"
+    DeliveryRequestSummary:
+      $ref: "./schemas/driver.yaml#/DeliveryRequestSummary"
+    DeliveryRequestDetail:
+      $ref: "./schemas/driver.yaml#/DeliveryRequestDetail"
+    ListDeliveryRequestsResponse:
+      $ref: "./schemas/driver.yaml#/ListDeliveryRequestsResponse"
+    GetDeliveryRequestResponse:
+      $ref: "./schemas/driver.yaml#/GetDeliveryRequestResponse"
+    AcceptDeliveryRequestResponse:
+      $ref: "./schemas/driver.yaml#/AcceptDeliveryRequestResponse"
+    RejectDeliveryRequestResponse:
+      $ref: "./schemas/driver.yaml#/RejectDeliveryRequestResponse"
+    DeliverySummary:
+      $ref: "./schemas/driver.yaml#/DeliverySummary"
+    DeliveryDetail:
+      $ref: "./schemas/driver.yaml#/DeliveryDetail"
+    ListDeliveriesResponse:
+      $ref: "./schemas/driver.yaml#/ListDeliveriesResponse"
+    GetDeliveryResponse:
+      $ref: "./schemas/driver.yaml#/GetDeliveryResponse"
+    UpdateDeliveryResponse:
+      $ref: "./schemas/driver.yaml#/UpdateDeliveryResponse"
+    Earning:
+      $ref: "./schemas/driver.yaml#/Earning"
+    ListEarningsResponse:
+      $ref: "./schemas/driver.yaml#/ListEarningsResponse"
+    EarningsSummary:
+      $ref: "./schemas/driver.yaml#/EarningsSummary"
+    GetEarningsSummaryResponse:
+      $ref: "./schemas/driver.yaml#/GetEarningsSummaryResponse"
+    DailyEarning:
+      $ref: "./schemas/driver.yaml#/DailyEarning"
+    ListDailyEarningsResponse:
+      $ref: "./schemas/driver.yaml#/ListDailyEarningsResponse"
+    Payout:
+      $ref: "./schemas/driver.yaml#/Payout"
+    ListPayoutsResponse:
+      $ref: "./schemas/driver.yaml#/ListPayoutsResponse"
+    GetPayoutResponse:
+      $ref: "./schemas/driver.yaml#/GetPayoutResponse"
+    DriverStatistics:
+      $ref: "./schemas/driver.yaml#/DriverStatistics"
+    GetDriverStatisticsResponse:
+      $ref: "./schemas/driver.yaml#/GetDriverStatisticsResponse"
+    DriverReviewView:
+      $ref: "./schemas/driver.yaml#/DriverReviewView"
+    ListDriverReviewsResponse:
+      $ref: "./schemas/driver.yaml#/ListDriverReviewsResponse"
+    AccountStatus:
+      $ref: "./schemas/admin.yaml#/AccountStatus"
+    ReviewStatus:
+      $ref: "./schemas/admin.yaml#/ReviewStatus"
+    UpdateAccountStatusRequest:
+      $ref: "./schemas/admin.yaml#/UpdateAccountStatusRequest"
+    AdminProfile:
+      $ref: "./schemas/admin.yaml#/AdminProfile"
+    LoginAdminRequest:
+      $ref: "./schemas/admin.yaml#/LoginAdminRequest"
+    LoginAdminResponse:
+      $ref: "./schemas/admin.yaml#/LoginAdminResponse"
+    RefreshAdminResponse:
+      $ref: "./schemas/admin.yaml#/RefreshAdminResponse"
+    LogoutAdminResponse:
+      $ref: "./schemas/admin.yaml#/LogoutAdminResponse"
+    ForgotPasswordAdminRequest:
+      $ref: "./schemas/admin.yaml#/ForgotPasswordAdminRequest"
+    ForgotPasswordAdminResponse:
+      $ref: "./schemas/admin.yaml#/ForgotPasswordAdminResponse"
+    ResetPasswordAdminRequest:
+      $ref: "./schemas/admin.yaml#/ResetPasswordAdminRequest"
+    ResetPasswordAdminResponse:
+      $ref: "./schemas/admin.yaml#/ResetPasswordAdminResponse"
+    ChangePasswordAdminRequest:
+      $ref: "./schemas/admin.yaml#/ChangePasswordAdminRequest"
+    ChangePasswordAdminResponse:
+      $ref: "./schemas/admin.yaml#/ChangePasswordAdminResponse"
+    GetAdminProfileResponse:
+      $ref: "./schemas/admin.yaml#/GetAdminProfileResponse"
+    UpdateAdminProfileRequest:
+      $ref: "./schemas/admin.yaml#/UpdateAdminProfileRequest"
+    UpdateAdminProfileResponse:
+      $ref: "./schemas/admin.yaml#/UpdateAdminProfileResponse"
+    AdminCity:
+      $ref: "./schemas/admin.yaml#/AdminCity"
+    ListAdminCitiesResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminCitiesResponse"
+    CreateCityRequest:
+      $ref: "./schemas/admin.yaml#/CreateCityRequest"
+    CreateCityResponse:
+      $ref: "./schemas/admin.yaml#/CreateCityResponse"
+    UpdateCityRequest:
+      $ref: "./schemas/admin.yaml#/UpdateCityRequest"
+    UpdateCityResponse:
+      $ref: "./schemas/admin.yaml#/UpdateCityResponse"
+    AdminCustomerSummary:
+      $ref: "./schemas/admin.yaml#/AdminCustomerSummary"
+    AdminCustomer:
+      $ref: "./schemas/admin.yaml#/AdminCustomer"
+    ListAdminCustomersResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminCustomersResponse"
+    GetAdminCustomerResponse:
+      $ref: "./schemas/admin.yaml#/GetAdminCustomerResponse"
+    UpdateAdminCustomerRequest:
+      $ref: "./schemas/admin.yaml#/UpdateAdminCustomerRequest"
+    UpdateAdminCustomerResponse:
+      $ref: "./schemas/admin.yaml#/UpdateAdminCustomerResponse"
+    UpdateCustomerAccountStatusResponse:
+      $ref: "./schemas/admin.yaml#/UpdateCustomerAccountStatusResponse"
+    DeleteAdminCustomerResponse:
+      $ref: "./schemas/admin.yaml#/DeleteAdminCustomerResponse"
+    AdminRestaurantSummary:
+      $ref: "./schemas/admin.yaml#/AdminRestaurantSummary"
+    AdminRestaurant:
+      $ref: "./schemas/admin.yaml#/AdminRestaurant"
+    ListAdminRestaurantsResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminRestaurantsResponse"
+    GetAdminRestaurantResponse:
+      $ref: "./schemas/admin.yaml#/GetAdminRestaurantResponse"
+    UpdateAdminRestaurantRequest:
+      $ref: "./schemas/admin.yaml#/UpdateAdminRestaurantRequest"
+    UpdateAdminRestaurantResponse:
+      $ref: "./schemas/admin.yaml#/UpdateAdminRestaurantResponse"
+    UpdateRestaurantStatusResponse:
+      $ref: "./schemas/admin.yaml#/UpdateRestaurantStatusResponse"
+    UpdateRestaurantAccountStatusResponse:
+      $ref: "./schemas/admin.yaml#/UpdateRestaurantAccountStatusResponse"
+    DeleteAdminRestaurantResponse:
+      $ref: "./schemas/admin.yaml#/DeleteAdminRestaurantResponse"
+    AdminDriverSummary:
+      $ref: "./schemas/admin.yaml#/AdminDriverSummary"
+    AdminDriver:
+      $ref: "./schemas/admin.yaml#/AdminDriver"
+    ListAdminDriversResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminDriversResponse"
+    GetAdminDriverResponse:
+      $ref: "./schemas/admin.yaml#/GetAdminDriverResponse"
+    UpdateAdminDriverRequest:
+      $ref: "./schemas/admin.yaml#/UpdateAdminDriverRequest"
+    UpdateAdminDriverResponse:
+      $ref: "./schemas/admin.yaml#/UpdateAdminDriverResponse"
+    UpdateDriverStatusRequest:
+      $ref: "./schemas/admin.yaml#/UpdateDriverStatusRequest"
+    UpdateDriverStatusResponse:
+      $ref: "./schemas/admin.yaml#/UpdateDriverStatusResponse"
+    UpdateDriverAccountStatusResponse:
+      $ref: "./schemas/admin.yaml#/UpdateDriverAccountStatusResponse"
+    ReviewDriverDocumentRequest:
+      $ref: "./schemas/admin.yaml#/ReviewDriverDocumentRequest"
+    ReviewDriverDocumentResponse:
+      $ref: "./schemas/admin.yaml#/ReviewDriverDocumentResponse"
+    DeleteAdminDriverResponse:
+      $ref: "./schemas/admin.yaml#/DeleteAdminDriverResponse"
+    ListAdminOrdersResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminOrdersResponse"
+    GetAdminOrderResponse:
+      $ref: "./schemas/admin.yaml#/GetAdminOrderResponse"
+    UpdateOrderStatusRequest:
+      $ref: "./schemas/admin.yaml#/UpdateOrderStatusRequest"
+    UpdateOrderStatusResponse:
+      $ref: "./schemas/admin.yaml#/UpdateOrderStatusResponse"
+    ListAdminPaymentsResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminPaymentsResponse"
+    GetAdminPaymentResponse:
+      $ref: "./schemas/admin.yaml#/GetAdminPaymentResponse"
+    CreateRefundRequest:
+      $ref: "./schemas/admin.yaml#/CreateRefundRequest"
+    CreateRefundResponse:
+      $ref: "./schemas/admin.yaml#/CreateRefundResponse"
+    UpdateRefundRequest:
+      $ref: "./schemas/admin.yaml#/UpdateRefundRequest"
+    UpdateRefundResponse:
+      $ref: "./schemas/admin.yaml#/UpdateRefundResponse"
+    AdminRestaurantReview:
+      $ref: "./schemas/admin.yaml#/AdminRestaurantReview"
+    AdminDriverReview:
+      $ref: "./schemas/admin.yaml#/AdminDriverReview"
+    ListAdminRestaurantReviewsResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminRestaurantReviewsResponse"
+    ListAdminDriverReviewsResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminDriverReviewsResponse"
+    ModerateReviewRequest:
+      $ref: "./schemas/admin.yaml#/ModerateReviewRequest"
+    ModerateRestaurantReviewResponse:
+      $ref: "./schemas/admin.yaml#/ModerateRestaurantReviewResponse"
+    ModerateDriverReviewResponse:
+      $ref: "./schemas/admin.yaml#/ModerateDriverReviewResponse"
+    AdminPayout:
+      $ref: "./schemas/admin.yaml#/AdminPayout"
+    ListAdminPayoutsResponse:
+      $ref: "./schemas/admin.yaml#/ListAdminPayoutsResponse"
+    GetAdminPayoutResponse:
+      $ref: "./schemas/admin.yaml#/GetAdminPayoutResponse"
+    CreatePayoutRequest:
+      $ref: "./schemas/admin.yaml#/CreatePayoutRequest"
+    CreatePayoutResponse:
+      $ref: "./schemas/admin.yaml#/CreatePayoutResponse"
+    UpdatePayoutRequest:
+      $ref: "./schemas/admin.yaml#/UpdatePayoutRequest"
+    UpdatePayoutResponse:
+      $ref: "./schemas/admin.yaml#/UpdatePayoutResponse"
+    AuditLogEntry:
+      $ref: "./schemas/admin.yaml#/AuditLogEntry"
+    ListAuditLogsResponse:
+      $ref: "./schemas/admin.yaml#/ListAuditLogsResponse"
+    GetAuditLogResponse:
+      $ref: "./schemas/admin.yaml#/GetAuditLogResponse"
+    AdminDashboard:
+      $ref: "./schemas/admin.yaml#/AdminDashboard"
+    GetAdminDashboardResponse:
+      $ref: "./schemas/admin.yaml#/GetAdminDashboardResponse"
+    OrdersReport:
+      $ref: "./schemas/admin.yaml#/OrdersReport"
+    SalesReport:
+      $ref: "./schemas/admin.yaml#/SalesReport"
+    GetOrdersReportResponse:
+      $ref: "./schemas/admin.yaml#/GetOrdersReportResponse"
+    GetSalesReportResponse:
+      $ref: "./schemas/admin.yaml#/GetSalesReportResponse"
+    CartItem:
+      $ref: "./schemas/cart.yaml#/CartItem"
+    Cart:
+      $ref: "./schemas/cart.yaml#/Cart"
+    GetCartResponse:
+      $ref: "./schemas/cart.yaml#/GetCartResponse"
+    AddCartItemRequest:
+      $ref: "./schemas/cart.yaml#/AddCartItemRequest"
+    AddCartItemResponse:
+      $ref: "./schemas/cart.yaml#/AddCartItemResponse"
+    UpdateCartItemRequest:
+      $ref: "./schemas/cart.yaml#/UpdateCartItemRequest"
+    UpdateCartItemResponse:
+      $ref: "./schemas/cart.yaml#/UpdateCartItemResponse"
+    RemoveCartItemResponse:
+      $ref: "./schemas/cart.yaml#/RemoveCartItemResponse"
+    ClearCartResponse:
+      $ref: "./schemas/cart.yaml#/ClearCartResponse"
+    PlaceOrderItemChoice:
+      $ref: "./schemas/order.yaml#/PlaceOrderItemChoice"
+    PlaceOrderRequest:
+      $ref: "./schemas/order.yaml#/PlaceOrderRequest"
+    PlaceOrderResponse:
+      $ref: "./schemas/order.yaml#/PlaceOrderResponse"
+    ListOrdersResponse:
+      $ref: "./schemas/order.yaml#/ListOrdersResponse"
+    GetOrderResponse:
+      $ref: "./schemas/order.yaml#/GetOrderResponse"
+    OrderStatusView:
+      $ref: "./schemas/order.yaml#/OrderStatusView"
+    GetOrderStatusResponse:
+      $ref: "./schemas/order.yaml#/GetOrderStatusResponse"
+    OrderTracking:
+      $ref: "./schemas/order.yaml#/OrderTracking"
+    GetOrderTrackingResponse:
+      $ref: "./schemas/order.yaml#/GetOrderTrackingResponse"
+    CancelOrderRequest:
+      $ref: "./schemas/order.yaml#/CancelOrderRequest"
+    CancelOrderResponse:
+      $ref: "./schemas/order.yaml#/CancelOrderResponse"
+    RestaurantOrderDetail:
+      $ref: "./schemas/order.yaml#/RestaurantOrderDetail"
+    ListRestaurantOrdersResponse:
+      $ref: "./schemas/order.yaml#/ListRestaurantOrdersResponse"
+    GetRestaurantOrderResponse:
+      $ref: "./schemas/order.yaml#/GetRestaurantOrderResponse"
+    RejectOrderRequest:
+      $ref: "./schemas/order.yaml#/RejectOrderRequest"
+    RestaurantOrderActionResponse:
+      $ref: "./schemas/order.yaml#/RestaurantOrderActionResponse"
+    PaymentMethodOption:
+      $ref: "./schemas/payment.yaml#/PaymentMethodOption"
+    ListPaymentMethodsResponse:
+      $ref: "./schemas/payment.yaml#/ListPaymentMethodsResponse"
+    ProcessPaymentRequest:
+      $ref: "./schemas/payment.yaml#/ProcessPaymentRequest"
+    ProcessPaymentResponse:
+      $ref: "./schemas/payment.yaml#/ProcessPaymentResponse"
+    GetPaymentResponse:
+      $ref: "./schemas/payment.yaml#/GetPaymentResponse"
+    ReviewImage:
+      $ref: "./schemas/review.yaml#/ReviewImage"
+    ReviewReply:
+      $ref: "./schemas/review.yaml#/ReviewReply"
+    RestaurantReviewPublic:
+      $ref: "./schemas/review.yaml#/RestaurantReviewPublic"
+    MyRestaurantReview:
+      $ref: "./schemas/review.yaml#/MyRestaurantReview"
+    OwnerRestaurantReview:
+      $ref: "./schemas/review.yaml#/OwnerRestaurantReview"
+    DriverReviewPublic:
+      $ref: "./schemas/review.yaml#/DriverReviewPublic"
+    MyDriverReview:
+      $ref: "./schemas/review.yaml#/MyDriverReview"
+    CreateReviewRequest:
+      $ref: "./schemas/review.yaml#/CreateReviewRequest"
+    UpdateReviewRequest:
+      $ref: "./schemas/review.yaml#/UpdateReviewRequest"
+    CreateRestaurantReviewResponse:
+      $ref: "./schemas/review.yaml#/CreateRestaurantReviewResponse"
+    GetMyRestaurantReviewResponse:
+      $ref: "./schemas/review.yaml#/GetMyRestaurantReviewResponse"
+    UpdateRestaurantReviewResponse:
+      $ref: "./schemas/review.yaml#/UpdateRestaurantReviewResponse"
+    DeleteRestaurantReviewResponse:
+      $ref: "./schemas/review.yaml#/DeleteRestaurantReviewResponse"
+    ListRestaurantReviewsResponse:
+      $ref: "./schemas/review.yaml#/ListRestaurantReviewsResponse"
+    AddReviewImageResponse:
+      $ref: "./schemas/review.yaml#/AddReviewImageResponse"
+    DeleteReviewImageResponse:
+      $ref: "./schemas/review.yaml#/DeleteReviewImageResponse"
+    CreateDriverReviewResponse:
+      $ref: "./schemas/review.yaml#/CreateDriverReviewResponse"
+    GetMyDriverReviewResponse:
+      $ref: "./schemas/review.yaml#/GetMyDriverReviewResponse"
+    UpdateDriverReviewResponse:
+      $ref: "./schemas/review.yaml#/UpdateDriverReviewResponse"
+    DeleteDriverReviewResponse:
+      $ref: "./schemas/review.yaml#/DeleteDriverReviewResponse"
+    ListPublicDriverReviewsResponse:
+      $ref: "./schemas/review.yaml#/ListPublicDriverReviewsResponse"
+    ListOwnerReviewsResponse:
+      $ref: "./schemas/review.yaml#/ListOwnerReviewsResponse"
+    GetOwnerReviewResponse:
+      $ref: "./schemas/review.yaml#/GetOwnerReviewResponse"
+    ReplyToReviewRequest:
+      $ref: "./schemas/review.yaml#/ReplyToReviewRequest"
+    ReplyToReviewResponse:
+      $ref: "./schemas/review.yaml#/ReplyToReviewResponse"
+    DeleteReviewReplyResponse:
+      $ref: "./schemas/review.yaml#/DeleteReviewReplyResponse"
+    MenuItemImageView:
+      $ref: "./schemas/menu.yaml#/MenuItemImageView"
+    RestaurantMenuItemSummary:
+      $ref: "./schemas/menu.yaml#/RestaurantMenuItemSummary"
+    RestaurantMenuItem:
+      $ref: "./schemas/menu.yaml#/RestaurantMenuItem"
+    CreateMenuItemRequest:
+      $ref: "./schemas/menu.yaml#/CreateMenuItemRequest"
+    UpdateMenuItemRequest:
+      $ref: "./schemas/menu.yaml#/UpdateMenuItemRequest"
+    ListRestaurantMenuItemsResponse:
+      $ref: "./schemas/menu.yaml#/ListRestaurantMenuItemsResponse"
+    GetRestaurantMenuItemResponse:
+      $ref: "./schemas/menu.yaml#/GetRestaurantMenuItemResponse"
+    CreateMenuItemResponse:
+      $ref: "./schemas/menu.yaml#/CreateMenuItemResponse"
+    UpdateMenuItemResponse:
+      $ref: "./schemas/menu.yaml#/UpdateMenuItemResponse"
+    DeleteMenuItemResponse:
+      $ref: "./schemas/menu.yaml#/DeleteMenuItemResponse"
+    UpdateMenuItemAvailabilityRequest:
+      $ref: "./schemas/menu.yaml#/UpdateMenuItemAvailabilityRequest"
+    UpdateMenuItemAvailabilityResponse:
+      $ref: "./schemas/menu.yaml#/UpdateMenuItemAvailabilityResponse"
+    AddMenuItemImageResponse:
+      $ref: "./schemas/menu.yaml#/AddMenuItemImageResponse"
+    DeleteMenuItemImageResponse:
+      $ref: "./schemas/menu.yaml#/DeleteMenuItemImageResponse"
+    OptionValueInput:
+      $ref: "./schemas/menu.yaml#/OptionValueInput"
+    CreateOptionGroupRequest:
+      $ref: "./schemas/menu.yaml#/CreateOptionGroupRequest"
+    UpdateOptionGroupRequest:
+      $ref: "./schemas/menu.yaml#/UpdateOptionGroupRequest"
+    ListOptionGroupsResponse:
+      $ref: "./schemas/menu.yaml#/ListOptionGroupsResponse"
+    OptionGroupResponse:
+      $ref: "./schemas/menu.yaml#/OptionGroupResponse"
+    DeleteOptionGroupResponse:
+      $ref: "./schemas/menu.yaml#/DeleteOptionGroupResponse"
+    CreateOptionValueRequest:
+      $ref: "./schemas/menu.yaml#/CreateOptionValueRequest"
+    UpdateOptionValueRequest:
+      $ref: "./schemas/menu.yaml#/UpdateOptionValueRequest"
+    OptionValueResponse:
+      $ref: "./schemas/menu.yaml#/OptionValueResponse"
+    DeleteOptionValueResponse:
+      $ref: "./schemas/menu.yaml#/DeleteOptionValueResponse"
+    Promotion:
+      $ref: "./schemas/promotion.yaml#/Promotion"
+    CreatePromotionRequest:
+      $ref: "./schemas/promotion.yaml#/CreatePromotionRequest"
+    UpdatePromotionRequest:
+      $ref: "./schemas/promotion.yaml#/UpdatePromotionRequest"
+    ListPromotionsResponse:
+      $ref: "./schemas/promotion.yaml#/ListPromotionsResponse"
+    GetPromotionResponse:
+      $ref: "./schemas/promotion.yaml#/GetPromotionResponse"
+    CreatePromotionResponse:
+      $ref: "./schemas/promotion.yaml#/CreatePromotionResponse"
+    UpdatePromotionResponse:
+      $ref: "./schemas/promotion.yaml#/UpdatePromotionResponse"
+    DeletePromotionResponse:
+      $ref: "./schemas/promotion.yaml#/DeletePromotionResponse"
+    Cuisine:
+      $ref: "./schemas/restaurant.yaml#/Cuisine"
+    ListCuisinesResponse:
+      $ref: "./schemas/restaurant.yaml#/ListCuisinesResponse"
+    CreateCuisineRequest:
+      $ref: "./schemas/restaurant.yaml#/CreateCuisineRequest"
+    UpdateCuisineRequest:
+      $ref: "./schemas/restaurant.yaml#/UpdateCuisineRequest"
+    CreateCuisineResponse:
+      $ref: "./schemas/restaurant.yaml#/CreateCuisineResponse"
+    UpdateCuisineResponse:
+      $ref: "./schemas/restaurant.yaml#/UpdateCuisineResponse"
+    DeleteCuisineResponse:
+      $ref: "./schemas/restaurant.yaml#/DeleteCuisineResponse"
+    ListPublicCuisinesResponse:
+      $ref: "./schemas/restaurant.yaml#/ListPublicCuisinesResponse"
+    ChangePasswordRestaurantRequest:
+      $ref: "./schemas/restaurant.yaml#/ChangePasswordRestaurantRequest"
+    ChangePasswordRestaurantResponse:
+      $ref: "./schemas/restaurant.yaml#/ChangePasswordRestaurantResponse"
+    RestaurantDashboard:
+      $ref: "./schemas/restaurant.yaml#/RestaurantDashboard"
+    GetRestaurantDashboardResponse:
+      $ref: "./schemas/restaurant.yaml#/GetRestaurantDashboardResponse"
+    RestaurantSalesStats:
+      $ref: "./schemas/restaurant.yaml#/RestaurantSalesStats"
+    GetRestaurantSalesStatsResponse:
+      $ref: "./schemas/restaurant.yaml#/GetRestaurantSalesStatsResponse"
+    RestaurantOrderStats:
+      $ref: "./schemas/restaurant.yaml#/RestaurantOrderStats"
+    GetRestaurantOrderStatsResponse:
+      $ref: "./schemas/restaurant.yaml#/GetRestaurantOrderStatsResponse"
 
   responses:
     ValidationError:
@@ -236,8 +1056,12 @@ components:
       $ref: "./responses/common.yaml#/Conflict"
     Unauthorized:
       $ref: "./responses/common.yaml#/Unauthorized"
+    Forbidden:
+      $ref: "./responses/common.yaml#/Forbidden"
     InvalidResetToken:
       $ref: "./responses/common.yaml#/InvalidResetToken"
+    InvalidRefreshToken:
+      $ref: "./responses/common.yaml#/InvalidRefreshToken"
     NotFound:
       $ref: "./responses/common.yaml#/NotFound"
     InternalServerError:

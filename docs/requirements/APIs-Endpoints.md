@@ -1,149 +1,221 @@
 # Full APIs
 
+Generated from `docs/api/` so it matches the spec. Paths include the `/api/v1` prefix and use `:param` for path parameters.
+
 ## Customer API
 
-| Method   | Endpoint                                     | Purpose                   |
-| -------- | -------------------------------------------- | ------------------------- |
-| `POST`   | `/auth/register/customer`                    | Register customer account |
-| `POST`   | `/auth/login`                                | Authenticate customer     |
-| `POST`   | `/auth/logout`                               | Logout current session    |
-| `POST`   | `/auth/password/forgot`                      | Request password reset    |
-| `POST`   | `/auth/password/reset`                       | Reset password            |
-| `GET`    | `/customers/me`                              | View customer profile     |
-| `PATCH`  | `/customers/me`                              | Update customer profile   |
-| `PATCH`  | `/customers/me/password`                     | Change password           |
-| `GET`    | `/customers/me/addresses`                    | List addresses            |
-| `POST`   | `/customers/me/addresses`                    | Add address               |
-| `GET`    | `/customers/me/addresses/:addressId`         | Get address               |
-| `PATCH`  | `/customers/me/addresses/:addressId`         | Update address            |
-| `DELETE` | `/customers/me/addresses/:addressId`         | Delete address            |
-| `PATCH`  | `/customers/me/addresses/:addressId/default` | Set default address       |
-| `GET`    | `/restaurants`                               | Browse restaurants        |
-| `GET`    | `/restaurants/search`                        | Search restaurants        |
-| `GET`    | `/restaurants?filters...`                    | Filter restaurants        |
-| `GET`    | `/restaurants/:restaurantId`                 | Restaurant details        |
-| `GET`    | `/restaurants/:restaurantId/menu`            | Browse restaurant menu    |
-| `GET`    | `/menu-items/:menuItemId`                    | Food details              |
-| `GET`    | `/menu-items/search`                         | Search food items         |
-| `GET`    | `/cart`                                      | View current cart         |
-| `POST`   | `/cart/items`                                | Add item                  |
-| `PATCH`  | `/cart/items/:itemId`                        | Change quantity           |
-| `DELETE` | `/cart/items/:itemId`                        | Remove item               |
-| `DELETE` | `/cart`                                      | Clear cart                |
-| `POST`   | `/orders`                                    | Place order               |
-| `GET`    | `/orders`                                    | Order history             |
-| `GET`    | `/orders/:orderId`                           | View order details        |
-| `GET`    | `/orders/:orderId/status`                    | Track order               |
-| `POST`   | `/orders/:orderId/cancellation`              | Request cancellation      |
-| `GET`    | `/payment-methods`                           | Available payment methods |
-| `POST`   | `/orders/:orderId/payment`                   | Process payment           |
-| `GET`    | `/orders/:orderId/payment`                   | Payment status            |
-| `POST`   | `/orders/:orderId/restaurant-review`         | Submit restaurant review  |
-| `GET`    | `/restaurants/:restaurantId/reviews`         | View restaurant reviews   |
-| `GET`    | `/restaurant-reviews/:reviewId`              | View review               |
-| `PATCH`  | `/restaurant-reviews/:reviewId`              | Edit review               |
-| `DELETE` | `/restaurant-reviews/:reviewId`              | Delete own review         |
-| `POST`   | `/restaurant-reviews/:reviewId/images`       | Add review image          |
-| `POST`   | `/orders/:orderId/driver-review`             | Rate driver               |
-| `GET`    | `/drivers/:driverId/reviews`                 | View driver reviews       |
-| `GET`    | `/driver-reviews/:reviewId`                  | View review               |
-| `PATCH`  | `/driver-reviews/:reviewId`                  | Edit own review           |
-| `DELETE` | `/driver-reviews/:reviewId`                  | Delete own review         |
+Includes the public endpoints (browsing, cities, cuisines, payment methods and public reviews).
+
+| Method   | Endpoint                                               | Purpose                                  |
+| -------- | ------------------------------------------------------ | ---------------------------------------- |
+| `GET`    | `/api/v1/cities`                                       | List the cities the platform operates in |
+| `POST`   | `/api/v1/auth/register/customer`                       | Register a customer                      |
+| `POST`   | `/api/v1/auth/login/customer`                          | Log in a customer                        |
+| `POST`   | `/api/v1/auth/logout/customer`                         | Log out a customer                       |
+| `POST`   | `/api/v1/auth/refresh/customer`                        | Refresh a customer access token          |
+| `POST`   | `/api/v1/auth/forgot-password/customer`                | Request a customer password reset        |
+| `POST`   | `/api/v1/auth/reset-password/customer`                 | Reset a customer password                |
+| `GET`    | `/api/v1/customers/me`                                 | View customer profile                    |
+| `PATCH`  | `/api/v1/customers/me`                                 | Update customer profile                  |
+| `POST`   | `/api/v1/customers/me/change-password`                 | Change customer password                 |
+| `GET`    | `/api/v1/customers/me/addresses`                       | List delivery addresses                  |
+| `POST`   | `/api/v1/customers/me/addresses`                       | Add a new delivery address               |
+| `GET`    | `/api/v1/customers/me/addresses/:addressId`            | Get one delivery address                 |
+| `PATCH`  | `/api/v1/customers/me/addresses/:addressId`            | Update one delivery address              |
+| `DELETE` | `/api/v1/customers/me/addresses/:addressId`            | Delete one delivery address              |
+| `GET`    | `/api/v1/restaurants`                                  | Browse, search, and filter restaurants   |
+| `GET`    | `/api/v1/restaurants/:restaurantId`                    | View restaurant details                  |
+| `GET`    | `/api/v1/restaurants/:restaurantId/menu`               | Browse a restaurant's menu               |
+| `GET`    | `/api/v1/menu-items`                                   | Search food items                        |
+| `GET`    | `/api/v1/menu-items/:menuItemId`                       | View food item details                   |
+| `GET`    | `/api/v1/cart`                                         | View the cart                            |
+| `DELETE` | `/api/v1/cart`                                         | Clear the cart                           |
+| `POST`   | `/api/v1/cart/items`                                   | Add an item to the cart                  |
+| `PATCH`  | `/api/v1/cart/items/:itemId`                           | Change an item's quantity                |
+| `DELETE` | `/api/v1/cart/items/:itemId`                           | Remove an item from the cart             |
+| `GET`    | `/api/v1/orders`                                       | List own orders                          |
+| `POST`   | `/api/v1/orders`                                       | Place an order                           |
+| `GET`    | `/api/v1/orders/:orderId`                              | View an order                            |
+| `GET`    | `/api/v1/orders/:orderId/status`                       | Track an order's status                  |
+| `GET`    | `/api/v1/orders/:orderId/tracking`                     | Track the delivery driver                |
+| `POST`   | `/api/v1/orders/:orderId/cancellation`                 | Cancel an order                          |
+| `GET`    | `/api/v1/payment-methods`                              | List payment methods                     |
+| `GET`    | `/api/v1/orders/:orderId/payment`                      | View an order's payment                  |
+| `POST`   | `/api/v1/orders/:orderId/payment`                      | Pay for an order                         |
+| `POST`   | `/api/v1/orders/:orderId/restaurant-review`            | Review the restaurant                    |
+| `POST`   | `/api/v1/orders/:orderId/driver-review`                | Review the driver                        |
+| `GET`    | `/api/v1/restaurants/:restaurantId/reviews`            | List a restaurant's reviews              |
+| `GET`    | `/api/v1/restaurant-reviews/:reviewId`                 | View own restaurant review               |
+| `PATCH`  | `/api/v1/restaurant-reviews/:reviewId`                 | Edit own restaurant review               |
+| `DELETE` | `/api/v1/restaurant-reviews/:reviewId`                 | Delete own restaurant review             |
+| `POST`   | `/api/v1/restaurant-reviews/:reviewId/images`          | Add a photo to a review                  |
+| `DELETE` | `/api/v1/restaurant-reviews/:reviewId/images/:imageId` | Remove a photo from a review             |
+| `GET`    | `/api/v1/cuisines`                                     | List cuisines                            |
 
 ## Restaurant API
 
-| Method   | Endpoint                                                                     | Purpose                |
-| -------- | ---------------------------------------------------------------------------- | ---------------------- |
-| `POST`   | `/api/v1/restaurants/auth/register`                                          | Register restaurant    |
-| `POST`   | `/api/v1/restaurants/auth/login`                                             | Login                  |
-| `POST`   | `/api/v1/restaurants/auth/logout`                                            | Logout                 |
-| `POST`   | `/api/v1/restaurants/auth/password-reset/request`                            | Request password reset |
-| `POST`   | `/api/v1/restaurants/auth/password-reset/confirm`                            | Reset password         |
-| `GET`    | `/api/v1/restaurants/me`                                                     | View own profile       |
-| `PATCH`  | `/api/v1/restaurants/me`                                                     | Update profile         |
-| `POST`   | `/api/v1/restaurants/me/logo`                                                | Upload/update logo     |
-| `GET`    | `/api/v1/restaurants/me/operating-hours`                                     | View operating hours   |
-| `PUT`    | `/api/v1/restaurants/me/operating-hours`                                     | Replace schedule       |
-| `PATCH`  | `/api/v1/restaurants/me/operating-hours/:id`                                 | Update specific day    |
-| `PATCH`  | `/api/v1/restaurants/me/availability`                                        | Change availability    |
-| `GET`    | `/api/v1/restaurants/me/categories`                                          | List categories        |
-| `POST`   | `/api/v1/restaurants/me/categories`                                          | Create category        |
-| `GET`    | `/api/v1/restaurants/me/categories/:categoryId`                              | Get category           |
-| `PATCH`  | `/api/v1/restaurants/me/categories/:categoryId`                              | Update category        |
-| `DELETE` | `/api/v1/restaurants/me/categories/:categoryId`                              | Delete category        |
-| `GET`    | `/api/v1/restaurants/me/menu-items`                                          | List menu items        |
-| `POST`   | `/api/v1/restaurants/me/menu-items`                                          | Create item            |
-| `GET`    | `/api/v1/restaurants/me/menu-items/:itemId`                                  | Get item               |
-| `PATCH`  | `/api/v1/restaurants/me/menu-items/:itemId`                                  | Update item            |
-| `DELETE` | `/api/v1/restaurants/me/menu-items/:itemId`                                  | Delete item            |
-| `PATCH`  | `/api/v1/restaurants/me/menu-items/:itemId/availability`                     | Change availability    |
-| `POST`   | `/api/v1/restaurants/me/menu-items/:itemId/images`                           | Upload image           |
-| `DELETE` | `/api/v1/restaurants/me/menu-items/:itemId/images/:imageId`                  | Remove image           |
-| `GET`    | `/api/v1/restaurants/me/menu-items/:itemId/options`                          | List option groups     |
-| `POST`   | `/api/v1/restaurants/me/menu-items/:itemId/options`                          | Create option group    |
-| `PATCH`  | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId`                 | Update group           |
-| `DELETE` | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId`                 | Delete group           |
-| `POST`   | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId/values`          | Add option             |
-| `PATCH`  | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId/values/:valueId` | Update option          |
-| `DELETE` | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId/values/:valueId` | Delete option          |
-| `GET`    | `/api/v1/restaurants/me/orders`                                              | List restaurant orders |
-| `GET`    | `/api/v1/restaurants/me/orders/:orderId`                                     | View order details     |
-| `GET`    | `/api/v1/restaurants/me/orders/active`                                       | Active orders          |
-| `GET`    | `/api/v1/restaurants/me/orders/history`                                      | Order history          |
-| `POST`   | `/api/v1/restaurants/me/orders/:orderId/accept`                              | Accept order           |
-| `POST`   | `/api/v1/restaurants/me/orders/:orderId/reject`                              | Reject order           |
-| `POST`   | `/api/v1/restaurants/me/orders/:orderId/prepare`                             | Start preparation      |
-| `POST`   | `/api/v1/restaurants/me/orders/:orderId/ready`                               | Ready for pickup       |
-| `GET`    | `/api/v1/restaurants/me/promotions`                                          | List promotions        |
-| `POST`   | `/api/v1/restaurants/me/promotions`                                          | Create promotion       |
-| `GET`    | `/api/v1/restaurants/me/promotions/:promotionId`                             | Get promotion          |
-| `PATCH`  | `/api/v1/restaurants/me/promotions/:promotionId`                             | Update promotion       |
-| `DELETE` | `/api/v1/restaurants/me/promotions/:promotionId`                             | Delete promotion       |
-| `GET`    | `/api/v1/restaurants/me/reviews`                                             | View reviews           |
-| `GET`    | `/api/v1/restaurants/me/reviews/:reviewId`                                   | View specific review   |
-| `POST`   | `/api/v1/restaurants/me/reviews/:reviewId/reply`                             | Respond to review      |
-| `GET`    | `/api/v1/restaurants/me/dashboard`                                           | Dashboard overview     |
-| `GET`    | `/api/v1/restaurants/me/dashboard/sales`                                     | Sales statistics       |
-| `GET`    | `/api/v1/restaurants/me/dashboard/orders`                                    | Order statistics       |
-| `GET`    | `/api/v1/restaurants/me/dashboard/revenue`                                   | Revenue report         |
+| Method   | Endpoint                                                                     | Purpose                                     |
+| -------- | ---------------------------------------------------------------------------- | ------------------------------------------- |
+| `POST`   | `/api/v1/restaurants/auth/register`                                          | Register a restaurant                       |
+| `POST`   | `/api/v1/restaurants/auth/login`                                             | Log in a restaurant                         |
+| `POST`   | `/api/v1/restaurants/auth/logout`                                            | Log out a restaurant                        |
+| `POST`   | `/api/v1/restaurants/auth/refresh`                                           | Refresh a restaurant access token           |
+| `POST`   | `/api/v1/restaurants/auth/password-reset/request`                            | Request a restaurant password reset         |
+| `POST`   | `/api/v1/restaurants/auth/password-reset/confirm`                            | Reset a restaurant password                 |
+| `GET`    | `/api/v1/restaurants/me`                                                     | View own restaurant profile                 |
+| `PATCH`  | `/api/v1/restaurants/me`                                                     | Update own restaurant profile               |
+| `POST`   | `/api/v1/restaurants/me/logo`                                                | Upload or update restaurant logo            |
+| `GET`    | `/api/v1/restaurants/me/branches`                                            | List own branches                           |
+| `POST`   | `/api/v1/restaurants/me/branches`                                            | Add a branch                                |
+| `GET`    | `/api/v1/restaurants/me/branches/:branchId`                                  | View one own branch                         |
+| `PATCH`  | `/api/v1/restaurants/me/branches/:branchId`                                  | Update or deactivate a branch               |
+| `GET`    | `/api/v1/restaurants/me/branches/:branchId/operating-hours`                  | View operating hours                        |
+| `PUT`    | `/api/v1/restaurants/me/branches/:branchId/operating-hours`                  | Replace the weekly operating hours schedule |
+| `PATCH`  | `/api/v1/restaurants/me/branches/:branchId/operating-hours/:operatingHourId` | Update operating hours for a specific day   |
+| `PATCH`  | `/api/v1/restaurants/me/branches/:branchId/availability`                     | Change branch availability                  |
+| `GET`    | `/api/v1/restaurants/me/categories`                                          | List own menu categories                    |
+| `POST`   | `/api/v1/restaurants/me/categories`                                          | Create a menu category                      |
+| `GET`    | `/api/v1/restaurants/me/categories/:categoryId`                              | Get one menu category                       |
+| `PATCH`  | `/api/v1/restaurants/me/categories/:categoryId`                              | Update a menu category                      |
+| `DELETE` | `/api/v1/restaurants/me/categories/:categoryId`                              | Delete a menu category                      |
+| `GET`    | `/api/v1/restaurants/me/orders`                                              | List restaurant orders                      |
+| `GET`    | `/api/v1/restaurants/me/orders/active`                                       | List active orders                          |
+| `GET`    | `/api/v1/restaurants/me/orders/history`                                      | Order history                               |
+| `GET`    | `/api/v1/restaurants/me/orders/:orderId`                                     | View an order                               |
+| `POST`   | `/api/v1/restaurants/me/orders/:orderId/accept`                              | Accept an order                             |
+| `POST`   | `/api/v1/restaurants/me/orders/:orderId/reject`                              | Reject an order                             |
+| `POST`   | `/api/v1/restaurants/me/orders/:orderId/prepare`                             | Start preparing an order                    |
+| `POST`   | `/api/v1/restaurants/me/orders/:orderId/ready`                               | Mark an order ready for pickup              |
+| `GET`    | `/api/v1/restaurants/me/reviews`                                             | List own restaurant's reviews               |
+| `GET`    | `/api/v1/restaurants/me/reviews/:reviewId`                                   | View one of the restaurant's reviews        |
+| `POST`   | `/api/v1/restaurants/me/reviews/:reviewId/reply`                             | Reply to a review                           |
+| `PATCH`  | `/api/v1/restaurants/me/reviews/:reviewId/reply`                             | Edit a reply                                |
+| `DELETE` | `/api/v1/restaurants/me/reviews/:reviewId/reply`                             | Remove a reply                              |
+| `GET`    | `/api/v1/restaurants/me/menu-items`                                          | List own menu items                         |
+| `POST`   | `/api/v1/restaurants/me/menu-items`                                          | Create a menu item                          |
+| `GET`    | `/api/v1/restaurants/me/menu-items/:itemId`                                  | View a menu item                            |
+| `PATCH`  | `/api/v1/restaurants/me/menu-items/:itemId`                                  | Update a menu item                          |
+| `DELETE` | `/api/v1/restaurants/me/menu-items/:itemId`                                  | Delete a menu item                          |
+| `PATCH`  | `/api/v1/restaurants/me/menu-items/:itemId/availability`                     | Mark an item available or sold out          |
+| `POST`   | `/api/v1/restaurants/me/menu-items/:itemId/images`                           | Add an image to a menu item                 |
+| `DELETE` | `/api/v1/restaurants/me/menu-items/:itemId/images/:imageId`                  | Remove an image from a menu item            |
+| `GET`    | `/api/v1/restaurants/me/menu-items/:itemId/options`                          | List an item's option groups                |
+| `POST`   | `/api/v1/restaurants/me/menu-items/:itemId/options`                          | Create an option group                      |
+| `PATCH`  | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId`                 | Update an option group                      |
+| `DELETE` | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId`                 | Delete an option group                      |
+| `POST`   | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId/values`          | Add an option to a group                    |
+| `PATCH`  | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId/values/:valueId` | Update an option                            |
+| `DELETE` | `/api/v1/restaurants/me/menu-items/:itemId/options/:groupId/values/:valueId` | Delete an option                            |
+| `GET`    | `/api/v1/restaurants/me/promotions`                                          | List own promotions                         |
+| `POST`   | `/api/v1/restaurants/me/promotions`                                          | Create a promotion                          |
+| `GET`    | `/api/v1/restaurants/me/promotions/:promotionId`                             | View a promotion                            |
+| `PATCH`  | `/api/v1/restaurants/me/promotions/:promotionId`                             | Update a promotion                          |
+| `DELETE` | `/api/v1/restaurants/me/promotions/:promotionId`                             | Delete a promotion                          |
+| `GET`    | `/api/v1/restaurants/me/cuisines`                                            | List own cuisine tags                       |
+| `POST`   | `/api/v1/restaurants/me/cuisines`                                            | Add a cuisine tag                           |
+| `PATCH`  | `/api/v1/restaurants/me/cuisines/:cuisineId`                                 | Update a cuisine tag                        |
+| `DELETE` | `/api/v1/restaurants/me/cuisines/:cuisineId`                                 | Delete a cuisine tag                        |
+| `POST`   | `/api/v1/restaurants/me/change-password`                                     | Change own password                         |
+| `GET`    | `/api/v1/restaurants/me/dashboard`                                           | Dashboard overview                          |
+| `GET`    | `/api/v1/restaurants/me/dashboard/sales`                                     | Sales statistics                            |
+| `GET`    | `/api/v1/restaurants/me/dashboard/orders`                                    | Order statistics                            |
 
 ## Driver API
 
-| Method   | Endpoint                                                        | Purpose                        |
-| -------- | --------------------------------------------------------------- | ------------------------------ |
-| `POST`   | `/api/v1/auth/driver/register`                                  | Register driver                |
-| `POST`   | `/api/v1/auth/login`                                            | Driver login                   |
-| `POST`   | `/api/v1/auth/logout`                                           | Logout                         |
-| `POST`   | `/api/v1/auth/password/forgot`                                  | Request password reset         |
-| `POST`   | `/api/v1/auth/password/reset`                                   | Reset password                 |
-| `GET`    | `/api/v1/driver/profile`                                        | View driver profile            |
-| `PATCH`  | `/api/v1/driver/profile`                                        | Update profile                 |
-| `PATCH`  | `/api/v1/driver/profile/vehicle`                                | Update vehicle information     |
-| `POST`   | `/api/v1/driver/profile/image`                                  | Upload profile picture         |
-| `GET`    | `/api/v1/driver/documents`                                      | View driver documents          |
-| `POST`   | `/api/v1/driver/documents`                                      | Upload document                |
-| `DELETE` | `/api/v1/driver/documents/:documentId`                          | Remove document                |
-| `GET`    | `/api/v1/driver/availability`                                   | Get current availability       |
-| `PATCH`  | `/api/v1/driver/availability`                                   | Change availability            |
-| `GET`    | `/api/v1/driver/deliveries/requests`                            | List pending delivery requests |
-| `GET`    | `/api/v1/driver/deliveries/:assignmentId`                       | View delivery details          |
-| `POST`   | `/api/v1/driver/deliveries/:assignmentId/accept`                | Accept delivery                |
-| `POST`   | `/api/v1/driver/deliveries/:assignmentId/reject`                | Reject delivery                |
-| `GET`    | `/api/v1/driver/deliveries/:assignmentId/navigation/restaurant` | Get restaurant navigation data |
-| `GET`    | `/api/v1/driver/deliveries/:assignmentId/navigation/customer`   | Get customer navigation data   |
-| `POST`   | `/api/v1/driver/deliveries/:assignmentId/pickup`                | Confirm pickup                 |
-| `GET`    | `/api/v1/driver/deliveries/:assignmentId/pickup/verify`         | Verify pickup information      |
-| `POST`   | `/api/v1/driver/deliveries/:assignmentId/start`                 | Start delivery                 |
-| `POST`   | `/api/v1/driver/deliveries/:assignmentId/delay`                 | Report delay                   |
-| `POST`   | `/api/v1/driver/deliveries/:assignmentId/complete`              | Confirm delivery               |
-| `POST`   | `/api/v1/driver/location`                                       | Send current location          |
-| `GET`    | `/api/v1/driver/deliveries/:assignmentId/location`              | Get driver's delivery location |
-| `GET`    | `/api/v1/driver/deliveries`                                     | List driver's deliveries       |
-| `GET`    | `/api/v1/driver/deliveries/history`                             | Completed delivery history     |
-| `GET`    | `/api/v1/driver/earnings`                                       | Earnings summary               |
-| `GET`    | `/api/v1/driver/earnings/daily`                                 | Daily earnings                 |
-| `GET`    | `/api/v1/driver/earnings/summary`                               | Period earnings                |
-| `GET`    | `/api/v1/driver/earnings/payouts`                               | Payout history                 |
-| `GET`    | `/api/v1/driver/statistics`                                     | Driver statistics              |
-| `GET`    | `/api/v1/driver/statistics/deliveries`                          | Completed deliveries           |
-| `GET`    | `/api/v1/driver/statistics/performance`                         | Performance metrics            |
+| Method   | Endpoint                                           | Purpose                          |
+| -------- | -------------------------------------------------- | -------------------------------- |
+| `POST`   | `/api/v1/auth/register/driver`                     | Register a driver                |
+| `POST`   | `/api/v1/auth/login/driver`                        | Log in a driver                  |
+| `POST`   | `/api/v1/auth/logout/driver`                       | Log out a driver                 |
+| `POST`   | `/api/v1/auth/refresh/driver`                      | Refresh a driver access token    |
+| `POST`   | `/api/v1/auth/forgot-password/driver`              | Request a driver password reset  |
+| `POST`   | `/api/v1/auth/reset-password/driver`               | Reset a driver password          |
+| `GET`    | `/api/v1/driver/profile`                           | View own driver profile          |
+| `PATCH`  | `/api/v1/driver/profile`                           | Update own driver profile        |
+| `POST`   | `/api/v1/driver/profile/change-password`           | Change own password              |
+| `POST`   | `/api/v1/driver/profile/image`                     | Upload or update profile picture |
+| `GET`    | `/api/v1/driver/vehicles`                          | List own vehicles                |
+| `POST`   | `/api/v1/driver/vehicles`                          | Replace the active vehicle       |
+| `PATCH`  | `/api/v1/driver/vehicles/:vehicleId`               | Update a vehicle                 |
+| `GET`    | `/api/v1/driver/documents`                         | List own documents               |
+| `POST`   | `/api/v1/driver/documents`                         | Upload a document                |
+| `DELETE` | `/api/v1/driver/documents/:documentId`             | Remove a document                |
+| `GET`    | `/api/v1/driver/availability`                      | Get current availability         |
+| `PATCH`  | `/api/v1/driver/availability`                      | Change availability              |
+| `POST`   | `/api/v1/driver/location`                          | Send current location            |
+| `GET`    | `/api/v1/driver/delivery-requests`                 | List pending delivery requests   |
+| `GET`    | `/api/v1/driver/delivery-requests/:offerId`        | View a delivery request          |
+| `POST`   | `/api/v1/driver/delivery-requests/:offerId/accept` | Accept a delivery request        |
+| `POST`   | `/api/v1/driver/delivery-requests/:offerId/reject` | Reject a delivery request        |
+| `GET`    | `/api/v1/driver/deliveries`                        | List own deliveries              |
+| `GET`    | `/api/v1/driver/deliveries/history`                | Completed delivery history       |
+| `GET`    | `/api/v1/driver/deliveries/:assignmentId`          | View delivery details            |
+| `POST`   | `/api/v1/driver/deliveries/:assignmentId/pickup`   | Confirm order pickup             |
+| `POST`   | `/api/v1/driver/deliveries/:assignmentId/start`    | Start the delivery               |
+| `POST`   | `/api/v1/driver/deliveries/:assignmentId/complete` | Confirm delivery                 |
+| `GET`    | `/api/v1/driver/earnings`                          | List earnings                    |
+| `GET`    | `/api/v1/driver/earnings/summary`                  | Earnings summary for a period    |
+| `GET`    | `/api/v1/driver/earnings/daily`                    | Daily earnings                   |
+| `GET`    | `/api/v1/driver/payouts`                           | Payout history                   |
+| `GET`    | `/api/v1/driver/payouts/:payoutId`                 | View a payout                    |
+| `GET`    | `/api/v1/driver/statistics`                        | Delivery statistics              |
+| `GET`    | `/api/v1/driver/reviews`                           | View own reviews                 |
+| `GET`    | `/api/v1/drivers/:driverId/reviews`                | List a driver's reviews          |
+| `GET`    | `/api/v1/driver-reviews/:reviewId`                 | View own driver review           |
+| `PATCH`  | `/api/v1/driver-reviews/:reviewId`                 | Edit own driver review           |
+| `DELETE` | `/api/v1/driver-reviews/:reviewId`                 | Delete own driver review         |
+
+## Administrator API
+
+| Method   | Endpoint                                                 | Purpose                                 |
+| -------- | -------------------------------------------------------- | --------------------------------------- |
+| `POST`   | `/api/v1/auth/login/admin`                               | Log in an administrator                 |
+| `POST`   | `/api/v1/auth/logout/admin`                              | Log out an administrator                |
+| `POST`   | `/api/v1/auth/refresh/admin`                             | Refresh an administrator access token   |
+| `POST`   | `/api/v1/auth/forgot-password/admin`                     | Request an administrator password reset |
+| `POST`   | `/api/v1/auth/reset-password/admin`                      | Reset an administrator password         |
+| `GET`    | `/api/v1/admin/me`                                       | View own administrator profile          |
+| `PATCH`  | `/api/v1/admin/me`                                       | Update own administrator profile        |
+| `POST`   | `/api/v1/admin/me/change-password`                       | Change own password                     |
+| `GET`    | `/api/v1/admin/cities`                                   | List all cities                         |
+| `POST`   | `/api/v1/admin/cities`                                   | Add a city                              |
+| `PATCH`  | `/api/v1/admin/cities/:cityId`                           | Update or deactivate a city             |
+| `GET`    | `/api/v1/admin/customers`                                | List and search customers               |
+| `GET`    | `/api/v1/admin/customers/:customerId`                    | View a customer                         |
+| `PATCH`  | `/api/v1/admin/customers/:customerId`                    | Update a customer                       |
+| `DELETE` | `/api/v1/admin/customers/:customerId`                    | Delete a customer                       |
+| `PATCH`  | `/api/v1/admin/customers/:customerId/account-status`     | Change a customer's account status      |
+| `GET`    | `/api/v1/admin/restaurants`                              | List and search restaurants             |
+| `GET`    | `/api/v1/admin/restaurants/:restaurantId`                | View a restaurant                       |
+| `PATCH`  | `/api/v1/admin/restaurants/:restaurantId`                | Update a restaurant                     |
+| `DELETE` | `/api/v1/admin/restaurants/:restaurantId`                | Delete a restaurant                     |
+| `POST`   | `/api/v1/admin/restaurants/:restaurantId/approve`        | Approve a restaurant registration       |
+| `POST`   | `/api/v1/admin/restaurants/:restaurantId/reject`         | Reject a restaurant registration        |
+| `PATCH`  | `/api/v1/admin/restaurants/:restaurantId/account-status` | Change a restaurant's account status    |
+| `GET`    | `/api/v1/admin/drivers`                                  | List and search drivers                 |
+| `GET`    | `/api/v1/admin/drivers/:driverId`                        | View a driver                           |
+| `PATCH`  | `/api/v1/admin/drivers/:driverId`                        | Update a driver                         |
+| `DELETE` | `/api/v1/admin/drivers/:driverId`                        | Delete a driver                         |
+| `PATCH`  | `/api/v1/admin/drivers/:driverId/status`                 | Approve or deactivate a driver          |
+| `PATCH`  | `/api/v1/admin/drivers/:driverId/account-status`         | Change a driver's account status        |
+| `PATCH`  | `/api/v1/admin/drivers/:driverId/documents/:documentId`  | Review a driver document                |
+| `GET`    | `/api/v1/admin/orders`                                   | List, search and filter orders          |
+| `GET`    | `/api/v1/admin/orders/:orderId`                          | View an order                           |
+| `PATCH`  | `/api/v1/admin/orders/:orderId/status`                   | Change an order's status                |
+| `GET`    | `/api/v1/admin/payments`                                 | List payments                           |
+| `GET`    | `/api/v1/admin/payments/:paymentId`                      | View a payment                          |
+| `POST`   | `/api/v1/admin/payments/:paymentId/refunds`              | Refund a payment                        |
+| `PATCH`  | `/api/v1/admin/payments/:paymentId/refunds/:refundId`    | Update a refund's status                |
+| `GET`    | `/api/v1/admin/restaurant-reviews`                       | List restaurant reviews                 |
+| `PATCH`  | `/api/v1/admin/restaurant-reviews/:reviewId`             | Moderate a restaurant review            |
+| `GET`    | `/api/v1/admin/driver-reviews`                           | List driver reviews                     |
+| `PATCH`  | `/api/v1/admin/driver-reviews/:reviewId`                 | Moderate a driver review                |
+| `GET`    | `/api/v1/admin/payouts`                                  | List driver payouts                     |
+| `POST`   | `/api/v1/admin/payouts`                                  | Create a driver payout                  |
+| `GET`    | `/api/v1/admin/payouts/:payoutId`                        | View a payout                           |
+| `PATCH`  | `/api/v1/admin/payouts/:payoutId`                        | Update a payout's status                |
+| `GET`    | `/api/v1/admin/audit-logs`                               | Search the audit log                    |
+| `GET`    | `/api/v1/admin/audit-logs/:auditLogId`                   | View an audit entry                     |
+| `GET`    | `/api/v1/admin/dashboard`                                | View the dashboard                      |
+| `GET`    | `/api/v1/admin/reports/orders`                           | Orders report                           |
+| `GET`    | `/api/v1/admin/reports/sales`                            | Sales report                            |

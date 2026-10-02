@@ -1,0 +1,303 @@
+restaurantPromotions:
+  get:
+    tags:
+      - Promotions
+
+    summary: List own promotions
+
+    description: |
+      Returns the authenticated restaurant's promotions, newest first, including ones that are
+      switched off or have ended.
+
+    operationId: listPromotions
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: isActive
+        in: query
+        required: false
+        description: Only promotions that are (`true`) or are not (`false`) switched on.
+        schema:
+          type: boolean
+        example: true
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Promotions retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/promotion.yaml#/ListPromotionsResponse"
+            example:
+              success: true
+              message: Promotions retrieved successfully
+              data:
+                promotions:
+                  - id: 160557b7-0592-52c8-b120-702b9ba6b194
+                    title: 20% off orders over 200 EGP
+                    discountType: percentage
+                    discountValue: 20
+                    startsAt: "2024-06-01T00:00:00.000Z"
+                    endsAt: "2024-06-30T23:59:59.000Z"
+                    isActive: true
+                    createdAt: "2024-05-20T10:00:00.000Z"
+                    updatedAt: null
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Promotions
+
+    summary: Create a promotion
+
+    description: |
+      Creates a promotion for the restaurant. Customers see it while it is switched on and between its
+      start and end. A percentage cannot exceed 100, the discount value cannot be negative, and
+      `endsAt` must be after `startsAt` (`400` otherwise).
+
+    operationId: createPromotion
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/promotion.yaml#/CreatePromotionRequest"
+          example:
+            title: 20% off orders over 200 EGP
+            discountType: percentage
+            discountValue: 20
+            startsAt: "2024-06-01T00:00:00.000Z"
+            endsAt: "2024-06-30T23:59:59.000Z"
+
+    responses:
+      "201":
+        description: Promotion created successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/promotion.yaml#/CreatePromotionResponse"
+            example:
+              success: true
+              message: Promotion created successfully
+              data:
+                promotion:
+                  id: 160557b7-0592-52c8-b120-702b9ba6b194
+                  title: 20% off orders over 200 EGP
+                  discountType: percentage
+                  discountValue: 20
+                  startsAt: "2024-06-01T00:00:00.000Z"
+                  endsAt: "2024-06-30T23:59:59.000Z"
+                  isActive: true
+                  createdAt: "2024-05-20T10:00:00.000Z"
+                  updatedAt: null
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantPromotion:
+  parameters:
+    - name: promotionId
+      in: path
+      required: true
+      description: Unique identifier of the promotion.
+      schema:
+        type: string
+        format: uuid
+      example: 160557b7-0592-52c8-b120-702b9ba6b194
+
+  get:
+    tags:
+      - Promotions
+
+    summary: View a promotion
+
+    description: Returns one of the restaurant's promotions.
+
+    operationId: getPromotion
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Promotion retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/promotion.yaml#/GetPromotionResponse"
+            example:
+              success: true
+              message: Promotion retrieved successfully
+              data:
+                promotion:
+                  id: 160557b7-0592-52c8-b120-702b9ba6b194
+                  title: 20% off orders over 200 EGP
+                  discountType: percentage
+                  discountValue: 20
+                  startsAt: "2024-06-01T00:00:00.000Z"
+                  endsAt: "2024-06-30T23:59:59.000Z"
+                  isActive: true
+                  createdAt: "2024-05-20T10:00:00.000Z"
+                  updatedAt: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Promotions
+
+    summary: Update a promotion
+
+    description: |
+      Updates a promotion. Only the supplied fields change; send `isActive: false` to switch it off
+      without deleting it. A percentage cannot exceed 100, the discount value cannot be negative, and
+      `endsAt` must be after `startsAt` (`400` otherwise).
+
+    operationId: updatePromotion
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/promotion.yaml#/UpdatePromotionRequest"
+          example:
+            discountValue: 25
+            isActive: true
+
+    responses:
+      "200":
+        description: Promotion updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/promotion.yaml#/UpdatePromotionResponse"
+            example:
+              success: true
+              message: Promotion updated successfully
+              data:
+                promotion:
+                  id: 160557b7-0592-52c8-b120-702b9ba6b194
+                  title: 20% off orders over 200 EGP
+                  discountType: percentage
+                  discountValue: 25
+                  startsAt: "2024-06-01T00:00:00.000Z"
+                  endsAt: "2024-06-30T23:59:59.000Z"
+                  isActive: true
+                  createdAt: "2024-05-20T10:00:00.000Z"
+                  updatedAt: "2024-06-05T12:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Promotions
+
+    summary: Delete a promotion
+
+    description: Permanently deletes a promotion.
+
+    operationId: deletePromotion
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Promotion deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/promotion.yaml#/DeletePromotionResponse"
+            example:
+              success: true
+              message: Promotion deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

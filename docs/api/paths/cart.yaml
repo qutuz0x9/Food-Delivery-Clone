@@ -1,0 +1,295 @@
+cart:
+  get:
+    tags:
+      - Cart
+
+    summary: View the cart
+
+    description: |
+      Returns the current customer's cart with its items and subtotal. A customer has at most one cart
+      and all of its items come from the same restaurant; `cart` is `null` when there is none. Items
+      whose menu item is no longer available are flagged with `isAvailable: false`.
+
+    operationId: getCart
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Cart retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/cart.yaml#/GetCartResponse"
+            example:
+              success: true
+              message: Cart retrieved successfully
+              data:
+                cart:
+                  id: 84c74967-41e7-5a32-a5ed-9506bf92a459
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  items:
+                    - id: 502199a9-304a-553b-ad69-1bf2baa4391e
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      isAvailable: true
+                  itemCount: 2
+                  subtotal: 300
+                  updatedAt: "2024-10-05T18:20:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Cart
+
+    summary: Clear the cart
+
+    description: Deletes the cart and all its items.
+
+    operationId: clearCart
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Cart cleared
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/cart.yaml#/ClearCartResponse"
+            example:
+              success: true
+              message: Cart cleared
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+cartItems:
+  post:
+    tags:
+      - Cart
+
+    summary: Add an item to the cart
+
+    description: |
+      Adds a menu item to the cart. Adding an item that is already in the cart increases its quantity. The unit price is the menu item's current base price. Only active, available items of an approved restaurant can be added (`404` or `409` otherwise).
+
+      A cart holds one restaurant's items. If the cart already contains another restaurant's items the call is rejected with `409` unless `replaceCart` is `true`, which discards the old cart and starts a new one.
+
+      The cart stores only the item and quantity. Options and special instructions are chosen when the order is placed.
+
+    operationId: addCartItem
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/cart.yaml#/AddCartItemRequest"
+          example:
+            menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+            quantity: 2
+
+    responses:
+      "201":
+        description: Item added to cart
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/cart.yaml#/AddCartItemResponse"
+            example:
+              success: true
+              message: Item added to cart
+              data:
+                cart:
+                  id: 84c74967-41e7-5a32-a5ed-9506bf92a459
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  items:
+                    - id: 502199a9-304a-553b-ad69-1bf2baa4391e
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
+                      quantity: 2
+                      unitPrice: 150
+                      totalPrice: 300
+                      isAvailable: true
+                  itemCount: 2
+                  subtotal: 300
+                  updatedAt: "2024-10-05T18:20:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+cartItem:
+  parameters:
+    - name: itemId
+      in: path
+      required: true
+      description: Unique identifier of the cart item.
+      schema:
+        type: string
+        format: uuid
+      example: 502199a9-304a-553b-ad69-1bf2baa4391e
+
+  patch:
+    tags:
+      - Cart
+
+    summary: Change an item's quantity
+
+    description: Sets the quantity of one cart item.
+
+    operationId: updateCartItem
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/cart.yaml#/UpdateCartItemRequest"
+          example:
+            quantity: 3
+
+    responses:
+      "200":
+        description: Cart item updated
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/cart.yaml#/UpdateCartItemResponse"
+            example:
+              success: true
+              message: Cart item updated
+              data:
+                cart:
+                  id: 84c74967-41e7-5a32-a5ed-9506bf92a459
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  items:
+                    - id: 502199a9-304a-553b-ad69-1bf2baa4391e
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
+                      quantity: 3
+                      unitPrice: 150
+                      totalPrice: 450
+                      isAvailable: true
+                  itemCount: 3
+                  subtotal: 450
+                  updatedAt: "2024-10-05T18:20:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Cart
+
+    summary: Remove an item from the cart
+
+    description: Removes one item. Removing the last item deletes the cart.
+
+    operationId: removeCartItem
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Item removed from cart
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/cart.yaml#/RemoveCartItemResponse"
+            example:
+              success: true
+              message: Item removed from cart
+              data:
+                cart:
+                  id: 84c74967-41e7-5a32-a5ed-9506bf92a459
+                  restaurant:
+                    id: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+                    name: Nile Grill House
+                  items:
+                    - id: 502199a9-304a-553b-ad69-1bf2baa4391e
+                      menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                      name: Mixed Grill
+                      imageUrl: https://cdn.example.com/menu/mixed-grill.jpg
+                      quantity: 1
+                      unitPrice: 150
+                      totalPrice: 150
+                      isAvailable: true
+                  itemCount: 1
+                  subtotal: 150
+                  updatedAt: "2024-10-05T18:20:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

@@ -1,0 +1,188 @@
+paymentMethods:
+  get:
+    tags:
+      - Payments
+
+    summary: List payment methods
+
+    description: |
+      Returns the ways a customer can pay: `cash`, `credit_card`, `debit_card`, `apple_pay`,
+      `google_pay` and `wallet`. All of them are always offered, because there is no setting to switch
+      a method off.
+
+    operationId: listPaymentMethods
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Payment methods retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/payment.yaml#/ListPaymentMethodsResponse"
+            example:
+              success: true
+              message: Payment methods retrieved successfully
+              data:
+                paymentMethods:
+                  - method: cash
+                    label: Cash on delivery
+                    online: false
+                  - method: credit_card
+                    label: Credit card
+                    online: true
+                  - method: debit_card
+                    label: Debit card
+                    online: true
+                  - method: apple_pay
+                    label: Apple Pay
+                    online: true
+                  - method: google_pay
+                    label: Google Pay
+                    online: true
+                  - method: wallet
+                    label: Wallet
+                    online: true
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+orderPayment:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  post:
+    tags:
+      - Payments
+
+    summary: Pay for an order
+
+    description: |
+      Charges the order's pending payment online using a token from the payment provider. The payment
+      moves to `processing`, then to `paid` (recording `paidAt` and the provider's
+      `transactionReference`) or to `failed` (recording `failureReason`); a failed payment can be
+      retried. Only the customer's own, unpaid, non-cash orders can be paid: otherwise `404` or `409`.
+
+    operationId: processPayment
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/payment.yaml#/ProcessPaymentRequest"
+          example:
+            paymentToken: tok_1QxA9z2eZvKYlo2C
+
+    responses:
+      "200":
+        description: Payment processed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/payment.yaml#/ProcessPaymentResponse"
+            example:
+              success: true
+              message: Payment processed successfully
+              data:
+                payment:
+                  id: 9b186018-751f-5f05-89e0-896252cd46cf
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  paymentMethod: credit_card
+                  status: paid
+                  transactionReference: txn_9f8e7d6c
+                  amount: 350
+                  currency: EGP
+                  paidAt: "2024-10-05T18:31:00.000Z"
+                  failureReason: null
+                  createdAt: "2024-10-05T18:30:30.000Z"
+                  updatedAt: "2024-10-05T18:31:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  get:
+    tags:
+      - Payments
+
+    summary: View an order's payment
+
+    description: |
+      Returns the payment of one of the customer's orders: the method, the amount, its status and,
+      once paid, when.
+
+    operationId: getOrderPayment
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Payment retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/payment.yaml#/GetPaymentResponse"
+            example:
+              success: true
+              message: Payment retrieved successfully
+              data:
+                payment:
+                  id: 9b186018-751f-5f05-89e0-896252cd46cf
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  paymentMethod: credit_card
+                  status: paid
+                  transactionReference: txn_9f8e7d6c
+                  amount: 350
+                  currency: EGP
+                  paidAt: "2024-10-05T18:31:00.000Z"
+                  failureReason: null
+                  createdAt: "2024-10-05T18:30:30.000Z"
+                  updatedAt: "2024-10-05T18:31:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

@@ -100,7 +100,6 @@ LoginCustomerResponse:
       required:
         - customer
         - accessToken
-        - refreshToken
       properties:
         customer:
           $ref: "#/Customer"
@@ -110,10 +109,30 @@ LoginCustomerResponse:
           description: JWT access token used to authenticate subsequent requests.
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.abc123signature
 
-        refreshToken:
+RefreshCustomerResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Access token refreshed successfully
+
+    data:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
           type: string
-          description: Opaque token used to obtain a new access token via the refresh endpoint.
-          example: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+          description: New JWT access token. The rotated refresh token is sent only in the `Set-Cookie` header.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
 
 ForgotPasswordCustomerRequest:
   type: object
@@ -311,7 +330,7 @@ CustomerProfile:
 
     emailVerified:
       type: boolean
-      description: Whether the customer's email address has been verified.
+      description: Whether the customer's email address has been verified (true once `emailVerifiedAt` is set on the user account).
       example: true
 
     createdAt:
@@ -467,6 +486,8 @@ DeliveryAddress:
     - phoneNumber
     - streetAddress
     - city
+    - latitude
+    - longitude
     - isDefault
     - createdAt
   properties:
@@ -497,9 +518,7 @@ DeliveryAddress:
       example: 12 Nile Corniche St, Apt 5
 
     city:
-      type: string
-      description: City name.
-      example: Cairo
+      $ref: "./city.yaml#/City"
 
     state:
       type: string
@@ -516,15 +535,17 @@ DeliveryAddress:
     latitude:
       type: number
       format: double
-      nullable: true
-      description: Latitude coordinate of the address.
+      minimum: -90
+      maximum: 90
+      description: Latitude coordinate of the address. Used to find the nearest restaurant branch.
       example: 30.0444
 
     longitude:
       type: number
       format: double
-      nullable: true
-      description: Longitude coordinate of the address.
+      minimum: -180
+      maximum: 180
+      description: Longitude coordinate of the address. Used to find the nearest restaurant branch.
       example: 31.2357
 
     isDefault:
@@ -577,7 +598,9 @@ CreateDeliveryAddressRequest:
     - recipientName
     - phoneNumber
     - streetAddress
-    - city
+    - cityId
+    - latitude
+    - longitude
   properties:
     label:
       type: string
@@ -599,10 +622,11 @@ CreateDeliveryAddressRequest:
       description: Street address, including building/apartment number.
       example: 12 Nile Corniche St, Apt 5
 
-    city:
+    cityId:
       type: string
-      description: City name.
-      example: Cairo
+      format: uuid
+      description: Identifier of the delivery city, from `GET /cities`.
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
 
     state:
       type: string
@@ -619,15 +643,17 @@ CreateDeliveryAddressRequest:
     latitude:
       type: number
       format: double
-      nullable: true
-      description: Latitude coordinate of the address.
+      minimum: -90
+      maximum: 90
+      description: Latitude coordinate of the address. Used to find the nearest restaurant branch.
       example: 30.0444
 
     longitude:
       type: number
       format: double
-      nullable: true
-      description: Longitude coordinate of the address.
+      minimum: -180
+      maximum: 180
+      description: Longitude coordinate of the address. Used to find the nearest restaurant branch.
       example: 31.2357
 
     isDefault:
@@ -711,10 +737,11 @@ UpdateDeliveryAddressRequest:
       description: Street address, including building/apartment number.
       example: 12 Nile Corniche St, Apt 5
 
-    city:
+    cityId:
       type: string
-      description: City name.
-      example: Cairo
+      format: uuid
+      description: Identifier of the delivery city, from `GET /cities`.
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
 
     state:
       type: string
@@ -731,15 +758,17 @@ UpdateDeliveryAddressRequest:
     latitude:
       type: number
       format: double
-      nullable: true
-      description: Latitude coordinate of the address.
+      minimum: -90
+      maximum: 90
+      description: Latitude coordinate of the address. Used to find the nearest restaurant branch.
       example: 30.0444
 
     longitude:
       type: number
       format: double
-      nullable: true
-      description: Longitude coordinate of the address.
+      minimum: -180
+      maximum: 180
+      description: Longitude coordinate of the address. Used to find the nearest restaurant branch.
       example: 31.2357
 
     isDefault:

@@ -1,0 +1,2230 @@
+PayoutStatus:
+  type: string
+  enum:
+    - pending
+    - processing
+    - completed
+    - failed
+    - on_hold
+    - cancelled
+  description: State of an earning or a payout.
+  example: pending
+
+DriverVehicle:
+  type: object
+  required:
+    - id
+    - vehicleType
+    - brand
+    - model
+    - color
+    - plateNumber
+    - manufactureYear
+    - insuranceExpiryDate
+    - isActive
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique vehicle identifier.
+      example: cbc5f999-4a36-5ffc-8f59-e683862a1bb7
+
+    vehicleType:
+      type: string
+      enum:
+        - car
+        - motorcycle
+        - scooter
+        - bicycle
+        - van
+        - truck
+      description: Kind of vehicle.
+      example: motorcycle
+
+    brand:
+      type: string
+      maxLength: 100
+      description: Manufacturer.
+      example: Honda
+
+    model:
+      type: string
+      maxLength: 100
+      description: Model name.
+      example: CB125
+
+    color:
+      type: string
+      nullable: true
+      maxLength: 50
+      description: Colour.
+      example: Red
+
+    plateNumber:
+      type: string
+      nullable: true
+      maxLength: 30
+      description: Registration plate. Unique across all vehicles.
+      example: ABC 1234
+
+    manufactureYear:
+      type: integer
+      nullable: true
+      description: Year of manufacture.
+      example: 2021
+
+    insuranceExpiryDate:
+      type: string
+      format: date
+      nullable: true
+      description: When the insurance expires.
+      example: "2025-12-31"
+
+    isActive:
+      type: boolean
+      description: |
+        Whether this is the driver's current vehicle. A driver has at most one active vehicle; inactive
+        vehicles are kept as history.
+      example: true
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the vehicle was added.
+      example: "2024-01-10T09:00:00.000Z"
+
+VehicleInput:
+  type: object
+  required:
+    - vehicleType
+    - brand
+    - model
+  properties:
+    vehicleType:
+      type: string
+      enum:
+        - car
+        - motorcycle
+        - scooter
+        - bicycle
+        - van
+        - truck
+      description: Kind of vehicle.
+      example: motorcycle
+
+    brand:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Manufacturer.
+      example: Honda
+
+    model:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Model name.
+      example: CB125
+
+    color:
+      type: string
+      nullable: true
+      maxLength: 50
+      description: Colour.
+      example: Red
+
+    plateNumber:
+      type: string
+      nullable: true
+      maxLength: 30
+      description: Registration plate. Must be unique across all vehicles.
+      example: ABC 1234
+
+    manufactureYear:
+      type: integer
+      nullable: true
+      description: Year of manufacture.
+      example: 2021
+
+    insuranceExpiryDate:
+      type: string
+      format: date
+      nullable: true
+      description: When the insurance expires.
+      example: "2025-12-31"
+
+DriverDocument:
+  type: object
+  required:
+    - id
+    - documentType
+    - fileUrl
+    - status
+    - expiryDate
+    - verifiedAt
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique document identifier.
+      example: 75488f9f-8635-539a-9d05-8e7c88db41e1
+
+    documentType:
+      type: string
+      enum:
+        - driver_license
+        - national_id
+        - passport
+        - insurance
+        - vehicle_registration
+        - background_check
+        - medical_certificate
+        - other
+      description: Kind of document.
+      example: driver_license
+
+    fileUrl:
+      type: string
+      format: uri
+      description: Where the uploaded file is stored.
+      example: https://cdn.example.com/drivers/omar/license.jpg
+
+    status:
+      type: string
+      enum:
+        - pending
+        - submitted
+        - verified
+        - rejected
+        - expired
+      description: Review state of the document.
+      example: verified
+
+    expiryDate:
+      type: string
+      format: date
+      nullable: true
+      description: When the document expires.
+      example: "2027-08-30"
+
+    verifiedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When an administrator verified it.
+      example: "2024-01-12T11:00:00.000Z"
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the document was uploaded.
+      example: "2024-01-10T09:05:00.000Z"
+
+DriverProfile:
+  type: object
+  required:
+    - id
+    - firstName
+    - lastName
+    - email
+    - phoneNumber
+    - dateOfBirth
+    - profileImageUrl
+    - nationalId
+    - licenseNumber
+    - licenseExpiryDate
+    - workingCity
+    - status
+    - availabilityStatus
+    - rating
+    - totalDeliveries
+    - createdAt
+    - updatedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique driver identifier.
+      example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+    firstName:
+      type: string
+      maxLength: 100
+      description: First name.
+      example: Omar
+
+    lastName:
+      type: string
+      maxLength: 100
+      description: Last name.
+      example: Hassan
+
+    email:
+      type: string
+      format: email
+      description: Login email of the driver's user account.
+      example: omar.hassan@example.com
+
+    phoneNumber:
+      type: string
+      description: Phone number of the driver's user account.
+      example: "+201001234567"
+
+    dateOfBirth:
+      type: string
+      format: date
+      description: Date of birth.
+      example: "1992-04-18"
+
+    profileImageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: Profile picture.
+      example: https://cdn.example.com/drivers/omar/profile.jpg
+
+    nationalId:
+      type: string
+      maxLength: 30
+      description: National identity number. Unique across drivers.
+      example: "29204180101234"
+
+    licenseNumber:
+      type: string
+      maxLength: 50
+      description: Driving licence number. Unique across drivers.
+      example: LIC-559213
+
+    licenseExpiryDate:
+      type: string
+      format: date
+      description: When the licence expires.
+      example: "2027-08-30"
+
+    workingCity:
+      $ref: "./city.yaml#/City"
+
+    status:
+      type: string
+      enum:
+        - pending
+        - active
+        - inactive
+      description: Approval state set by an administrator. Only `active` drivers can receive deliveries.
+      example: active
+
+    availabilityStatus:
+      type: string
+      enum:
+        - available
+        - busy
+        - offline
+        - on_break
+      description: Whether the driver is taking deliveries right now.
+      example: available
+
+    rating:
+      type: number
+      format: double
+      minimum: 0
+      maximum: 5
+      description: Average review rating (0-5), a cached value.
+      example: 4.8
+
+    totalDeliveries:
+      type: integer
+      minimum: 0
+      description: Completed deliveries, a cached value.
+      example: 312
+
+    vehicle:
+      type: object
+      nullable: true
+      description: The driver's active vehicle.
+      allOf:
+        - $ref: "#/DriverVehicle"
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the account was created.
+      example: "2024-01-10T09:00:00.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: Last profile change.
+      example: "2024-02-01T09:00:00.000Z"
+
+RegisterDriverRequest:
+  type: object
+  required:
+    - email
+    - password
+    - phoneNumber
+    - firstName
+    - lastName
+    - dateOfBirth
+    - nationalId
+    - licenseNumber
+    - licenseExpiryDate
+    - workingCityId
+    - vehicle
+  properties:
+    email:
+      type: string
+      format: email
+      description: Login email. Must be unique across all accounts.
+      example: omar.hassan@example.com
+
+    password:
+      type: string
+      format: password
+      minLength: 8
+      description: Account password.
+      example: StrongPassword123!
+
+    phoneNumber:
+      type: string
+      description: Phone number. Must be unique across all accounts.
+      example: "+201001234567"
+
+    firstName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: First name.
+      example: Omar
+
+    lastName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Last name.
+      example: Hassan
+
+    dateOfBirth:
+      type: string
+      format: date
+      description: Date of birth.
+      example: "1992-04-18"
+
+    nationalId:
+      type: string
+      maxLength: 30
+      description: National identity number. Must be unique across drivers.
+      example: "29204180101234"
+
+    licenseNumber:
+      type: string
+      maxLength: 50
+      description: Driving licence number. Must be unique across drivers.
+      example: LIC-559213
+
+    licenseExpiryDate:
+      type: string
+      format: date
+      description: When the licence expires.
+      example: "2027-08-30"
+
+    workingCityId:
+      type: string
+      format: uuid
+      description: The one city the driver serves, from `GET /cities`.
+      example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+    vehicle:
+      $ref: "#/VehicleInput"
+
+RegisterDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Driver account created successfully. It is now pending approval.
+
+    data:
+      type: object
+      required:
+        - driver
+      properties:
+        driver:
+          $ref: "#/DriverProfile"
+
+LoginDriverRequest:
+  type: object
+  required:
+    - email
+    - password
+  properties:
+    email:
+      type: string
+      format: email
+      description: Account email.
+      example: omar.hassan@example.com
+
+    password:
+      type: string
+      format: password
+      description: Account password.
+      example: StrongPassword123!
+
+LoginDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Logged in successfully
+
+    data:
+      type: object
+      required:
+        - driver
+        - accessToken
+      properties:
+        driver:
+          $ref: "#/DriverProfile"
+
+        accessToken:
+          type: string
+          description: JWT access token used to authenticate subsequent requests.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+RefreshDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Access token refreshed successfully
+
+    data:
+      type: object
+      required:
+        - accessToken
+      properties:
+        accessToken:
+          type: string
+          description: New JWT access token. The rotated refresh token is sent only in the `Set-Cookie` header.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.xyz789signature
+
+LogoutDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Logged out successfully
+
+    data:
+      type: object
+      nullable: true
+
+ForgotPasswordDriverRequest:
+  type: object
+  required:
+    - email
+  properties:
+    email:
+      type: string
+      format: email
+      description: Email of the account to recover.
+      example: omar.hassan@example.com
+
+ForgotPasswordDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: If an account with that email exists, a password reset link has been sent.
+
+    data:
+      type: object
+      nullable: true
+
+ResetPasswordDriverRequest:
+  type: object
+  required:
+    - token
+    - newPassword
+    - confirmPassword
+  properties:
+    token:
+      type: string
+      description: Password reset token received via email.
+      example: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+
+    newPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: New account password.
+      example: NewStrongPassword123!
+
+    confirmPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: Must match `newPassword` exactly.
+      example: NewStrongPassword123!
+
+ResetPasswordDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Password reset successfully. Please log in again.
+
+    data:
+      type: object
+      nullable: true
+
+ChangePasswordDriverRequest:
+  type: object
+  required:
+    - currentPassword
+    - newPassword
+    - confirmPassword
+  properties:
+    currentPassword:
+      type: string
+      format: password
+      description: The driver's current password.
+      example: StrongPassword123!
+
+    newPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: New account password.
+      example: NewStrongPassword123!
+
+    confirmPassword:
+      type: string
+      format: password
+      minLength: 8
+      description: Must match `newPassword` exactly.
+      example: NewStrongPassword123!
+
+ChangePasswordDriverResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Password changed successfully
+
+    data:
+      type: object
+      nullable: true
+
+GetDriverProfileResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Driver profile retrieved successfully
+
+    data:
+      type: object
+      required:
+        - driver
+      properties:
+        driver:
+          $ref: "#/DriverProfile"
+
+UpdateDriverProfileRequest:
+  type: object
+  minProperties: 1
+  properties:
+    firstName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: First name.
+      example: Omar
+
+    lastName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Last name.
+      example: Hassan
+
+    phoneNumber:
+      type: string
+      description: Phone number. Must stay unique across all accounts.
+      example: "+201001234567"
+
+    dateOfBirth:
+      type: string
+      format: date
+      description: Date of birth.
+      example: "1992-04-18"
+
+    licenseNumber:
+      type: string
+      maxLength: 50
+      description: Driving licence number. Must stay unique across drivers.
+      example: LIC-559213
+
+    licenseExpiryDate:
+      type: string
+      format: date
+      description: When the licence expires.
+      example: "2028-08-30"
+
+    workingCityId:
+      type: string
+      format: uuid
+      description: New working city, from `GET /cities`.
+      example: 7a4c1e92-0d5b-4b3f-9e68-1f2a3b4c5d6e
+
+UpdateDriverProfileResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Driver profile updated successfully
+
+    data:
+      type: object
+      required:
+        - driver
+      properties:
+        driver:
+          $ref: "#/DriverProfile"
+
+UploadDriverImageResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Profile picture updated successfully
+
+    data:
+      type: object
+      required:
+        - profileImageUrl
+      properties:
+        profileImageUrl:
+          type: string
+          format: uri
+          description: URL of the newly uploaded picture.
+          example: https://cdn.example.com/drivers/omar/profile.jpg
+
+ListDriverVehiclesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Vehicles retrieved successfully
+
+    data:
+      type: object
+      required:
+        - vehicles
+      properties:
+        vehicles:
+          type: array
+          items:
+            $ref: "#/DriverVehicle"
+
+CreateDriverVehicleRequest:
+  $ref: "#/VehicleInput"
+
+CreateDriverVehicleResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Vehicle added successfully
+
+    data:
+      type: object
+      required:
+        - vehicle
+      properties:
+        vehicle:
+          $ref: "#/DriverVehicle"
+
+UpdateDriverVehicleRequest:
+  type: object
+  minProperties: 1
+  properties:
+    vehicleType:
+      type: string
+      enum:
+        - car
+        - motorcycle
+        - scooter
+        - bicycle
+        - van
+        - truck
+      description: Kind of vehicle.
+      example: motorcycle
+
+    brand:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Manufacturer.
+      example: Honda
+
+    model:
+      type: string
+      minLength: 1
+      maxLength: 100
+      description: Model name.
+      example: CB125
+
+    color:
+      type: string
+      nullable: true
+      maxLength: 50
+      description: Colour.
+      example: Red
+
+    plateNumber:
+      type: string
+      nullable: true
+      maxLength: 30
+      description: Registration plate. Must be unique across all vehicles.
+      example: ABC 1234
+
+    manufactureYear:
+      type: integer
+      nullable: true
+      description: Year of manufacture.
+      example: 2021
+
+    insuranceExpiryDate:
+      type: string
+      format: date
+      nullable: true
+      description: When the insurance expires.
+      example: "2025-12-31"
+
+UpdateDriverVehicleResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Vehicle updated successfully
+
+    data:
+      type: object
+      required:
+        - vehicle
+      properties:
+        vehicle:
+          $ref: "#/DriverVehicle"
+
+ListDriverDocumentsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Documents retrieved successfully
+
+    data:
+      type: object
+      required:
+        - documents
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: "#/DriverDocument"
+
+UploadDriverDocumentResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Document uploaded successfully
+
+    data:
+      type: object
+      required:
+        - document
+      properties:
+        document:
+          $ref: "#/DriverDocument"
+
+DeleteDriverDocumentResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Document removed successfully
+
+    data:
+      type: object
+      nullable: true
+
+DriverAvailability:
+  type: object
+  required:
+    - status
+    - availabilityStatus
+  properties:
+    status:
+      type: string
+      enum:
+        - pending
+        - active
+        - inactive
+      description: Approval state set by an administrator.
+      example: active
+
+    availabilityStatus:
+      type: string
+      enum:
+        - available
+        - busy
+        - offline
+        - on_break
+      description: Whether the driver is taking deliveries right now.
+      example: available
+
+GetDriverAvailabilityResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Availability retrieved successfully
+
+    data:
+      type: object
+      required:
+        - availability
+      properties:
+        availability:
+          $ref: "#/DriverAvailability"
+
+UpdateDriverAvailabilityRequest:
+  type: object
+  required:
+    - availabilityStatus
+  properties:
+    availabilityStatus:
+      type: string
+      enum:
+        - available
+        - offline
+        - on_break
+      description: |
+        New availability. `busy` is set by the system while a delivery is in progress and cannot be
+        requested.
+      example: offline
+
+UpdateDriverAvailabilityResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Availability updated successfully
+
+    data:
+      type: object
+      required:
+        - availability
+      properties:
+        availability:
+          $ref: "#/DriverAvailability"
+
+UpdateDriverLocationRequest:
+  type: object
+  required:
+    - latitude
+    - longitude
+  properties:
+    latitude:
+      type: number
+      format: double
+      minimum: -90
+      maximum: 90
+      description: Current latitude.
+      example: 30.0561
+
+    longitude:
+      type: number
+      format: double
+      minimum: -180
+      maximum: 180
+      description: Current longitude.
+      example: 31.2394
+
+    heading:
+      type: integer
+      nullable: true
+      minimum: 0
+      maximum: 359
+      description: Direction of travel in degrees (0-359).
+      example: 90
+
+    speed:
+      type: number
+      format: double
+      nullable: true
+      minimum: 0
+      description: Speed in km/h.
+      example: 32.5
+
+    recordedAt:
+      type: string
+      format: date-time
+      description: When the position was measured. Defaults to the server time.
+      example: "2024-10-05T19:05:00.000Z"
+
+UpdateDriverLocationResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Location recorded successfully
+
+    data:
+      type: object
+      required:
+        - recordedAt
+      properties:
+        recordedAt:
+          type: string
+          format: date-time
+          description: Timestamp the position was stored under.
+          example: "2024-10-05T19:05:00.000Z"
+
+DeliveryRequestSummary:
+  type: object
+  description: A delivery offered to the driver.
+  required:
+    - id
+    - status
+    - offeredAt
+    - expiresAt
+    - orderId
+    - orderNumber
+    - restaurantName
+    - itemCount
+    - pickup
+    - dropoff
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Offer identifier. Use it to accept or reject the request.
+      example: 72cd5acb-ce36-5283-89c9-2d75c379d05e
+
+    status:
+      type: string
+      enum:
+        - offered
+        - accepted
+        - rejected
+        - expired
+        - withdrawn
+      description: State of the offer.
+      example: offered
+
+    offeredAt:
+      type: string
+      format: date-time
+      description: When the offer was made.
+      example: "2024-10-05T18:32:30.000Z"
+
+    expiresAt:
+      type: string
+      format: date-time
+      description: When the offer stops being valid.
+      example: "2024-10-05T18:33:30.000Z"
+
+    orderId:
+      type: string
+      format: uuid
+      description: The order to deliver.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Order number.
+      example: ORD-1001
+
+    restaurantName:
+      type: string
+      description: Restaurant to collect from.
+      example: Nile Grill House
+
+    itemCount:
+      type: integer
+      minimum: 0
+      description: Number of items in the order.
+      example: 2
+
+    pickup:
+      type: object
+      required:
+        - branchLabel
+        - street
+        - city
+        - latitude
+        - longitude
+      properties:
+        branchLabel:
+          type: string
+          description: Branch to collect from.
+          example: Ramses Branch
+
+        street:
+          type: string
+          description: Branch street address.
+          example: 15 Ramses St
+
+        building:
+          type: string
+          nullable: true
+          description: Building name or number.
+          example: Building 4
+
+        city:
+          $ref: "./city.yaml#/City"
+
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: Branch latitude.
+          example: 30.0561
+
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: Branch longitude.
+          example: 31.2394
+
+    dropoff:
+      type: object
+      description: |
+        Only the area is shown until the request is accepted. The customer's name, phone and street
+        address appear in the delivery details after that.
+      required:
+        - cityId
+        - city
+        - latitude
+        - longitude
+      properties:
+        cityId:
+          type: string
+          format: uuid
+          description: City of the delivery address.
+          example: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+
+        city:
+          type: string
+          description: City name.
+          example: Cairo
+
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: Delivery point latitude.
+          example: 30.0444
+
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: Delivery point longitude.
+          example: 31.2357
+
+DeliveryRequestDetail:
+  allOf:
+    - $ref: "#/DeliveryRequestSummary"
+    - type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: What is in the order.
+          items:
+            type: object
+            required:
+              - name
+              - quantity
+            properties:
+              name:
+                type: string
+                example: Mixed Grill
+
+              quantity:
+                type: integer
+                minimum: 1
+                example: 2
+
+        customerNote:
+          type: string
+          nullable: true
+          description: Note from the customer for the whole order.
+          example: Please ring the bell
+
+ListDeliveryRequestsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery requests retrieved successfully
+
+    data:
+      type: object
+      required:
+        - requests
+        - pagination
+      properties:
+        requests:
+          type: array
+          items:
+            $ref: "#/DeliveryRequestSummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetDeliveryRequestResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery request retrieved successfully
+
+    data:
+      type: object
+      required:
+        - request
+      properties:
+        request:
+          $ref: "#/DeliveryRequestDetail"
+
+AcceptDeliveryRequestResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery request accepted
+
+    data:
+      type: object
+      required:
+        - delivery
+      properties:
+        delivery:
+          $ref: "#/DeliveryDetail"
+
+RejectDeliveryRequestResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery request rejected
+
+    data:
+      type: object
+      nullable: true
+
+DeliverySummary:
+  type: object
+  required:
+    - id
+    - orderId
+    - orderNumber
+    - orderStatus
+    - status
+    - restaurantName
+    - branchLabel
+    - dropoffCity
+    - assignedAt
+    - acceptedAt
+    - completedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Assignment identifier, used in the delivery endpoints.
+      example: a7b7de55-5c91-5d15-b152-a7f6c258fe30
+
+    orderId:
+      type: string
+      format: uuid
+      description: The order being delivered.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Order number.
+      example: ORD-1001
+
+    orderStatus:
+      $ref: "./order.yaml#/OrderStatus"
+
+    status:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - rejected
+        - completed
+        - cancelled
+      description: State of the driver's assignment.
+      example: accepted
+
+    restaurantName:
+      type: string
+      description: Restaurant to collect from.
+      example: Nile Grill House
+
+    branchLabel:
+      type: string
+      description: Branch to collect from.
+      example: Ramses Branch
+
+    dropoffCity:
+      type: string
+      description: City the order is delivered to.
+      example: Cairo
+
+    assignedAt:
+      type: string
+      format: date-time
+      description: When the assignment was created.
+      example: "2024-10-05T18:33:00.000Z"
+
+    acceptedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the driver accepted.
+      example: "2024-10-05T18:33:00.000Z"
+
+    completedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the delivery was completed.
+      example: null
+
+DeliveryDetail:
+  allOf:
+    - $ref: "#/DeliverySummary"
+    - type: object
+      required:
+        - pickup
+        - dropoff
+        - items
+      properties:
+        pickup:
+          $ref: "./order.yaml#/OrderBranch"
+
+        dropoff:
+          $ref: "./order.yaml#/OrderAddress"
+
+        items:
+          type: array
+          items:
+            $ref: "./order.yaml#/OrderItem"
+
+        customerNote:
+          type: string
+          nullable: true
+          description: Note from the customer for the whole order.
+          example: Please ring the bell
+
+        payment:
+          type: object
+          nullable: true
+          description: Payment for the order. For `cash` the driver collects `amount` from the customer.
+          allOf:
+            - $ref: "./payment.yaml#/PaymentSummary"
+
+ListDeliveriesResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Deliveries retrieved successfully
+
+    data:
+      type: object
+      required:
+        - deliveries
+        - pagination
+      properties:
+        deliveries:
+          type: array
+          items:
+            $ref: "#/DeliverySummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetDeliveryResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery retrieved successfully
+
+    data:
+      type: object
+      required:
+        - delivery
+      properties:
+        delivery:
+          $ref: "#/DeliveryDetail"
+
+UpdateDeliveryResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Delivery updated successfully
+
+    data:
+      type: object
+      required:
+        - delivery
+      properties:
+        delivery:
+          $ref: "#/DeliveryDetail"
+
+Earning:
+  type: object
+  required:
+    - id
+    - orderId
+    - orderNumber
+    - baseFee
+    - bonus
+    - tip
+    - deduction
+    - netAmount
+    - status
+    - payoutId
+    - createdAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique earning identifier.
+      example: e5e31669-fa69-5b42-8ddb-c31707eb989c
+
+    orderId:
+      type: string
+      format: uuid
+      description: Delivered order the earning is for.
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+    orderNumber:
+      type: string
+      description: Order number.
+      example: ORD-1001
+
+    baseFee:
+      type: number
+      format: double
+      minimum: 0
+      description: Base delivery fee.
+      example: 30
+
+    bonus:
+      type: number
+      format: double
+      minimum: 0
+      description: Bonus.
+      example: 5
+
+    tip:
+      type: number
+      format: double
+      minimum: 0
+      description: Tip from the customer.
+      example: 10
+
+    deduction:
+      type: number
+      format: double
+      minimum: 0
+      description: Deductions.
+      example: 0
+
+    netAmount:
+      type: number
+      format: double
+      minimum: 0
+      description: Base fee + bonus + tip − deduction.
+      example: 45
+
+    status:
+      $ref: "#/PayoutStatus"
+
+    payoutId:
+      type: string
+      format: uuid
+      nullable: true
+      description: Payout that paid this earning, once it is settled.
+      example: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the earning was recorded.
+      example: "2024-10-05T19:20:00.000Z"
+
+ListEarningsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Earnings retrieved successfully
+
+    data:
+      type: object
+      required:
+        - earnings
+        - pagination
+      properties:
+        earnings:
+          type: array
+          items:
+            $ref: "#/Earning"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+EarningsSummary:
+  type: object
+  required:
+    - periodStart
+    - periodEnd
+    - deliveries
+    - baseFee
+    - bonus
+    - tip
+    - deduction
+    - netAmount
+    - byStatus
+  properties:
+    periodStart:
+      type: string
+      format: date
+      description: First day of the period.
+      example: "2024-10-01"
+
+    periodEnd:
+      type: string
+      format: date
+      description: Last day of the period.
+      example: "2024-10-31"
+
+    deliveries:
+      type: integer
+      minimum: 0
+      description: Earnings recorded in the period.
+      example: 48
+
+    baseFee:
+      type: number
+      format: double
+      minimum: 0
+      description: Total base fees.
+      example: 1440
+
+    bonus:
+      type: number
+      format: double
+      minimum: 0
+      description: Total bonuses.
+      example: 120
+
+    tip:
+      type: number
+      format: double
+      minimum: 0
+      description: Total tips.
+      example: 360
+
+    deduction:
+      type: number
+      format: double
+      minimum: 0
+      description: Total deductions.
+      example: 20
+
+    netAmount:
+      type: number
+      format: double
+      minimum: 0
+      description: Total net amount.
+      example: 1900
+
+    byStatus:
+      type: object
+      description: Net amount per status, so the driver can see what is still unpaid.
+      required:
+        - pending
+        - processing
+        - completed
+        - failed
+        - on_hold
+        - cancelled
+      properties:
+        pending:
+          type: number
+          format: double
+          minimum: 0
+          example: 450
+
+        processing:
+          type: number
+          format: double
+          minimum: 0
+          example: 0
+
+        completed:
+          type: number
+          format: double
+          minimum: 0
+          example: 1450
+
+        failed:
+          type: number
+          format: double
+          minimum: 0
+          example: 0
+
+        on_hold:
+          type: number
+          format: double
+          minimum: 0
+          example: 0
+
+        cancelled:
+          type: number
+          format: double
+          minimum: 0
+          example: 0
+
+GetEarningsSummaryResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Earnings summary retrieved successfully
+
+    data:
+      type: object
+      required:
+        - summary
+      properties:
+        summary:
+          $ref: "#/EarningsSummary"
+
+DailyEarning:
+  type: object
+  required:
+    - date
+    - deliveries
+    - tip
+    - netAmount
+  properties:
+    date:
+      type: string
+      format: date
+      description: The day.
+      example: "2024-10-05"
+
+    deliveries:
+      type: integer
+      minimum: 0
+      description: Earnings recorded that day.
+      example: 9
+
+    tip:
+      type: number
+      format: double
+      minimum: 0
+      description: Tips that day.
+      example: 70
+
+    netAmount:
+      type: number
+      format: double
+      minimum: 0
+      description: Net amount that day.
+      example: 410
+
+ListDailyEarningsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Daily earnings retrieved successfully
+
+    data:
+      type: object
+      required:
+        - days
+      properties:
+        days:
+          type: array
+          items:
+            $ref: "#/DailyEarning"
+
+Payout:
+  type: object
+  required:
+    - id
+    - periodStart
+    - periodEnd
+    - amount
+    - status
+    - paidAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique payout identifier.
+      example: 96ccc283-c80a-50f4-aa26-931dc0f37dbf
+
+    periodStart:
+      type: string
+      format: date
+      description: First day the payout covers.
+      example: "2024-09-29"
+
+    periodEnd:
+      type: string
+      format: date
+      description: Last day the payout covers.
+      example: "2024-10-05"
+
+    amount:
+      type: number
+      format: double
+      minimum: 0
+      description: Total paid out.
+      example: 1450
+
+    status:
+      $ref: "#/PayoutStatus"
+
+    paidAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the payout was made.
+      example: "2024-10-07T10:00:00.000Z"
+
+ListPayoutsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payouts retrieved successfully
+
+    data:
+      type: object
+      required:
+        - payouts
+        - pagination
+      properties:
+        payouts:
+          type: array
+          items:
+            $ref: "#/Payout"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetPayoutResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Payout retrieved successfully
+
+    data:
+      type: object
+      required:
+        - payout
+        - earnings
+      properties:
+        payout:
+          $ref: "#/Payout"
+
+        earnings:
+          type: array
+          description: The earnings this payout settled.
+          items:
+            $ref: "#/Earning"
+
+DriverStatistics:
+  type: object
+  required:
+    - period
+    - rating
+    - totalDeliveries
+    - completedDeliveries
+    - cancelledDeliveries
+    - offers
+    - acceptanceRate
+  properties:
+    period:
+      type: object
+      required:
+        - from
+        - to
+      properties:
+        from:
+          type: string
+          format: date
+          nullable: true
+          description: Start of the period, if one was given.
+          example: "2024-10-01"
+
+        to:
+          type: string
+          format: date
+          nullable: true
+          description: End of the period, if one was given.
+          example: "2024-10-31"
+
+    rating:
+      type: number
+      format: double
+      nullable: true
+      minimum: 0
+      maximum: 5
+      description: Average review rating (0-5).
+      example: 4.8
+
+    totalDeliveries:
+      type: integer
+      minimum: 0
+      description: Completed deliveries over the driver's lifetime.
+      example: 312
+
+    completedDeliveries:
+      type: integer
+      minimum: 0
+      description: Deliveries completed in the period.
+      example: 48
+
+    cancelledDeliveries:
+      type: integer
+      minimum: 0
+      description: Assignments cancelled in the period.
+      example: 1
+
+    offers:
+      type: object
+      description: Delivery requests offered to the driver in the period.
+      required:
+        - received
+        - accepted
+        - rejected
+        - expired
+      properties:
+        received:
+          type: integer
+          minimum: 0
+          example: 60
+
+        accepted:
+          type: integer
+          minimum: 0
+          example: 48
+
+        rejected:
+          type: integer
+          minimum: 0
+          example: 7
+
+        expired:
+          type: integer
+          minimum: 0
+          example: 5
+
+    acceptanceRate:
+      type: number
+      format: double
+      nullable: true
+      minimum: 0
+      maximum: 1
+      description: Accepted offers divided by offers received. Null when there were none.
+      example: 0.8
+
+GetDriverStatisticsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Statistics retrieved successfully
+
+    data:
+      type: object
+      required:
+        - statistics
+      properties:
+        statistics:
+          $ref: "#/DriverStatistics"
+
+DriverReviewView:
+  type: object
+  required:
+    - id
+    - orderNumber
+    - rating
+    - title
+    - comment
+    - isEdited
+    - createdAt
+    - publishedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique review identifier.
+      example: 05d4f94b-3812-570d-848c-c7db2eeef83f
+
+    orderNumber:
+      type: string
+      description: Order the review is about.
+      example: ORD-1001
+
+    rating:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: Rating from 1 to 5.
+      example: 5
+
+    title:
+      type: string
+      nullable: true
+      description: Review title.
+      example: Fast and polite
+
+    comment:
+      type: string
+      nullable: true
+      description: Review text.
+      example: Arrived early and the food was still hot.
+
+    isEdited:
+      type: boolean
+      description: Whether the customer edited the review.
+      example: false
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the review was written.
+      example: "2024-10-05T20:00:00.000Z"
+
+    publishedAt:
+      type: string
+      format: date-time
+      nullable: true
+      description: When the review was published.
+      example: "2024-10-05T21:00:00.000Z"
+
+ListDriverReviewsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Reviews retrieved successfully
+
+    data:
+      type: object
+      required:
+        - reviews
+        - pagination
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/DriverReviewView"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"

@@ -1,0 +1,1209 @@
+orderRestaurantReview:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  post:
+    tags:
+      - Reviews
+
+    summary: Review the restaurant
+
+    description: |
+      Reviews the restaurant of one of the customer's orders. The order must be `delivered`, and an
+      order can be reviewed only once (`409` otherwise). The review starts `pending` and becomes
+      public once an administrator publishes it.
+
+    operationId: createRestaurantReview
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/review.yaml#/CreateReviewRequest"
+          example:
+            rating: 4
+            title: Great grills
+            comment: Tasty food, a bit late.
+
+    responses:
+      "201":
+        description: Review submitted
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/CreateRestaurantReviewResponse"
+            example:
+              success: true
+              message: Review submitted successfully. It will be shown once it has been approved.
+              data:
+                review:
+                  id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                  authorName: John D.
+                  rating: 4
+                  title: Great grills
+                  comment: Tasty food, a bit late.
+                  isEdited: false
+                  images:
+                    - id: c2779949-0759-5883-98e6-8ef9d8da783e
+                      imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                      sortOrder: 0
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: null
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: pending
+                  updatedAt: "2024-10-05T20:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+orderDriverReview:
+  parameters:
+    - name: orderId
+      in: path
+      required: true
+      description: Unique identifier of the order.
+      schema:
+        type: string
+        format: uuid
+      example: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+
+  post:
+    tags:
+      - Reviews
+
+    summary: Review the driver
+
+    description: |
+      Reviews the driver who delivered one of the customer's orders. The order must be `delivered` and
+      have had a driver, and an order's driver can be reviewed only once (`409` otherwise). The review
+      starts `pending` and becomes public once an administrator publishes it.
+
+    operationId: createDriverReview
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/review.yaml#/CreateReviewRequest"
+          example:
+            rating: 5
+            title: Fast and polite
+            comment: Arrived early and the food was still hot.
+
+    responses:
+      "201":
+        description: Review submitted
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/CreateDriverReviewResponse"
+            example:
+              success: true
+              message: Review submitted successfully. It will be shown once it has been approved.
+              data:
+                review:
+                  id: 05d4f94b-3812-570d-848c-c7db2eeef83f
+                  authorName: John D.
+                  rating: 5
+                  title: Fast and polite
+                  comment: Arrived early and the food was still hot.
+                  isEdited: false
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: null
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: pending
+                  updatedAt: "2024-10-05T20:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantReviews:
+  parameters:
+    - name: restaurantId
+      in: path
+      required: true
+      description: Unique identifier of the restaurant.
+      schema:
+        type: string
+        format: uuid
+      example: 4f5e6d7c-8b9a-4c1d-9e2f-3a4b5c6d7e8f
+
+  get:
+    tags:
+      - Reviews
+
+    summary: List a restaurant's reviews
+
+    description: |
+      Returns the published reviews of an approved restaurant, newest first, with the restaurant's
+      reply when it has one. Publicly accessible; no authentication required.
+
+    operationId: listRestaurantReviews
+
+    security: []
+
+    parameters:
+      - name: rating
+        in: query
+        required: false
+        description: Only reviews with this rating.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 5
+        example: 5
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Reviews retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/ListRestaurantReviewsResponse"
+            example:
+              success: true
+              message: Reviews retrieved successfully
+              data:
+                reviews:
+                  - id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                    authorName: John D.
+                    rating: 4
+                    title: Great grills
+                    comment: Tasty food, a bit late.
+                    isEdited: false
+                    images:
+                      - id: c2779949-0759-5883-98e6-8ef9d8da783e
+                        imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                        sortOrder: 0
+                    reply:
+                      reply: Thank you, we are working on delivery times.
+                      createdAt: "2024-10-06T09:00:00.000Z"
+                      updatedAt: "2024-10-06T09:00:00.000Z"
+                    createdAt: "2024-10-05T20:00:00.000Z"
+                    publishedAt: "2024-10-06T08:00:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverPublicReviews:
+  parameters:
+    - name: driverId
+      in: path
+      required: true
+      description: Unique identifier of the driver.
+      schema:
+        type: string
+        format: uuid
+      example: e035c191-7d58-52be-9f78-c9a9351192dd
+
+  get:
+    tags:
+      - Reviews
+
+    summary: List a driver's reviews
+
+    description: |
+      Returns the published reviews of an active driver, newest first. Publicly accessible; no
+      authentication required.
+
+    operationId: listPublicDriverReviews
+
+    security: []
+
+    parameters:
+      - name: rating
+        in: query
+        required: false
+        description: Only reviews with this rating.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 5
+        example: 5
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Reviews retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/ListPublicDriverReviewsResponse"
+            example:
+              success: true
+              message: Reviews retrieved successfully
+              data:
+                reviews:
+                  - id: 05d4f94b-3812-570d-848c-c7db2eeef83f
+                    authorName: John D.
+                    rating: 5
+                    title: Fast and polite
+                    comment: Arrived early and the food was still hot.
+                    isEdited: false
+                    createdAt: "2024-10-05T20:00:00.000Z"
+                    publishedAt: "2024-10-06T08:00:00.000Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantReview:
+  parameters:
+    - name: reviewId
+      in: path
+      required: true
+      description: Unique identifier of the review.
+      schema:
+        type: string
+        format: uuid
+      example: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+
+  get:
+    tags:
+      - Reviews
+
+    summary: View own restaurant review
+
+    description: |
+      Returns one of the customer's restaurant reviews in any moderation state. Only the review's
+      author can use this endpoint; anyone else gets `404`.
+
+    operationId: getMyRestaurantReview
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Review retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/GetMyRestaurantReviewResponse"
+            example:
+              success: true
+              message: Review retrieved successfully
+              data:
+                review:
+                  id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                  authorName: John D.
+                  rating: 4
+                  title: Great grills
+                  comment: Tasty food, a bit late.
+                  isEdited: false
+                  images:
+                    - id: c2779949-0759-5883-98e6-8ef9d8da783e
+                      imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                      sortOrder: 0
+                  reply:
+                    reply: Thank you, we are working on delivery times.
+                    createdAt: "2024-10-06T09:00:00.000Z"
+                    updatedAt: "2024-10-06T09:00:00.000Z"
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: published
+                  updatedAt: "2024-10-05T20:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Reviews
+
+    summary: Edit own restaurant review
+
+    description: |
+      Edits the rating, title or comment. The review is marked as edited and keeps its moderation
+      status. Only the review's author can use this endpoint; anyone else gets `404`.
+
+    operationId: updateRestaurantReview
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/review.yaml#/UpdateReviewRequest"
+          example:
+            rating: 5
+            comment: Even better than last time.
+
+    responses:
+      "200":
+        description: Review updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/UpdateRestaurantReviewResponse"
+            example:
+              success: true
+              message: Review updated successfully
+              data:
+                review:
+                  id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                  authorName: John D.
+                  rating: 5
+                  title: Great grills
+                  comment: Even better than last time.
+                  isEdited: true
+                  images:
+                    - id: c2779949-0759-5883-98e6-8ef9d8da783e
+                      imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                      sortOrder: 0
+                  reply:
+                    reply: Thank you, we are working on delivery times.
+                    createdAt: "2024-10-06T09:00:00.000Z"
+                    updatedAt: "2024-10-06T09:00:00.000Z"
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: published
+                  updatedAt: "2024-10-05T20:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Reviews
+
+    summary: Delete own restaurant review
+
+    description: |
+      Withdraws the review: it is marked `deleted`, disappears from the public list, and the
+      restaurant's cached rating is recalculated. The record itself is kept. Only the review's author
+      can use this endpoint; anyone else gets `404`.
+
+    operationId: deleteRestaurantReview
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Review deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/DeleteRestaurantReviewResponse"
+            example:
+              success: true
+              message: Review deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantReviewImages:
+  parameters:
+    - name: reviewId
+      in: path
+      required: true
+      description: Unique identifier of the review.
+      schema:
+        type: string
+        format: uuid
+      example: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+
+  post:
+    tags:
+      - Reviews
+
+    summary: Add a photo to a review
+
+    description: |
+      Attaches a photo to one of the customer's restaurant reviews. Only the review's author can use
+      this endpoint; anyone else gets `404`.
+
+    operationId: addRestaurantReviewImage
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required:
+              - image
+            properties:
+              image:
+                type: string
+                format: binary
+                description: Photo file (JPEG or PNG).
+
+              sortOrder:
+                type: integer
+                minimum: 0
+                default: 0
+                description: Position among the review's photos.
+
+    responses:
+      "201":
+        description: Photo added successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/AddReviewImageResponse"
+            example:
+              success: true
+              message: Photo added successfully
+              data:
+                image:
+                  id: c2779949-0759-5883-98e6-8ef9d8da783e
+                  imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                  sortOrder: 0
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+restaurantReviewImage:
+  parameters:
+    - name: reviewId
+      in: path
+      required: true
+      description: Unique identifier of the review.
+      schema:
+        type: string
+        format: uuid
+      example: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+    - name: imageId
+      in: path
+      required: true
+      description: Unique identifier of the photo.
+      schema:
+        type: string
+        format: uuid
+      example: c2779949-0759-5883-98e6-8ef9d8da783e
+
+  delete:
+    tags:
+      - Reviews
+
+    summary: Remove a photo from a review
+
+    description: |
+      Removes a photo from one of the customer's restaurant reviews. Only the review's author can use
+      this endpoint; anyone else gets `404`.
+
+    operationId: deleteRestaurantReviewImage
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Photo removed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/DeleteReviewImageResponse"
+            example:
+              success: true
+              message: Photo removed successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+driverReview:
+  parameters:
+    - name: reviewId
+      in: path
+      required: true
+      description: Unique identifier of the review.
+      schema:
+        type: string
+        format: uuid
+      example: 05d4f94b-3812-570d-848c-c7db2eeef83f
+
+  get:
+    tags:
+      - Reviews
+
+    summary: View own driver review
+
+    description: |
+      Returns one of the customer's driver reviews in any moderation state. Only the review's author
+      can use this endpoint; anyone else gets `404`.
+
+    operationId: getMyDriverReview
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Review retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/GetMyDriverReviewResponse"
+            example:
+              success: true
+              message: Review retrieved successfully
+              data:
+                review:
+                  id: 05d4f94b-3812-570d-848c-c7db2eeef83f
+                  authorName: John D.
+                  rating: 5
+                  title: Fast and polite
+                  comment: Arrived early and the food was still hot.
+                  isEdited: false
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: published
+                  updatedAt: "2024-10-05T20:00:00.000Z"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Reviews
+
+    summary: Edit own driver review
+
+    description: |
+      Edits the rating, title or comment. The review is marked as edited and keeps its moderation
+      status. Only the review's author can use this endpoint; anyone else gets `404`.
+
+    operationId: updateDriverReview
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/review.yaml#/UpdateReviewRequest"
+          example:
+            rating: 4
+            comment: Good, but a little late.
+
+    responses:
+      "200":
+        description: Review updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/UpdateDriverReviewResponse"
+            example:
+              success: true
+              message: Review updated successfully
+              data:
+                review:
+                  id: 05d4f94b-3812-570d-848c-c7db2eeef83f
+                  authorName: John D.
+                  rating: 4
+                  title: Fast and polite
+                  comment: Good, but a little late.
+                  isEdited: true
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+                  orderId: 9c5c9d42-4b36-52e7-b4d4-c9e4d980f49b
+                  orderNumber: ORD-1001
+                  status: published
+                  updatedAt: "2024-10-05T20:00:00.000Z"
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Reviews
+
+    summary: Delete own driver review
+
+    description: |
+      Withdraws the review: it is marked `deleted`, disappears from the public list, and the driver's
+      cached rating is recalculated. The record itself is kept. Only the review's author can use this
+      endpoint; anyone else gets `404`.
+
+    operationId: deleteDriverReview
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Review deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/DeleteDriverReviewResponse"
+            example:
+              success: true
+              message: Review deleted successfully
+              data: null
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+ownerReviews:
+  get:
+    tags:
+      - Reviews
+
+    summary: List own restaurant's reviews
+
+    description: |
+      Returns the published reviews customers wrote about the authenticated restaurant, newest first,
+      with the restaurant's reply when it has one.
+
+    operationId: listOwnerReviews
+
+    security:
+      - bearerAuth: []
+
+    parameters:
+      - name: rating
+        in: query
+        required: false
+        description: Only reviews with this rating.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 5
+        example: 1
+      - name: replied
+        in: query
+        required: false
+        description: "`true` for reviews that have a reply, `false` for those that do not."
+        schema:
+          type: boolean
+        example: false
+      - name: page
+        in: query
+        required: false
+        description: Page number to retrieve.
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Number of results per page.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        example: 20
+
+    responses:
+      "200":
+        description: Reviews retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/ListOwnerReviewsResponse"
+            example:
+              success: true
+              message: Reviews retrieved successfully
+              data:
+                reviews:
+                  - id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                    authorName: John D.
+                    rating: 4
+                    title: Great grills
+                    comment: Tasty food, a bit late.
+                    isEdited: false
+                    images:
+                      - id: c2779949-0759-5883-98e6-8ef9d8da783e
+                        imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                        sortOrder: 0
+                    reply:
+                      reply: Thank you, we are working on delivery times.
+                      createdAt: "2024-10-06T09:00:00.000Z"
+                      updatedAt: "2024-10-06T09:00:00.000Z"
+                    createdAt: "2024-10-05T20:00:00.000Z"
+                    publishedAt: "2024-10-06T08:00:00.000Z"
+                    orderNumber: ORD-1001
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 57
+                  totalPages: 3
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+ownerReview:
+  parameters:
+    - name: reviewId
+      in: path
+      required: true
+      description: Unique identifier of the review.
+      schema:
+        type: string
+        format: uuid
+      example: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+
+  get:
+    tags:
+      - Reviews
+
+    summary: View one of the restaurant's reviews
+
+    description: Returns one published review of the authenticated restaurant.
+
+    operationId: getOwnerReview
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Review retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/GetOwnerReviewResponse"
+            example:
+              success: true
+              message: Review retrieved successfully
+              data:
+                review:
+                  id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                  authorName: John D.
+                  rating: 4
+                  title: Great grills
+                  comment: Tasty food, a bit late.
+                  isEdited: false
+                  images:
+                    - id: c2779949-0759-5883-98e6-8ef9d8da783e
+                      imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                      sortOrder: 0
+                  reply:
+                    reply: Thank you, we are working on delivery times.
+                    createdAt: "2024-10-06T09:00:00.000Z"
+                    updatedAt: "2024-10-06T09:00:00.000Z"
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+                  orderNumber: ORD-1001
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+ownerReviewReply:
+  parameters:
+    - name: reviewId
+      in: path
+      required: true
+      description: Unique identifier of the review.
+      schema:
+        type: string
+        format: uuid
+      example: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+
+  post:
+    tags:
+      - Reviews
+
+    summary: Reply to a review
+
+    description: |
+      Writes the restaurant's reply to a published review. A review can have only one reply (`409` if
+      it already has one); change it with `PATCH` instead.
+
+    operationId: replyToReview
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/review.yaml#/ReplyToReviewRequest"
+          example:
+            reply: Thank you, we are working on delivery times.
+
+    responses:
+      "201":
+        description: Reply saved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/ReplyToReviewResponse"
+            example:
+              success: true
+              message: Reply saved successfully
+              data:
+                review:
+                  id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                  authorName: John D.
+                  rating: 4
+                  title: Great grills
+                  comment: Tasty food, a bit late.
+                  isEdited: false
+                  images:
+                    - id: c2779949-0759-5883-98e6-8ef9d8da783e
+                      imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                      sortOrder: 0
+                  reply:
+                    reply: Thank you, we are working on delivery times.
+                    createdAt: "2024-10-06T09:00:00.000Z"
+                    updatedAt: "2024-10-06T09:00:00.000Z"
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+                  orderNumber: ORD-1001
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "409":
+        $ref: "../responses/common.yaml#/Conflict"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  patch:
+    tags:
+      - Reviews
+
+    summary: Edit a reply
+
+    description: |
+      Changes the text of the restaurant's existing reply. A review without a reply is reported as
+      `404`.
+
+    operationId: updateReviewReply
+
+    security:
+      - bearerAuth: []
+
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../schemas/review.yaml#/ReplyToReviewRequest"
+          example:
+            reply: Thanks! Delivery is faster now.
+
+    responses:
+      "200":
+        description: Reply saved successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/ReplyToReviewResponse"
+            example:
+              success: true
+              message: Reply saved successfully
+              data:
+                review:
+                  id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                  authorName: John D.
+                  rating: 4
+                  title: Great grills
+                  comment: Tasty food, a bit late.
+                  isEdited: false
+                  images:
+                    - id: c2779949-0759-5883-98e6-8ef9d8da783e
+                      imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                      sortOrder: 0
+                  reply:
+                    reply: Thanks! Delivery is faster now.
+                    createdAt: "2024-10-06T09:00:00.000Z"
+                    updatedAt: "2024-10-06T09:00:00.000Z"
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+                  orderNumber: ORD-1001
+
+      "400":
+        $ref: "../responses/common.yaml#/ValidationError"
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Reviews
+
+    summary: Remove a reply
+
+    description: Removes the restaurant's reply. A review without a reply is reported as `404`.
+
+    operationId: deleteReviewReply
+
+    security:
+      - bearerAuth: []
+
+    responses:
+      "200":
+        description: Reply removed successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../schemas/review.yaml#/DeleteReviewReplyResponse"
+            example:
+              success: true
+              message: Reply removed successfully
+              data:
+                review:
+                  id: 9cbcd5fc-2edf-52da-9921-c8c55d3d05a1
+                  authorName: John D.
+                  rating: 4
+                  title: Great grills
+                  comment: Tasty food, a bit late.
+                  isEdited: false
+                  images:
+                    - id: c2779949-0759-5883-98e6-8ef9d8da783e
+                      imageUrl: https://cdn.example.com/reviews/1/photo1.jpg
+                      sortOrder: 0
+                  createdAt: "2024-10-05T20:00:00.000Z"
+                  publishedAt: "2024-10-06T08:00:00.000Z"
+                  orderNumber: ORD-1001
+
+      "401":
+        $ref: "../responses/common.yaml#/Unauthorized"
+
+      "403":
+        $ref: "../responses/common.yaml#/Forbidden"
+
+      "404":
+        $ref: "../responses/common.yaml#/NotFound"
+
+      "500":
+        $ref: "../responses/common.yaml#/InternalServerError"

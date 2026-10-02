@@ -473,6 +473,7 @@ CreateMenuCategoryRequest:
   properties:
     name:
       type: string
+      maxLength: 100
       description: Category name (FR-RES-008.1).
       example: Starters
 
@@ -539,6 +540,7 @@ UpdateMenuCategoryRequest:
   properties:
     name:
       type: string
+      maxLength: 100
       description: Category name (FR-RES-008.2).
       example: Starters & Salads
 
@@ -593,3 +595,708 @@ DeleteMenuCategoryResponse:
       type: object
       nullable: true
       example: null
+
+MenuItemImageView:
+  type: object
+  required:
+    - id
+    - imageUrl
+    - displayOrder
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique image identifier.
+      example: cbd7cd9e-8db7-5dd1-b283-71ba565d56b4
+
+    imageUrl:
+      type: string
+      format: uri
+      description: Where the image is stored.
+      example: https://cdn.example.com/menu/mixed-grill.jpg
+
+    displayOrder:
+      type: integer
+      minimum: 0
+      description: Position among the item's images.
+      example: 0
+
+RestaurantMenuItemSummary:
+  type: object
+  required:
+    - id
+    - categoryId
+    - categoryName
+    - name
+    - basePrice
+    - isAvailable
+    - isActive
+    - preparationTime
+    - imageUrl
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique menu item identifier.
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+    categoryId:
+      type: string
+      format: uuid
+      description: Menu category the item is in.
+      example: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+
+    categoryName:
+      type: string
+      description: Name of that category.
+      example: Mains
+
+    name:
+      type: string
+      maxLength: 150
+      description: Item name.
+      example: Mixed Grill
+
+    basePrice:
+      type: number
+      format: double
+      minimum: 0
+      description: Base price.
+      example: 150
+
+    isAvailable:
+      type: boolean
+      description: Whether customers can order the item right now.
+      example: true
+
+    isActive:
+      type: boolean
+      description: Whether the item is on the menu at all. An inactive item is hidden from customers.
+      example: true
+
+    preparationTime:
+      type: integer
+      nullable: true
+      minimum: 0
+      description: Preparation time in minutes.
+      example: 25
+
+    imageUrl:
+      type: string
+      format: uri
+      nullable: true
+      description: First image.
+      example: https://cdn.example.com/menu/mixed-grill.jpg
+
+RestaurantMenuItem:
+  type: object
+  required:
+    - id
+    - categoryId
+    - categoryName
+    - name
+    - description
+    - basePrice
+    - isAvailable
+    - isActive
+    - preparationTime
+    - images
+    - optionGroups
+    - createdAt
+    - updatedAt
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique menu item identifier.
+      example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+    categoryId:
+      type: string
+      format: uuid
+      description: Menu category the item is in.
+      example: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+
+    categoryName:
+      type: string
+      description: Name of that category.
+      example: Mains
+
+    name:
+      type: string
+      maxLength: 150
+      description: Item name.
+      example: Mixed Grill
+
+    description:
+      type: string
+      nullable: true
+      description: Description.
+      example: Kofta, kebab and grilled chicken with rice.
+
+    basePrice:
+      type: number
+      format: double
+      minimum: 0
+      description: Base price.
+      example: 150
+
+    isAvailable:
+      type: boolean
+      description: Whether customers can order the item right now.
+      example: true
+
+    isActive:
+      type: boolean
+      description: Whether the item is on the menu at all.
+      example: true
+
+    preparationTime:
+      type: integer
+      nullable: true
+      minimum: 0
+      description: Preparation time in minutes.
+      example: 25
+
+    images:
+      type: array
+      items:
+        $ref: "#/MenuItemImageView"
+
+    optionGroups:
+      type: array
+      items:
+        $ref: "#/MenuItemOptionGroup"
+
+    createdAt:
+      type: string
+      format: date-time
+      description: When the item was created.
+      example: "2023-11-12T09:00:00.000Z"
+
+    updatedAt:
+      type: string
+      format: date-time
+      description: Last change.
+      example: "2024-02-01T09:00:00.000Z"
+
+CreateMenuItemRequest:
+  type: object
+  required:
+    - categoryId
+    - name
+    - basePrice
+  properties:
+    categoryId:
+      type: string
+      format: uuid
+      description: One of the restaurant's active menu categories.
+      example: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+
+    name:
+      type: string
+      minLength: 1
+      maxLength: 150
+      description: Item name. Must be unique among the restaurant's active items.
+      example: Mixed Grill
+
+    description:
+      type: string
+      nullable: true
+      description: Description.
+      example: Kofta, kebab and grilled chicken with rice.
+
+    basePrice:
+      type: number
+      format: double
+      minimum: 0
+      description: Base price.
+      example: 150
+
+    preparationTime:
+      type: integer
+      nullable: true
+      minimum: 0
+      description: Preparation time in minutes.
+      example: 25
+
+    isAvailable:
+      type: boolean
+      default: true
+      description: Whether the item can be ordered.
+      example: true
+
+    isActive:
+      type: boolean
+      default: true
+      description: Whether the item is on the menu.
+      example: true
+
+UpdateMenuItemRequest:
+  type: object
+  minProperties: 1
+  properties:
+    categoryId:
+      type: string
+      format: uuid
+      description: One of the restaurant's active menu categories.
+      example: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+
+    name:
+      type: string
+      minLength: 1
+      maxLength: 150
+      description: Item name. Must be unique among the restaurant's active items.
+      example: Mixed Grill
+
+    description:
+      type: string
+      nullable: true
+      description: Description.
+      example: Kofta, kebab and grilled chicken with rice.
+
+    basePrice:
+      type: number
+      format: double
+      minimum: 0
+      description: Base price.
+      example: 150
+
+    preparationTime:
+      type: integer
+      nullable: true
+      minimum: 0
+      description: Preparation time in minutes.
+      example: 25
+
+    isActive:
+      type: boolean
+      description: Set to `false` to take the item off the menu.
+      example: true
+
+ListRestaurantMenuItemsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu items retrieved successfully
+
+    data:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/RestaurantMenuItemSummary"
+
+        pagination:
+          $ref: "./common.yaml#/PaginationMeta"
+
+GetRestaurantMenuItemResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu item retrieved successfully
+
+    data:
+      type: object
+      required:
+        - item
+      properties:
+        item:
+          $ref: "#/RestaurantMenuItem"
+
+CreateMenuItemResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu item created successfully
+
+    data:
+      type: object
+      required:
+        - item
+      properties:
+        item:
+          $ref: "#/RestaurantMenuItem"
+
+UpdateMenuItemResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu item updated successfully
+
+    data:
+      type: object
+      required:
+        - item
+      properties:
+        item:
+          $ref: "#/RestaurantMenuItem"
+
+DeleteMenuItemResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Menu item deleted successfully
+
+    data:
+      type: object
+      nullable: true
+
+UpdateMenuItemAvailabilityRequest:
+  type: object
+  required:
+    - isAvailable
+  properties:
+    isAvailable:
+      type: boolean
+      description: "`false` marks the item as sold out for now."
+      example: false
+
+UpdateMenuItemAvailabilityResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Availability updated successfully
+
+    data:
+      type: object
+      required:
+        - itemId
+        - isAvailable
+      properties:
+        itemId:
+          type: string
+          format: uuid
+          example: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+
+        isAvailable:
+          type: boolean
+          example: false
+
+AddMenuItemImageResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Image added successfully
+
+    data:
+      type: object
+      required:
+        - image
+      properties:
+        image:
+          $ref: "#/MenuItemImageView"
+
+DeleteMenuItemImageResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Image removed successfully
+
+    data:
+      type: object
+      nullable: true
+
+OptionValueInput:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      minLength: 1
+      description: Option name. Must be unique within the group.
+      example: Large
+
+    priceAdjustment:
+      type: number
+      format: double
+      default: 0
+      description: Price change when chosen. May be negative.
+      example: 20
+
+    displayOrder:
+      type: integer
+      nullable: true
+      minimum: 0
+      description: Position within the group.
+      example: 1
+
+CreateOptionGroupRequest:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      minLength: 1
+      description: Group name. Must be unique within the item.
+      example: Size
+
+    minSelection:
+      type: integer
+      minimum: 0
+      default: 0
+      description: Fewest options the customer must pick (0 or more).
+      example: 1
+
+    maxSelection:
+      type: integer
+      minimum: 1
+      default: 1
+      description: Most options the customer may pick (at least 1, and not below `minSelection`).
+      example: 1
+
+    isRequired:
+      type: boolean
+      default: false
+      description: Whether the customer must choose. A required group needs `minSelection` of at least 1.
+      example: true
+
+    values:
+      type: array
+      description: Options to create with the group.
+      items:
+        $ref: "#/OptionValueInput"
+
+UpdateOptionGroupRequest:
+  type: object
+  minProperties: 1
+  properties:
+    name:
+      type: string
+      minLength: 1
+      description: Group name. Must be unique within the item.
+      example: Size
+
+    minSelection:
+      type: integer
+      minimum: 0
+      default: 0
+      description: Fewest options the customer must pick (0 or more).
+      example: 1
+
+    maxSelection:
+      type: integer
+      minimum: 1
+      default: 1
+      description: Most options the customer may pick (at least 1, and not below `minSelection`).
+      example: 1
+
+    isRequired:
+      type: boolean
+      default: false
+      description: Whether the customer must choose. A required group needs `minSelection` of at least 1.
+      example: true
+
+ListOptionGroupsResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Option groups retrieved successfully
+
+    data:
+      type: object
+      required:
+        - optionGroups
+      properties:
+        optionGroups:
+          type: array
+          items:
+            $ref: "#/MenuItemOptionGroup"
+
+OptionGroupResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Option group saved successfully
+
+    data:
+      type: object
+      required:
+        - optionGroup
+      properties:
+        optionGroup:
+          $ref: "#/MenuItemOptionGroup"
+
+DeleteOptionGroupResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Option group deleted successfully
+
+    data:
+      type: object
+      nullable: true
+
+CreateOptionValueRequest:
+  $ref: "#/OptionValueInput"
+
+UpdateOptionValueRequest:
+  type: object
+  minProperties: 1
+  properties:
+    name:
+      type: string
+      minLength: 1
+      description: Option name. Must be unique within the group.
+      example: Large
+
+    priceAdjustment:
+      type: number
+      format: double
+      default: 0
+      description: Price change when chosen. May be negative.
+      example: 20
+
+    displayOrder:
+      type: integer
+      nullable: true
+      minimum: 0
+      description: Position within the group.
+      example: 1
+
+OptionValueResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Option saved successfully
+
+    data:
+      type: object
+      required:
+        - optionValue
+      properties:
+        optionValue:
+          $ref: "#/MenuItemOptionValue"
+
+DeleteOptionValueResponse:
+  type: object
+  required:
+    - success
+    - message
+    - data
+  properties:
+    success:
+      type: boolean
+      example: true
+
+    message:
+      type: string
+      example: Option deleted successfully
+
+    data:
+      type: object
+      nullable: true
