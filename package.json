@@ -35,6 +35,7 @@
     "build": "tsc -p tsconfig.build.json",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
+    "lint:api": "redocly lint docs/api/openapi.yaml",
     "prebuild": "prisma contract emit",
     "contract:emit": "prisma contract emit",
     "contract:infer": "prisma contract infer",
@@ -51,6 +52,7 @@
   },
   "devDependencies": {
     "@prisma/cli-engine": "^0.4.0",
+    "@redocly/cli": "^2.57.0",
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.1",
     "@types/swagger-ui-express": "^4.1.8",

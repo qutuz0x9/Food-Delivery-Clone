@@ -1,0 +1,8 @@
+# Config for `npm run lint:api` (Redocly CLI). The recommended ruleset, minus the one rule that cannot apply yet.
+extends:
+  - recommended
+
+rules:
+  # The only server is http://localhost:3000/api/v1 because no public server exists yet.
+  # Re-enable this rule once a deployed server URL is added to docs/api/openapi.yaml.
+  no-server-example.com: off

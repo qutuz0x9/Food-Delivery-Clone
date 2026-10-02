@@ -2,7 +2,7 @@
 name: openapi-generator
 description: Read the project's markdown endpoint index and add the missing endpoints to the split OpenAPI 3.0.3 spec under docs/api/. Use when the user wants to generate or extend OpenAPI docs from the API endpoint list.
 argument-hint: "[domain-or-section] [markdown-file]"
-allowed-tools: Read, Edit, Write, Grep, Glob, Bash(npx @redocly/cli lint:*)
+allowed-tools: Read, Edit, Write, Grep, Glob, Bash(npm run lint:api)
 ---
 
 # OpenAPI Generator Skill
@@ -10,7 +10,7 @@ allowed-tools: Read, Edit, Write, Grep, Glob, Bash(npx @redocly/cli lint:*)
 Turn the endpoint list in `docs/requirements/APIs-Endpoints.md` into the split OpenAPI spec under `docs/api/`. The
 spec already exists and is partly written, so this skill **extends and merges**. It never regenerates or overwrites.
 
-The conventions live in `.claude/rules/open-api-rules.md` and `CLAUDE.md` ("OpenAPI Spec Conventions"). Read the rules
+The conventions live in `.claude/rules/open-api-rules.md` and `CLAUDE.md` ("OpenAPI Spec (`docs/api/`)"). Read the rules
 file first and follow it exactly. This skill only describes the workflow.
 
 ## Usage
@@ -38,7 +38,8 @@ file first and follow it exactly. This skill only describes the workflow.
 
 3. **Cross-check requirements and the DB**
    - Find the matching `FR-*` IDs in `docs/requirements/Functional-Requirements.md`.
-   - Read `docs/dbdesign/Food-Delivery-System-sqldiagram.sql` for exact field names, types and constraints.
+   - Read `src/prisma/contract.prisma` (the only source of truth for the database) for exact field names, types,
+     constraints and enum values. Never use `docs/dbdesign/`; it is a frozen historical sketch.
    - If a field or behaviour is ambiguous, ask the user. Do not invent it. Keep `delivery_addresses` vs.
      `delivery_address` and `restaurant_categories` vs. `menu_categories` separate.
 
@@ -60,8 +61,8 @@ file first and follow it exactly. This skill only describes the workflow.
      `PaginationMeta` under `data.pagination`.
 
 5. **Validate**
-   - Run `npx @redocly/cli lint docs/api/openapi.yaml`.
-   - Fix all new errors. Ignore the `no-server-example.com` warning on the localhost server.
+   - Run `npm run lint:api` (Redocly, config in `redocly.yaml`).
+   - Fix all new errors and warnings. The localhost-server warning is already turned off in that config.
 
 6. **Report**
    - Print a table of the endpoints added (method, path, operationId) and the endpoints skipped as already present.

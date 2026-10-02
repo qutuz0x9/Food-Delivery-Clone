@@ -103,8 +103,9 @@ docs/api/
   `responses/` files in the same change — do not let `docs/api/` drift from the implemented routes.
 - New domains get a new `paths/<domain>.yaml` and `schemas/<domain>.yaml` file; don't add unrelated
   endpoints to an existing domain file.
-- Cite the functional requirement ID (e.g. `FR-CUS-012`) in an operation's description, and check the DB
-  design SQL for exact field names and types before writing a schema.
+- Cite the functional requirement ID (e.g. `FR-CUS-012`) in an operation's description, and check
+  `src/prisma/contract.prisma` (the only source of truth for the database) for exact field names, types and enum
+  values before writing a schema. Expose the `@map` camelCase name, not the `snake_case` column.
 - To add endpoints from `docs/requirements/APIs-Endpoints.md`, use the `/openapi-generator` skill. It merges into
   the existing spec and does not regenerate it.
 
@@ -113,10 +114,10 @@ docs/api/
 Lint the spec after any edit using Redocly CLI (bundles and resolves all `$ref`s across files):
 
 ```bash
-npx @redocly/cli lint docs/api/openapi.yaml
+npm run lint:api
 ```
 
-Fix any new errors introduced by your change before considering the documentation update complete.
-
-The `no-server-example.com` warning on the `localhost` dev `servers` URL is expected in this project (no
-public server exists yet) and can be ignored — do not attempt to "fix" it by changing the server URL.
+Fix any new errors or warnings introduced by your change before considering the documentation update complete.
+The script runs `redocly lint docs/api/openapi.yaml` with the config in `redocly.yaml` (the recommended ruleset). That
+config turns off `no-server-example.com` on purpose, because the only server is the `localhost` dev URL (no public
+server exists yet) — do not "fix" it by changing the server URL. CI runs the same script.
