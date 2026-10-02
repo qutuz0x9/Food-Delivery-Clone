@@ -2,7 +2,7 @@
 
 This document tracks real-world food delivery platform capabilities (in the
 spirit of Uber Eats, DoorDash, Talabat) that the current schema
-(`docs/dbdesign/Food-Delivery-System-sqldiagram.sql`) does not yet support.
+(`src/prisma/contract.prisma`) does not yet support.
 These were identified during an order-flow design review but intentionally
 **deferred** — not implemented — so they can be scoped and planned
 individually later. Each item below should be re-evaluated against
@@ -81,8 +81,8 @@ five smaller issues worth revisiting together:
   `out_for_delivery`, but no corresponding cached timestamp exists.
 
 Since the cached timestamp columns on `orders` are intentional
-denormalization for fast reads (see the `COMMENT ON COLUMN` notes in
-`sqldiagram.sql`), leaving them incomplete relative to the 9-value
+denormalization for fast reads (see the `Order` model in
+`contract.prisma`), leaving them incomplete relative to the 9-value
 `order_status` enum undermines that goal — callers still have to fall back
 to `order_status_history` for the missing transitions anyway. Any future
 fix should add the 3 missing timestamp columns, fix the `updated_at`
@@ -94,6 +94,6 @@ migrations touching the same table.
 **Already addressed** (for context, not part of this backlog):
 
 - Order-item option snapshotting was implemented via the new
-  `order_item_options` table (see `sqldiagram.sql`), so selected
+  `order_item_options` table (see `OrderItemOption` in `contract.prisma`), so selected
   customizations (e.g. "extra cheese", "no onions") are now preserved
   per order item even if the source menu option is later changed/removed.

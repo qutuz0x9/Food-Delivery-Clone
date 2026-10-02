@@ -11,14 +11,14 @@ A backend platform for a food delivery service (similar to Uber Eats / Talabat),
 
 The system covers the full order lifecycle (cart → order → payment → delivery → status history), JWT-based authentication with role-based access control, and a REST API versioned under `/api/v1`.
 
-Project scope and behavior are defined in [Functional-Requirements.md](docs/requirements/Functional-Requirements.md), the full REST endpoint index in [APIs-Endpoints.md](docs/requirements/APIs-Endpoints.md), the relational data model in [Food-Delivery-System-sqldiagram.sql](docs/dbdesign/Food-Delivery-System-sqldiagram.sql) (with an ERD companion PDF in the same folder), and the API surface (work in progress) in [openapi.yaml](docs/api/openapi.yaml).
+Project scope and behavior are defined in [Functional-Requirements.md](docs/requirements/Functional-Requirements.md), the full REST endpoint index in [APIs-Endpoints.md](docs/requirements/APIs-Endpoints.md), the data model in [contract.prisma](src/prisma/contract.prisma) (the only source of truth for the database; `docs/dbdesign/` holds the original first-draft sketch, kept for history), and the API surface (work in progress) in [openapi.yaml](docs/api/openapi.yaml).
 
 ## Current Status
 
 This project is in the design/documentation phase — no business logic or database layer has been implemented yet.
 
 - **App scaffold**: a minimal Express + TypeScript app (`src/app.ts`, `src/index.ts`) that serves the bundled OpenAPI spec via Swagger UI at `/api-docs`.
-- **Database design**: the full relational schema is finalized in `docs/dbdesign/Food-Delivery-System-sqldiagram.sql`, covering identity/auth, customers, restaurants, menus, orders, payments, drivers, and audit logging.
+- **Database design**: the full relational schema is defined in the Prisma 8 data contract `src/prisma/contract.prisma`, covering identity/auth, customers, restaurants, menus, orders, payments, drivers, and audit logging.
 - **OpenAPI documentation**: split into `docs/api/paths/`, `docs/api/schemas/`, and `docs/api/responses/` per domain, following the conventions in `.claude/rules/open-api-rules.md`. Documented so far, tagged by resource domain (`Auth`, `Customers`, `Restaurants`, `Menu`):
   - **Auth** — customer and restaurant registration, login, logout, and password recovery.
   - **Customers** — profile management and delivery address CRUD.

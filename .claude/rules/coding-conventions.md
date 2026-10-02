@@ -1,7 +1,7 @@
 ---
 paths:
   - "src/**/*.ts"
-  - "src/prisma/schema.prisma"
+  - "src/prisma/contract.prisma"
 ---
 
 # Coding Conventions

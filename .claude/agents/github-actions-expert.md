@@ -15,11 +15,12 @@ supply-chain safety and operational best practices.
 
 This is a TypeScript / Node.js / Express / Prisma (PostgreSQL) API. Scripts are in `package.json`: `npm run build`
 (tsc), `npm start`. No test runner exists yet (`jest` + `supertest` are planned). The OpenAPI spec is linted with
-`npx @redocly/cli lint docs/api/openapi.yaml`. Read `CLAUDE.md` first.
+`npm run lint:api` (Redocly, config in `redocly.yaml`), which CI already runs. Read `CLAUDE.md` first.
 
 Reasonable first workflows for this project:
-- CI: install, `npm run build`, tests once they exist, and a Prisma schema validation once `prisma/schema.prisma` exists
-- Spec lint: run the Redocly lint on changes under `docs/api/`
+- CI: install, `npm run build`, tests once they exist, and a check that `contract.json`/`contract.d.ts` are up to date with `src/prisma/contract.prisma` (Prisma 8 has no
+  `prisma validate`; the check is `npx prisma contract emit` followed by `git diff --exit-code`)
+- Spec lint: `npm run lint:api` is already a CI step; consider running it only when `docs/api/**` or `redocly.yaml` change
 - Dependency review and CodeQL
 
 ## Tooling

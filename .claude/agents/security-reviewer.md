@@ -26,7 +26,7 @@ review:
   processed. Administrator state changes are written to `audit_log`.
 
 The project is at the design stage and most code doesn't exist yet. If you are asked to review the spec or schema
-(`docs/api/`, `docs/dbdesign/`), review those for security design gaps instead (missing `security` on operations,
+(`docs/api/`, `src/prisma/contract.prisma`), review those for security design gaps instead (missing `security` on operations,
 sensitive fields in response schemas, missing ownership constraints).
 
 ## Step 0: Plan the Review

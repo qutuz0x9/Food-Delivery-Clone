@@ -10,7 +10,7 @@ API versioned under `/api/v1`.
 
 **Current status: design/documentation phase.** No business logic, database layer, or `src/modules/` structure
 exists yet — only a minimal Express scaffold (`src/app.ts`, `src/index.ts`) that serves the OpenAPI spec via Swagger
-UI. Most work right now is on the OpenAPI spec (`docs/api/`) and the DB schema (`docs/dbdesign/`).
+UI. Most work right now is on the OpenAPI spec (`docs/api/`) and the data contract (`src/prisma/contract.prisma`).
 
 ## Source of Truth
 
@@ -77,6 +77,7 @@ npm run build   # tsc compile to dist/
 npm start       # run compiled dist/index.js
 npm run lint    # oxlint with type-aware rules (config: .oxlintrc.json)
 npm run lint:fix  # same, applying safe auto-fixes
+npm run lint:api  # Redocly lint of docs/api/openapi.yaml (config: redocly.yaml)
 ```
 
 Run `npm run lint` and `npm run build` after code changes and fix new findings. Oxlint is used instead of ESLint
@@ -84,7 +85,7 @@ because typescript-eslint can't load TypeScript 7 (no JS compiler API). Two rule
 `.claude/rules/coding-conventions.md`: `no-restricted-imports` bans `@prisma/client` outside `*.repository.ts` and
 `src/config/`, and `promise/prefer-await-to-then` bans `.then()` chains.
 
-CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run lint` and `npm run build` on pushes to `main` and on PRs. Pin
+CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run lint`, `npm run lint:api` and `npm run build` on pushes to `main` and on PRs. Pin
 any new action to a full commit SHA with a version comment, as the existing steps do.
 
 No test runner is configured yet (`npm test` is a placeholder). Once implementation starts, use `jest` + `supertest`
@@ -101,7 +102,7 @@ in `.claude/rules/open-api-rules.md`, which loads automatically when you work on
 editing the spec, and lint after every edit:
 
 ```bash
-npx @redocly/cli lint docs/api/openapi.yaml
+npm run lint:api
 ```
 
 Update `docs/api/` in the same change as any route you add or modify in `src/`, so it doesn't drift from the
@@ -123,7 +124,7 @@ src/
   middlewares/              # auth, error handler, role guard, request validation
   common/                    # shared utils, error classes, pagination helpers
   config/                    # env loading, prisma client instance, logger
-  prisma/schema.prisma
+  prisma/contract.prisma   # Prisma 8 data contract (exists today), plus generated contract.json / contract.d.ts
 ```
 
 The requirements also imply features outside this module list: cart (`shopping_cart*`), reviews, promotions,
@@ -132,4 +133,4 @@ notifications, and dashboards/reports (`FR-RES-021`, `FR-DRV-016/017`, `FR-ADM-0
 
 Coding conventions (async/await and error handling, zod validation, DTOs, Prisma mapping, transactions, soft deletes,
 order status history, role guards, `audit_log`) are in `.claude/rules/coding-conventions.md`. It loads automatically
-when you work on `src/**/*.ts` or `src/prisma/schema.prisma`.
+when you work on `src/**/*.ts` or `src/prisma/contract.prisma`.
