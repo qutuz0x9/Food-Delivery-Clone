@@ -22,25 +22,114 @@ registerDriver:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/RegisterDriverRequest"
-          example:
-            email: omar.hassan@example.com
-            password: StrongPassword123!
-            phoneNumber: "+201001234567"
-            firstName: Omar
-            lastName: Hassan
-            dateOfBirth: "1992-04-18"
-            nationalId: "29204180101234"
-            licenseNumber: LIC-559213
-            licenseExpiryDate: "2027-08-30"
-            workingCityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
-            vehicle:
-              vehicleType: motorcycle
-              brand: Honda
-              model: CB125
-              color: Red
-              plateNumber: ABC 1234
-              manufactureYear: 2021
-              insuranceExpiryDate: "2025-12-31"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                email: omar.hassan@example.com
+                password: StrongPassword123!
+                phoneNumber: "+201001234567"
+                firstName: Omar
+                lastName: Hassan
+                dateOfBirth: "1992-04-18"
+                nationalId: "29204180101234"
+                licenseNumber: LIC-559213
+                licenseExpiryDate: "2027-08-30"
+                workingCityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                vehicle:
+                  vehicleType: motorcycle
+                  brand: Honda
+                  model: CB125
+                  color: Red
+                  plateNumber: ABC 1234
+                  manufactureYear: 2021
+                  insuranceExpiryDate: "2025-12-31"
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingEmail:
+              summary: Missing required `email` (400)
+              value:
+                password: StrongPassword123!
+                phoneNumber: "+201001234567"
+                firstName: Omar
+                lastName: Hassan
+                dateOfBirth: 1992-04-18
+                nationalId: "29204180101234"
+                licenseNumber: LIC-559213
+                licenseExpiryDate: 2027-08-30
+                workingCityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                vehicle:
+                  vehicleType: motorcycle
+                  brand: Honda
+                  model: CB125
+                  color: Red
+                  plateNumber: ABC 1234
+                  manufactureYear: 2021
+                  insuranceExpiryDate: 2025-12-31
+            invalidEmail:
+              summary: "`email` is not a valid email (400)"
+              value:
+                email: not-an-email
+                password: StrongPassword123!
+                phoneNumber: "+201001234567"
+                firstName: Omar
+                lastName: Hassan
+                dateOfBirth: 1992-04-18
+                nationalId: "29204180101234"
+                licenseNumber: LIC-559213
+                licenseExpiryDate: 2027-08-30
+                workingCityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                vehicle:
+                  vehicleType: motorcycle
+                  brand: Honda
+                  model: CB125
+                  color: Red
+                  plateNumber: ABC 1234
+                  manufactureYear: 2021
+                  insuranceExpiryDate: 2025-12-31
+            passwordTooShort:
+              summary: "`password` shorter than 8 characters (400)"
+              value:
+                email: omar.hassan@example.com
+                password: xxxxxxx
+                phoneNumber: "+201001234567"
+                firstName: Omar
+                lastName: Hassan
+                dateOfBirth: 1992-04-18
+                nationalId: "29204180101234"
+                licenseNumber: LIC-559213
+                licenseExpiryDate: 2027-08-30
+                workingCityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                vehicle:
+                  vehicleType: motorcycle
+                  brand: Honda
+                  model: CB125
+                  color: Red
+                  plateNumber: ABC 1234
+                  manufactureYear: 2021
+                  insuranceExpiryDate: 2025-12-31
+            blankFirstName:
+              summary: "`firstName` is empty (400)"
+              value:
+                email: omar.hassan@example.com
+                password: StrongPassword123!
+                phoneNumber: "+201001234567"
+                firstName: ""
+                lastName: Hassan
+                dateOfBirth: 1992-04-18
+                nationalId: "29204180101234"
+                licenseNumber: LIC-559213
+                licenseExpiryDate: 2027-08-30
+                workingCityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                vehicle:
+                  vehicleType: motorcycle
+                  brand: Honda
+                  model: CB125
+                  color: Red
+                  plateNumber: ABC 1234
+                  manufactureYear: 2021
+                  insuranceExpiryDate: 2025-12-31
 
     responses:
       "201":
@@ -119,9 +208,24 @@ loginDriver:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/LoginDriverRequest"
-          example:
-            email: omar.hassan@example.com
-            password: StrongPassword123!
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                email: omar.hassan@example.com
+                password: StrongPassword123!
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingEmail:
+              summary: Missing required `email` (400)
+              value:
+                password: StrongPassword123!
+            invalidEmail:
+              summary: "`email` is not a valid email (400)"
+              value:
+                email: not-an-email
+                password: StrongPassword123!
 
     responses:
       "200":
@@ -322,8 +426,18 @@ forgotPasswordDriver:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/ForgotPasswordDriverRequest"
-          example:
-            email: omar.hassan@example.com
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                email: omar.hassan@example.com
+            missingEmail:
+              summary: Missing required `email` (400)
+              value: {}
+            invalidEmail:
+              summary: "`email` is not a valid email (400)"
+              value:
+                email: not-an-email
 
     responses:
       "200":
@@ -365,10 +479,27 @@ resetPasswordDriver:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/ResetPasswordDriverRequest"
-          example:
-            token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
-            newPassword: NewStrongPassword123!
-            confirmPassword: NewStrongPassword123!
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingToken:
+              summary: Missing required `token` (400)
+              value:
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            newPasswordTooShort:
+              summary: "`newPassword` shorter than 8 characters (400)"
+              value:
+                token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+                newPassword: xxxxxxx
+                confirmPassword: NewStrongPassword123!
 
     responses:
       "200":
@@ -482,10 +613,34 @@ driverProfile:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/UpdateDriverProfileRequest"
-          example:
-            firstName: Omar
-            licenseExpiryDate: "2028-08-30"
-            workingCityId: 7a4c1e92-0d5b-4b3f-9e68-1f2a3b4c5d6e
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                firstName: Omar
+                licenseExpiryDate: "2028-08-30"
+                workingCityId: 7a4c1e92-0d5b-4b3f-9e68-1f2a3b4c5d6e
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            firstNameTooLong:
+              summary: "`firstName` longer than 100 characters (400)"
+              value:
+                firstName: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                licenseExpiryDate: 2028-08-30
+                workingCityId: 7a4c1e92-0d5b-4b3f-9e68-1f2a3b4c5d6e
+            invalidLicenseExpiryDate:
+              summary: "`licenseExpiryDate` is not a valid date (400)"
+              value:
+                firstName: Omar
+                licenseExpiryDate: not-a-date
+                workingCityId: 7a4c1e92-0d5b-4b3f-9e68-1f2a3b4c5d6e
+            invalidWorkingCityId:
+              summary: "`workingCityId` is not a valid UUID (400)"
+              value:
+                firstName: Omar
+                licenseExpiryDate: 2028-08-30
+                workingCityId: not-a-uuid
 
     responses:
       "200":
@@ -568,10 +723,27 @@ changePasswordDriver:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/ChangePasswordDriverRequest"
-          example:
-            currentPassword: StrongPassword123!
-            newPassword: NewStrongPassword123!
-            confirmPassword: NewStrongPassword123!
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                currentPassword: StrongPassword123!
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingCurrentPassword:
+              summary: Missing required `currentPassword` (400)
+              value:
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            newPasswordTooShort:
+              summary: "`newPassword` shorter than 8 characters (400)"
+              value:
+                currentPassword: StrongPassword123!
+                newPassword: xxxxxxx
+                confirmPassword: NewStrongPassword123!
 
     responses:
       "200":
@@ -732,14 +904,59 @@ driverVehicles:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/CreateDriverVehicleRequest"
-          example:
-            vehicleType: car
-            brand: Toyota
-            model: Yaris
-            color: White
-            plateNumber: DEF 5678
-            manufactureYear: 2023
-            insuranceExpiryDate: "2026-06-30"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                vehicleType: car
+                brand: Toyota
+                model: Yaris
+                color: White
+                plateNumber: DEF 5678
+                manufactureYear: 2023
+                insuranceExpiryDate: "2026-06-30"
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingVehicleType:
+              summary: Missing required `vehicleType` (400)
+              value:
+                brand: Toyota
+                model: Yaris
+                color: White
+                plateNumber: DEF 5678
+                manufactureYear: 2023
+                insuranceExpiryDate: 2026-06-30
+            invalidVehicleType:
+              summary: "`vehicleType` is not one of the allowed values (400)"
+              value:
+                vehicleType: not_a_valid_value
+                brand: Toyota
+                model: Yaris
+                color: White
+                plateNumber: DEF 5678
+                manufactureYear: 2023
+                insuranceExpiryDate: 2026-06-30
+            blankBrand:
+              summary: "`brand` is empty (400)"
+              value:
+                vehicleType: car
+                brand: ""
+                model: Yaris
+                color: White
+                plateNumber: DEF 5678
+                manufactureYear: 2023
+                insuranceExpiryDate: 2026-06-30
+            colorTooLong:
+              summary: "`color` longer than 50 characters (400)"
+              value:
+                vehicleType: car
+                brand: Toyota
+                model: Yaris
+                color: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                plateNumber: DEF 5678
+                manufactureYear: 2023
+                insuranceExpiryDate: 2026-06-30
 
     responses:
       "201":
@@ -811,9 +1028,25 @@ driverVehicle:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/UpdateDriverVehicleRequest"
-          example:
-            color: Black
-            insuranceExpiryDate: "2026-12-31"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                color: Black
+                insuranceExpiryDate: "2026-12-31"
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            colorTooLong:
+              summary: "`color` longer than 50 characters (400)"
+              value:
+                color: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                insuranceExpiryDate: 2026-12-31
+            invalidInsuranceExpiryDate:
+              summary: "`insuranceExpiryDate` is not a valid date (400)"
+              value:
+                color: Black
+                insuranceExpiryDate: not-a-date
 
     responses:
       "200":
@@ -1097,8 +1330,18 @@ driverAvailability:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/UpdateDriverAvailabilityRequest"
-          example:
-            availabilityStatus: offline
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                availabilityStatus: offline
+            missingAvailabilityStatus:
+              summary: Missing required `availabilityStatus` (400)
+              value: {}
+            invalidAvailabilityStatus:
+              summary: "`availabilityStatus` is not one of the allowed values (400)"
+              value:
+                availabilityStatus: not_a_valid_value
 
     responses:
       "200":
@@ -1153,12 +1396,41 @@ driverLocation:
         application/json:
           schema:
             $ref: "../schemas/driver.yaml#/UpdateDriverLocationRequest"
-          example:
-            latitude: 30.0561
-            longitude: 31.2394
-            heading: 90
-            speed: 32.5
-            recordedAt: "2024-10-05T19:05:00.000Z"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                latitude: 30.0561
+                longitude: 31.2394
+                heading: 90
+                speed: 32.5
+                recordedAt: "2024-10-05T19:05:00.000Z"
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingLatitude:
+              summary: Missing required `latitude` (400)
+              value:
+                longitude: 31.2394
+                heading: 90
+                speed: 32.5
+                recordedAt: 2024-10-05T19:05:00.000Z
+            latitudeTooLow:
+              summary: "`latitude` below the minimum of -90 (400)"
+              value:
+                latitude: -91
+                longitude: 31.2394
+                heading: 90
+                speed: 32.5
+                recordedAt: 2024-10-05T19:05:00.000Z
+            invalidRecordedAt:
+              summary: "`recordedAt` is not a valid date (400)"
+              value:
+                latitude: 30.0561
+                longitude: 31.2394
+                heading: 90
+                speed: 32.5
+                recordedAt: not-a-date
 
     responses:
       "201":

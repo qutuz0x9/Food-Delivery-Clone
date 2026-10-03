@@ -316,12 +316,49 @@ restaurantMenuItems:
         application/json:
           schema:
             $ref: "../schemas/menu.yaml#/CreateMenuItemRequest"
-          example:
-            categoryId: cf8547b5-aef4-5866-86ac-b39dd6c061cb
-            name: Mixed Grill
-            description: Kofta, kebab and grilled chicken with rice.
-            basePrice: 150
-            preparationTime: 25
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                categoryId: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+                name: Mixed Grill
+                description: Kofta, kebab and grilled chicken with rice.
+                basePrice: 150
+                preparationTime: 25
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingCategoryId:
+              summary: Missing required `categoryId` (400)
+              value:
+                name: Mixed Grill
+                description: Kofta, kebab and grilled chicken with rice.
+                basePrice: 150
+                preparationTime: 25
+            invalidCategoryId:
+              summary: "`categoryId` is not a valid UUID (400)"
+              value:
+                categoryId: not-a-uuid
+                name: Mixed Grill
+                description: Kofta, kebab and grilled chicken with rice.
+                basePrice: 150
+                preparationTime: 25
+            blankName:
+              summary: "`name` is empty (400)"
+              value:
+                categoryId: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+                name: ""
+                description: Kofta, kebab and grilled chicken with rice.
+                basePrice: 150
+                preparationTime: 25
+            basePriceTooLow:
+              summary: "`basePrice` below the minimum of 0 (400)"
+              value:
+                categoryId: cf8547b5-aef4-5866-86ac-b39dd6c061cb
+                name: Mixed Grill
+                description: Kofta, kebab and grilled chicken with rice.
+                basePrice: -1
+                preparationTime: 25
 
     responses:
       "201":
@@ -468,9 +505,20 @@ restaurantMenuItem:
         application/json:
           schema:
             $ref: "../schemas/menu.yaml#/UpdateMenuItemRequest"
-          example:
-            basePrice: 160
-            preparationTime: 30
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                basePrice: 160
+                preparationTime: 30
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            basePriceTooLow:
+              summary: "`basePrice` below the minimum of 0 (400)"
+              value:
+                basePrice: -1
+                preparationTime: 30
 
     responses:
       "200":
@@ -608,8 +656,18 @@ restaurantMenuItemAvailability:
         application/json:
           schema:
             $ref: "../schemas/menu.yaml#/UpdateMenuItemAvailabilityRequest"
-          example:
-            isAvailable: false
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                isAvailable: false
+            missingIsAvailable:
+              summary: Missing required `isAvailable` (400)
+              value: {}
+            isAvailableWrongType:
+              summary: "`isAvailable` is text instead of true/false (400)"
+              value:
+                isAvailable: yes
 
     responses:
       "200":
@@ -859,18 +917,76 @@ restaurantMenuItemOptions:
         application/json:
           schema:
             $ref: "../schemas/menu.yaml#/CreateOptionGroupRequest"
-          example:
-            name: Size
-            minSelection: 1
-            maxSelection: 1
-            isRequired: true
-            values:
-              - name: Regular
-                priceAdjustment: 0
-                displayOrder: 0
-              - name: Large
-                priceAdjustment: 20
-                displayOrder: 1
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                name: Size
+                minSelection: 1
+                maxSelection: 1
+                isRequired: true
+                values:
+                  - name: Regular
+                    priceAdjustment: 0
+                    displayOrder: 0
+                  - name: Large
+                    priceAdjustment: 20
+                    displayOrder: 1
+            missingName:
+              summary: Missing required `name` (400)
+              value:
+                minSelection: 1
+                maxSelection: 1
+                isRequired: true
+                values:
+                  - name: Regular
+                    priceAdjustment: 0
+                    displayOrder: 0
+                  - name: Large
+                    priceAdjustment: 20
+                    displayOrder: 1
+            blankName:
+              summary: "`name` is empty (400)"
+              value:
+                name: ""
+                minSelection: 1
+                maxSelection: 1
+                isRequired: true
+                values:
+                  - name: Regular
+                    priceAdjustment: 0
+                    displayOrder: 0
+                  - name: Large
+                    priceAdjustment: 20
+                    displayOrder: 1
+            minSelectionTooLow:
+              summary: "`minSelection` below the minimum of 0 (400)"
+              value:
+                name: Size
+                minSelection: -1
+                maxSelection: 1
+                isRequired: true
+                values:
+                  - name: Regular
+                    priceAdjustment: 0
+                    displayOrder: 0
+                  - name: Large
+                    priceAdjustment: 20
+                    displayOrder: 1
+            isRequiredWrongType:
+              summary: "`isRequired` is text instead of true/false (400)"
+              value:
+                name: Size
+                minSelection: 1
+                maxSelection: 1
+                isRequired: yes
+                values:
+                  - name: Regular
+                    priceAdjustment: 0
+                    displayOrder: 0
+                  - name: Large
+                    priceAdjustment: 20
+                    displayOrder: 1
 
     responses:
       "201":
@@ -957,8 +1073,18 @@ restaurantMenuItemOption:
         application/json:
           schema:
             $ref: "../schemas/menu.yaml#/UpdateOptionGroupRequest"
-          example:
-            maxSelection: 2
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                maxSelection: 2
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            maxSelectionTooLow:
+              summary: "`maxSelection` below the minimum of 1 (400)"
+              value:
+                maxSelection: 0
 
     responses:
       "200":
@@ -1085,10 +1211,36 @@ restaurantMenuItemOptionValues:
         application/json:
           schema:
             $ref: "../schemas/menu.yaml#/CreateOptionValueRequest"
-          example:
-            name: Extra large
-            priceAdjustment: 35
-            displayOrder: 2
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                name: Extra large
+                priceAdjustment: 35
+                displayOrder: 2
+            missingName:
+              summary: Missing required `name` (400)
+              value:
+                priceAdjustment: 35
+                displayOrder: 2
+            blankName:
+              summary: "`name` is empty (400)"
+              value:
+                name: ""
+                priceAdjustment: 35
+                displayOrder: 2
+            priceAdjustmentWrongType:
+              summary: "`priceAdjustment` is text instead of a number (400)"
+              value:
+                name: Extra large
+                priceAdjustment: abc
+                displayOrder: 2
+            displayOrderTooLow:
+              summary: "`displayOrder` below the minimum of 0 (400)"
+              value:
+                name: Extra large
+                priceAdjustment: 35
+                displayOrder: -1
 
     responses:
       "201":
@@ -1173,8 +1325,18 @@ restaurantMenuItemOptionValue:
         application/json:
           schema:
             $ref: "../schemas/menu.yaml#/UpdateOptionValueRequest"
-          example:
-            priceAdjustment: 25
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                priceAdjustment: 25
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            priceAdjustmentWrongType:
+              summary: "`priceAdjustment` is text instead of a number (400)"
+              value:
+                priceAdjustment: abc
 
     responses:
       "200":

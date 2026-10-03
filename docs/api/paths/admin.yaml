@@ -22,9 +22,24 @@ loginAdmin:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/LoginAdminRequest"
-          example:
-            email: sara.mostafa@example.com
-            password: StrongPassword123!
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                email: sara.mostafa@example.com
+                password: StrongPassword123!
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingEmail:
+              summary: Missing required `email` (400)
+              value:
+                password: StrongPassword123!
+            invalidEmail:
+              summary: "`email` is not a valid email (400)"
+              value:
+                email: not-an-email
+                password: StrongPassword123!
 
     responses:
       "200":
@@ -200,8 +215,18 @@ forgotPasswordAdmin:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/ForgotPasswordAdminRequest"
-          example:
-            email: sara.mostafa@example.com
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                email: sara.mostafa@example.com
+            missingEmail:
+              summary: Missing required `email` (400)
+              value: {}
+            invalidEmail:
+              summary: "`email` is not a valid email (400)"
+              value:
+                email: not-an-email
 
     responses:
       "200":
@@ -242,10 +267,27 @@ resetPasswordAdmin:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/ResetPasswordAdminRequest"
-          example:
-            token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
-            newPassword: NewStrongPassword123!
-            confirmPassword: NewStrongPassword123!
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingToken:
+              summary: Missing required `token` (400)
+              value:
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            newPasswordTooShort:
+              summary: "`newPassword` shorter than 8 characters (400)"
+              value:
+                token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+                newPassword: xxxxxxx
+                confirmPassword: NewStrongPassword123!
 
     responses:
       "200":
@@ -334,9 +376,15 @@ adminProfile:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateAdminProfileRequest"
-          example:
-            firstName: Sara
-            phoneNumber: "+201112223334"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                firstName: Sara
+                phoneNumber: "+201112223334"
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
 
     responses:
       "200":
@@ -396,10 +444,27 @@ changePasswordAdmin:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/ChangePasswordAdminRequest"
-          example:
-            currentPassword: StrongPassword123!
-            newPassword: NewStrongPassword123!
-            confirmPassword: NewStrongPassword123!
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                currentPassword: StrongPassword123!
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingCurrentPassword:
+              summary: Missing required `currentPassword` (400)
+              value:
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            newPasswordTooShort:
+              summary: "`newPassword` shorter than 8 characters (400)"
+              value:
+                currentPassword: StrongPassword123!
+                newPassword: xxxxxxx
+                confirmPassword: NewStrongPassword123!
 
     responses:
       "200":
@@ -500,9 +565,24 @@ adminCities:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/CreateCityRequest"
-          example:
-            name: Alexandria
-            country: Egypt
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                name: Alexandria
+                country: Egypt
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingName:
+              summary: Missing required `name` (400)
+              value:
+                country: Egypt
+            blankName:
+              summary: "`name` is empty (400)"
+              value:
+                name: ""
+                country: Egypt
 
     responses:
       "201":
@@ -570,8 +650,18 @@ adminCity:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateCityRequest"
-          example:
-            isActive: false
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                isActive: false
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            isActiveWrongType:
+              summary: "`isActive` is text instead of true/false (400)"
+              value:
+                isActive: yes
 
     responses:
       "200":
@@ -801,9 +891,20 @@ adminCustomer:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateAdminCustomerRequest"
-          example:
-            firstName: Johnny
-            phoneNumber: "+201234567891"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                firstName: Johnny
+                phoneNumber: "+201234567891"
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            firstNameTooLong:
+              summary: "`firstName` longer than 100 characters (400)"
+              value:
+                firstName: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                phoneNumber: "+201234567891"
 
     responses:
       "200":
@@ -940,8 +1041,18 @@ adminCustomerAccountStatus:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateAccountStatusRequest"
-          example:
-            accountStatus: suspended
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                accountStatus: suspended
+            missingAccountStatus:
+              summary: Missing required `accountStatus` (400)
+              value: {}
+            invalidAccountStatus:
+              summary: "`accountStatus` is not one of the allowed values (400)"
+              value:
+                accountStatus: not_a_valid_value
 
     responses:
       "200":
@@ -1197,9 +1308,20 @@ adminRestaurant:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateAdminRestaurantRequest"
-          example:
-            minimumOrderAmount: 120
-            deliveryFee: 30
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                minimumOrderAmount: 120
+                deliveryFee: 30
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            minimumOrderAmountTooLow:
+              summary: "`minimumOrderAmount` below the minimum of 0 (400)"
+              value:
+                minimumOrderAmount: -1
+                deliveryFee: 30
 
     responses:
       "200":
@@ -1470,8 +1592,18 @@ adminRestaurantAccountStatus:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateAccountStatusRequest"
-          example:
-            accountStatus: suspended
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                accountStatus: suspended
+            missingAccountStatus:
+              summary: Missing required `accountStatus` (400)
+              value: {}
+            invalidAccountStatus:
+              summary: "`accountStatus` is not one of the allowed values (400)"
+              value:
+                accountStatus: not_a_valid_value
 
     responses:
       "200":
@@ -1754,8 +1886,18 @@ adminDriver:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateAdminDriverRequest"
-          example:
-            licenseExpiryDate: "2028-08-30"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                licenseExpiryDate: "2028-08-30"
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            invalidLicenseExpiryDate:
+              summary: "`licenseExpiryDate` is not a valid date (400)"
+              value:
+                licenseExpiryDate: not-a-date
 
     responses:
       "200":
@@ -1905,8 +2047,18 @@ adminDriverStatus:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateDriverStatusRequest"
-          example:
-            status: active
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                status: active
+            missingStatus:
+              summary: Missing required `status` (400)
+              value: {}
+            invalidStatus:
+              summary: "`status` is not one of the allowed values (400)"
+              value:
+                status: not_a_valid_value
 
     responses:
       "200":
@@ -1988,8 +2140,18 @@ adminDriverAccountStatus:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateAccountStatusRequest"
-          example:
-            accountStatus: suspended
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                accountStatus: suspended
+            missingAccountStatus:
+              summary: Missing required `accountStatus` (400)
+              value: {}
+            invalidAccountStatus:
+              summary: "`accountStatus` is not one of the allowed values (400)"
+              value:
+                accountStatus: not_a_valid_value
 
     responses:
       "200":
@@ -2076,8 +2238,18 @@ adminDriverDocument:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/ReviewDriverDocumentRequest"
-          example:
-            status: verified
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                status: verified
+            missingStatus:
+              summary: Missing required `status` (400)
+              value: {}
+            invalidStatus:
+              summary: "`status` is not one of the allowed values (400)"
+              value:
+                status: not_a_valid_value
 
     responses:
       "200":
@@ -2441,9 +2613,21 @@ adminOrderStatus:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateOrderStatusRequest"
-          example:
-            status: cancelled
-            note: Restaurant could not fulfil the order
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                status: cancelled
+                note: Restaurant could not fulfil the order
+            missingStatus:
+              summary: Missing required `status` (400)
+              value:
+                note: Restaurant could not fulfil the order
+            invalidStatus:
+              summary: "`status` is not one of the allowed values (400)"
+              value:
+                status: not_a_valid_value
+                note: Restaurant could not fulfil the order
 
     responses:
       "200":
@@ -2799,9 +2983,21 @@ adminPaymentRefunds:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/CreateRefundRequest"
-          example:
-            amount: 50
-            reason: Missing item
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                amount: 50
+                reason: Missing item
+            missingAmount:
+              summary: Missing required `amount` (400)
+              value:
+                reason: Missing item
+            amountTooLow:
+              summary: "`amount` below the minimum of 0.01 (400)"
+              value:
+                amount: -0.99
+                reason: Missing item
 
     responses:
       "201":
@@ -2904,8 +3100,18 @@ adminPaymentRefund:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateRefundRequest"
-          example:
-            status: completed
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                status: completed
+            missingStatus:
+              summary: Missing required `status` (400)
+              value: {}
+            invalidStatus:
+              summary: "`status` is not one of the allowed values (400)"
+              value:
+                status: not_a_valid_value
 
     responses:
       "200":
@@ -3114,8 +3320,18 @@ adminModerateRestaurantReview:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/ModerateReviewRequest"
-          example:
-            status: published
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                status: published
+            missingStatus:
+              summary: Missing required `status` (400)
+              value: {}
+            invalidStatus:
+              summary: "`status` is not one of the allowed values (400)"
+              value:
+                status: not_a_valid_value
 
     responses:
       "200":
@@ -3309,8 +3525,18 @@ adminModerateDriverReview:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/ModerateReviewRequest"
-          example:
-            status: published
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                status: published
+            missingStatus:
+              summary: Missing required `status` (400)
+              value: {}
+            invalidStatus:
+              summary: "`status` is not one of the allowed values (400)"
+              value:
+                status: not_a_valid_value
 
     responses:
       "200":
@@ -3469,10 +3695,33 @@ adminPayouts:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/CreatePayoutRequest"
-          example:
-            driverId: e035c191-7d58-52be-9f78-c9a9351192dd
-            periodStart: "2024-09-29"
-            periodEnd: "2024-10-05"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                driverId: e035c191-7d58-52be-9f78-c9a9351192dd
+                periodStart: "2024-09-29"
+                periodEnd: "2024-10-05"
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingDriverId:
+              summary: Missing required `driverId` (400)
+              value:
+                periodStart: 2024-09-29
+                periodEnd: 2024-10-05
+            invalidDriverId:
+              summary: "`driverId` is not a valid UUID (400)"
+              value:
+                driverId: not-a-uuid
+                periodStart: 2024-09-29
+                periodEnd: 2024-10-05
+            invalidPeriodStart:
+              summary: "`periodStart` is not a valid date (400)"
+              value:
+                driverId: e035c191-7d58-52be-9f78-c9a9351192dd
+                periodStart: not-a-date
+                periodEnd: 2024-10-05
 
     responses:
       "201":
@@ -3608,9 +3857,26 @@ adminPayout:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdatePayoutRequest"
-          example:
-            status: completed
-            paidAt: "2024-10-07T10:00:00.000Z"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                status: completed
+                paidAt: "2024-10-07T10:00:00.000Z"
+            missingStatus:
+              summary: Missing required `status` (400)
+              value:
+                paidAt: 2024-10-07T10:00:00.000Z
+            invalidStatus:
+              summary: "`status` is not one of the allowed values (400)"
+              value:
+                status: not_a_valid_value
+                paidAt: 2024-10-07T10:00:00.000Z
+            invalidPaidAt:
+              summary: "`paidAt` is not a valid date (400)"
+              value:
+                status: completed
+                paidAt: not-a-date
 
     responses:
       "200":
@@ -4225,12 +4491,49 @@ adminAdmins:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/CreateAdminRequest"
-          example:
-            email: omar.admin@example.com
-            password: TempPassw0rd!
-            phoneNumber: "+201555667788"
-            firstName: Omar
-            lastName: Khaled
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                email: omar.admin@example.com
+                password: TempPassw0rd!
+                phoneNumber: "+201555667788"
+                firstName: Omar
+                lastName: Khaled
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingEmail:
+              summary: Missing required `email` (400)
+              value:
+                password: TempPassw0rd!
+                phoneNumber: "+201555667788"
+                firstName: Omar
+                lastName: Khaled
+            invalidEmail:
+              summary: "`email` is not a valid email (400)"
+              value:
+                email: not-an-email
+                password: TempPassw0rd!
+                phoneNumber: "+201555667788"
+                firstName: Omar
+                lastName: Khaled
+            passwordTooShort:
+              summary: "`password` shorter than 8 characters (400)"
+              value:
+                email: omar.admin@example.com
+                password: xxxxxxx
+                phoneNumber: "+201555667788"
+                firstName: Omar
+                lastName: Khaled
+            blankFirstName:
+              summary: "`firstName` is empty (400)"
+              value:
+                email: omar.admin@example.com
+                password: TempPassw0rd!
+                phoneNumber: "+201555667788"
+                firstName: ""
+                lastName: Khaled
 
     responses:
       "201":
@@ -4405,8 +4708,18 @@ adminAdminAccountStatus:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/UpdateAccountStatusRequest"
-          example:
-            accountStatus: suspended
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                accountStatus: suspended
+            missingAccountStatus:
+              summary: Missing required `accountStatus` (400)
+              value: {}
+            invalidAccountStatus:
+              summary: "`accountStatus` is not one of the allowed values (400)"
+              value:
+                accountStatus: not_a_valid_value
 
     responses:
       "200":
@@ -4723,8 +5036,18 @@ adminOrderDispatchAssignment:
         application/json:
           schema:
             $ref: "../schemas/admin.yaml#/AssignDriverRequest"
-          example:
-            driverId: e035c191-7d58-52be-9f78-c9a9351192dd
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                driverId: e035c191-7d58-52be-9f78-c9a9351192dd
+            missingDriverId:
+              summary: Missing required `driverId` (400)
+              value: {}
+            invalidDriverId:
+              summary: "`driverId` is not a valid UUID (400)"
+              value:
+                driverId: not-a-uuid
 
     responses:
       "200":

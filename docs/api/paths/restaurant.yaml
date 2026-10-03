@@ -342,19 +342,84 @@ registerRestaurant:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/RegisterRestaurantRequest"
-          example:
-            name: Nile Grill House
-            email: contact@nilegrill.example.com
-            password: StrongPassword123!
-            phoneNumber: "+201234567890"
-            description: Authentic Egyptian grills and mezze.
-            branch:
-              label: Ramses Branch
-              cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
-              street: 15 Ramses St
-              building: Building 4
-              latitude: 30.0561
-              longitude: 31.2394
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                name: Nile Grill House
+                email: contact@nilegrill.example.com
+                password: StrongPassword123!
+                phoneNumber: "+201234567890"
+                description: Authentic Egyptian grills and mezze.
+                branch:
+                  label: Ramses Branch
+                  cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                  street: 15 Ramses St
+                  building: Building 4
+                  latitude: 30.0561
+                  longitude: 31.2394
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingName:
+              summary: Missing required `name` (400)
+              value:
+                email: contact@nilegrill.example.com
+                password: StrongPassword123!
+                phoneNumber: "+201234567890"
+                description: Authentic Egyptian grills and mezze.
+                branch:
+                  label: Ramses Branch
+                  cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                  street: 15 Ramses St
+                  building: Building 4
+                  latitude: 30.0561
+                  longitude: 31.2394
+            nameTooLong:
+              summary: "`name` longer than 150 characters (400)"
+              value:
+                name: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                email: contact@nilegrill.example.com
+                password: StrongPassword123!
+                phoneNumber: "+201234567890"
+                description: Authentic Egyptian grills and mezze.
+                branch:
+                  label: Ramses Branch
+                  cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                  street: 15 Ramses St
+                  building: Building 4
+                  latitude: 30.0561
+                  longitude: 31.2394
+            invalidEmail:
+              summary: "`email` is not a valid email (400)"
+              value:
+                name: Nile Grill House
+                email: not-an-email
+                password: StrongPassword123!
+                phoneNumber: "+201234567890"
+                description: Authentic Egyptian grills and mezze.
+                branch:
+                  label: Ramses Branch
+                  cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                  street: 15 Ramses St
+                  building: Building 4
+                  latitude: 30.0561
+                  longitude: 31.2394
+            passwordTooShort:
+              summary: "`password` shorter than 8 characters (400)"
+              value:
+                name: Nile Grill House
+                email: contact@nilegrill.example.com
+                password: xxxxxxx
+                phoneNumber: "+201234567890"
+                description: Authentic Egyptian grills and mezze.
+                branch:
+                  label: Ramses Branch
+                  cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                  street: 15 Ramses St
+                  building: Building 4
+                  latitude: 30.0561
+                  longitude: 31.2394
 
     responses:
       "201":
@@ -431,9 +496,24 @@ loginRestaurant:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/LoginRestaurantRequest"
-          example:
-            email: contact@nilegrill.example.com
-            password: StrongPassword123!
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                email: contact@nilegrill.example.com
+                password: StrongPassword123!
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingEmail:
+              summary: Missing required `email` (400)
+              value:
+                password: StrongPassword123!
+            invalidEmail:
+              summary: "`email` is not a valid email (400)"
+              value:
+                email: not-an-email
+                password: StrongPassword123!
 
     responses:
       "200":
@@ -649,8 +729,18 @@ forgotPasswordRestaurant:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/ForgotPasswordRestaurantRequest"
-          example:
-            email: contact@nilegrill.example.com
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                email: contact@nilegrill.example.com
+            missingEmail:
+              summary: Missing required `email` (400)
+              value: {}
+            invalidEmail:
+              summary: "`email` is not a valid email (400)"
+              value:
+                email: not-an-email
 
     responses:
       "200":
@@ -696,10 +786,27 @@ resetPasswordRestaurant:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/ResetPasswordRestaurantRequest"
-          example:
-            token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
-            newPassword: NewStrongPassword123!
-            confirmPassword: NewStrongPassword123!
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingToken:
+              summary: Missing required `token` (400)
+              value:
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            newPasswordTooShort:
+              summary: "`newPassword` shorter than 8 characters (400)"
+              value:
+                token: 9f8e7d6c-5b4a-3c2d-1e0f-a1b2c3d4e5f6
+                newPassword: xxxxxxx
+                confirmPassword: NewStrongPassword123!
 
     responses:
       "200":
@@ -816,13 +923,34 @@ restaurantProfile:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/UpdateRestaurantProfileRequest"
-          example:
-            name: Nile Grill House
-            description: Authentic Egyptian grills, mezze, and fresh salads.
-            phoneNumber: "+201234567890"
-            minimumOrderAmount: 120
-            deliveryFee: 30
-            estimatedDeliveryTime: 40
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                name: Nile Grill House
+                description: Authentic Egyptian grills, mezze, and fresh salads.
+                phoneNumber: "+201234567890"
+                minimumOrderAmount: 120
+                deliveryFee: 30
+                estimatedDeliveryTime: 40
+            nameTooLong:
+              summary: "`name` longer than 150 characters (400)"
+              value:
+                name: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                description: Authentic Egyptian grills, mezze, and fresh salads.
+                phoneNumber: "+201234567890"
+                minimumOrderAmount: 120
+                deliveryFee: 30
+                estimatedDeliveryTime: 40
+            minimumOrderAmountTooLow:
+              summary: "`minimumOrderAmount` below the minimum of 0 (400)"
+              value:
+                name: Nile Grill House
+                description: Authentic Egyptian grills, mezze, and fresh salads.
+                phoneNumber: "+201234567890"
+                minimumOrderAmount: -1
+                deliveryFee: 30
+                estimatedDeliveryTime: 40
 
     responses:
       "200":
@@ -1017,13 +1145,54 @@ restaurantBranches:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/CreateBranchRequest"
-          example:
-            label: Ramses Branch
-            cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
-            street: 15 Ramses St
-            building: Building 4
-            latitude: 30.0561
-            longitude: 31.2394
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                label: Ramses Branch
+                cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                street: 15 Ramses St
+                building: Building 4
+                latitude: 30.0561
+                longitude: 31.2394
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingLabel:
+              summary: Missing required `label` (400)
+              value:
+                cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                street: 15 Ramses St
+                building: Building 4
+                latitude: 30.0561
+                longitude: 31.2394
+            blankLabel:
+              summary: "`label` is empty (400)"
+              value:
+                label: ""
+                cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                street: 15 Ramses St
+                building: Building 4
+                latitude: 30.0561
+                longitude: 31.2394
+            invalidCityId:
+              summary: "`cityId` is not a valid UUID (400)"
+              value:
+                label: Ramses Branch
+                cityId: not-a-uuid
+                street: 15 Ramses St
+                building: Building 4
+                latitude: 30.0561
+                longitude: 31.2394
+            latitudeTooLow:
+              summary: "`latitude` below the minimum of -90 (400)"
+              value:
+                label: Ramses Branch
+                cityId: 5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21
+                street: 15 Ramses St
+                building: Building 4
+                latitude: -91
+                longitude: 31.2394
 
     responses:
       "201":
@@ -1160,9 +1329,20 @@ restaurantBranch:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/UpdateBranchRequest"
-          example:
-            street: 20 Ramses St
-            isActive: true
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                street: 20 Ramses St
+                isActive: true
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            isActiveWrongType:
+              summary: "`isActive` is text instead of true/false (400)"
+              value:
+                street: 20 Ramses St
+                isActive: yes
 
     responses:
       "200":
@@ -1208,7 +1388,6 @@ restaurantBranch:
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
-
 
 restaurantOperatingHours:
   parameters:
@@ -1297,36 +1476,46 @@ restaurantOperatingHours:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/ReplaceOperatingHoursRequest"
-          example:
-            operatingHours:
-              - dayOfWeek: 0
-                opensAt: "09:00"
-                closesAt: "23:00"
-                isClosed: false
-              - dayOfWeek: 1
-                opensAt: "09:00"
-                closesAt: "23:00"
-                isClosed: false
-              - dayOfWeek: 2
-                opensAt: "09:00"
-                closesAt: "23:00"
-                isClosed: false
-              - dayOfWeek: 3
-                opensAt: "09:00"
-                closesAt: "23:00"
-                isClosed: false
-              - dayOfWeek: 4
-                opensAt: "09:00"
-                closesAt: "23:00"
-                isClosed: false
-              - dayOfWeek: 5
-                opensAt: "12:00"
-                closesAt: "01:00"
-                isClosed: false
-              - dayOfWeek: 6
-                opensAt: null
-                closesAt: null
-                isClosed: true
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                operatingHours:
+                  - dayOfWeek: 0
+                    opensAt: "09:00"
+                    closesAt: "23:00"
+                    isClosed: false
+                  - dayOfWeek: 1
+                    opensAt: "09:00"
+                    closesAt: "23:00"
+                    isClosed: false
+                  - dayOfWeek: 2
+                    opensAt: "09:00"
+                    closesAt: "23:00"
+                    isClosed: false
+                  - dayOfWeek: 3
+                    opensAt: "09:00"
+                    closesAt: "23:00"
+                    isClosed: false
+                  - dayOfWeek: 4
+                    opensAt: "09:00"
+                    closesAt: "23:00"
+                    isClosed: false
+                  - dayOfWeek: 5
+                    opensAt: "12:00"
+                    closesAt: "01:00"
+                    isClosed: false
+                  - dayOfWeek: 6
+                    opensAt: null
+                    closesAt: null
+                    isClosed: true
+            missingOperatingHours:
+              summary: Missing required `operatingHours` (400)
+              value: {}
+            emptyOperatingHours:
+              summary: "`operatingHours` has no items (400)"
+              value:
+                operatingHours: []
 
     responses:
       "200":
@@ -1411,10 +1600,19 @@ restaurantOperatingHour:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/UpdateOperatingHourRequest"
-          example:
-            opensAt: "10:00"
-            closesAt: "22:00"
-            isClosed: false
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                opensAt: "10:00"
+                closesAt: "22:00"
+                isClosed: false
+            isClosedWrongType:
+              summary: "`isClosed` is text instead of true/false (400)"
+              value:
+                opensAt: 10:00
+                closesAt: 22:00
+                isClosed: yes
 
     responses:
       "200":
@@ -1483,8 +1681,18 @@ branchAvailability:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/UpdateBranchAvailabilityRequest"
-          example:
-            availabilityStatus: closed
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                availabilityStatus: closed
+            missingAvailabilityStatus:
+              summary: Missing required `availabilityStatus` (400)
+              value: {}
+            invalidAvailabilityStatus:
+              summary: "`availabilityStatus` is not one of the allowed values (400)"
+              value:
+                availabilityStatus: not_a_valid_value
 
     responses:
       "200":
@@ -1588,10 +1796,36 @@ restaurantMenuCategories:
         application/json:
           schema:
             $ref: "../schemas/menu.yaml#/CreateMenuCategoryRequest"
-          example:
-            name: Starters
-            displayOrder: 1
-            isActive: true
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                name: Starters
+                displayOrder: 1
+                isActive: true
+            missingName:
+              summary: Missing required `name` (400)
+              value:
+                displayOrder: 1
+                isActive: true
+            nameTooLong:
+              summary: "`name` longer than 100 characters (400)"
+              value:
+                name: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                displayOrder: 1
+                isActive: true
+            displayOrderWrongType:
+              summary: "`displayOrder` is text instead of a number (400)"
+              value:
+                name: Starters
+                displayOrder: abc
+                isActive: true
+            isActiveWrongType:
+              summary: "`isActive` is text instead of true/false (400)"
+              value:
+                name: Starters
+                displayOrder: 1
+                isActive: yes
 
     responses:
       "201":
@@ -1708,10 +1942,31 @@ restaurantMenuCategory:
         application/json:
           schema:
             $ref: "../schemas/menu.yaml#/UpdateMenuCategoryRequest"
-          example:
-            name: Starters & Salads
-            displayOrder: 2
-            isActive: true
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                name: Starters & Salads
+                displayOrder: 2
+                isActive: true
+            nameTooLong:
+              summary: "`name` longer than 100 characters (400)"
+              value:
+                name: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                displayOrder: 2
+                isActive: true
+            displayOrderWrongType:
+              summary: "`displayOrder` is text instead of a number (400)"
+              value:
+                name: Starters & Salads
+                displayOrder: abc
+                isActive: true
+            isActiveWrongType:
+              summary: "`isActive` is text instead of true/false (400)"
+              value:
+                name: Starters & Salads
+                displayOrder: 2
+                isActive: yes
 
     responses:
       "200":
@@ -1890,8 +2145,18 @@ restaurantCuisines:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/CreateCuisineRequest"
-          example:
-            name: Grills
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                name: Grills
+            missingName:
+              summary: Missing required `name` (400)
+              value: {}
+            blankName:
+              summary: "`name` is empty (400)"
+              value:
+                name: ""
 
     responses:
       "201":
@@ -1958,8 +2223,18 @@ restaurantCuisine:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/UpdateCuisineRequest"
-          example:
-            name: Grilled meats
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                name: Grilled meats
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            nameTooLong:
+              summary: "`name` longer than 150 characters (400)"
+              value:
+                name: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
     responses:
       "200":
@@ -2056,10 +2331,27 @@ changePasswordRestaurant:
         application/json:
           schema:
             $ref: "../schemas/restaurant.yaml#/ChangePasswordRestaurantRequest"
-          example:
-            currentPassword: StrongPassword123!
-            newPassword: NewStrongPassword123!
-            confirmPassword: NewStrongPassword123!
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                currentPassword: StrongPassword123!
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingCurrentPassword:
+              summary: Missing required `currentPassword` (400)
+              value:
+                newPassword: NewStrongPassword123!
+                confirmPassword: NewStrongPassword123!
+            newPasswordTooShort:
+              summary: "`newPassword` shorter than 8 characters (400)"
+              value:
+                currentPassword: StrongPassword123!
+                newPassword: xxxxxxx
+                confirmPassword: NewStrongPassword123!
 
     responses:
       "200":

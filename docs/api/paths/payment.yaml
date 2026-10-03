@@ -89,8 +89,14 @@ orderPayment:
         application/json:
           schema:
             $ref: "../schemas/payment.yaml#/ProcessPaymentRequest"
-          example:
-            paymentToken: tok_1QxA9z2eZvKYlo2C
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                paymentToken: tok_1QxA9z2eZvKYlo2C
+            missingPaymentToken:
+              summary: Missing required `paymentToken` (400)
+              value: {}
 
     responses:
       "200":

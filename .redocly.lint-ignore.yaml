@@ -6,3 +6,458 @@ docs/api/paths/city.yaml:
 docs/api/paths/restaurant.yaml:
   operation-4xx-response:
     - '#/listCuisines/get/responses'
+  no-invalid-media-type-examples:
+    - >-
+      #/registerRestaurant/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/registerRestaurant/post/requestBody/content/application~1json/examples/missingName/value
+    - >-
+      #/registerRestaurant/post/requestBody/content/application~1json/examples/nameTooLong/value/name
+    - >-
+      #/registerRestaurant/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/registerRestaurant/post/requestBody/content/application~1json/examples/passwordTooShort/value/password
+    - >-
+      #/loginRestaurant/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/loginRestaurant/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/loginRestaurant/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/forgotPasswordRestaurant/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/forgotPasswordRestaurant/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/resetPasswordRestaurant/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/resetPasswordRestaurant/post/requestBody/content/application~1json/examples/missingToken/value
+    - >-
+      #/resetPasswordRestaurant/post/requestBody/content/application~1json/examples/newPasswordTooShort/value/newPassword
+    - >-
+      #/restaurantProfile/patch/requestBody/content/application~1json/examples/nameTooLong/value/name
+    - >-
+      #/restaurantProfile/patch/requestBody/content/application~1json/examples/minimumOrderAmountTooLow/value/minimumOrderAmount
+    - >-
+      #/restaurantBranches/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantBranches/post/requestBody/content/application~1json/examples/missingLabel/value
+    - >-
+      #/restaurantBranches/post/requestBody/content/application~1json/examples/blankLabel/value/label
+    - >-
+      #/restaurantBranches/post/requestBody/content/application~1json/examples/invalidCityId/value/cityId
+    - >-
+      #/restaurantBranches/post/requestBody/content/application~1json/examples/latitudeTooLow/value/latitude
+    - >-
+      #/restaurantBranch/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantBranch/patch/requestBody/content/application~1json/examples/isActiveWrongType/value/isActive
+    - >-
+      #/restaurantOperatingHours/put/requestBody/content/application~1json/examples/missingOperatingHours/value
+    - >-
+      #/restaurantOperatingHours/put/requestBody/content/application~1json/examples/emptyOperatingHours/value/operatingHours
+    - >-
+      #/restaurantOperatingHour/patch/requestBody/content/application~1json/examples/isClosedWrongType/value/isClosed
+    - >-
+      #/branchAvailability/patch/requestBody/content/application~1json/examples/missingAvailabilityStatus/value
+    - >-
+      #/branchAvailability/patch/requestBody/content/application~1json/examples/invalidAvailabilityStatus/value/availabilityStatus
+    - >-
+      #/restaurantMenuCategories/post/requestBody/content/application~1json/examples/missingName/value
+    - >-
+      #/restaurantMenuCategories/post/requestBody/content/application~1json/examples/nameTooLong/value/name
+    - >-
+      #/restaurantMenuCategories/post/requestBody/content/application~1json/examples/displayOrderWrongType/value/displayOrder
+    - >-
+      #/restaurantMenuCategories/post/requestBody/content/application~1json/examples/isActiveWrongType/value/isActive
+    - >-
+      #/restaurantMenuCategory/patch/requestBody/content/application~1json/examples/nameTooLong/value/name
+    - >-
+      #/restaurantMenuCategory/patch/requestBody/content/application~1json/examples/displayOrderWrongType/value/displayOrder
+    - >-
+      #/restaurantMenuCategory/patch/requestBody/content/application~1json/examples/isActiveWrongType/value/isActive
+    - >-
+      #/restaurantCuisines/post/requestBody/content/application~1json/examples/missingName/value
+    - >-
+      #/restaurantCuisines/post/requestBody/content/application~1json/examples/blankName/value/name
+    - >-
+      #/restaurantCuisine/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantCuisine/patch/requestBody/content/application~1json/examples/nameTooLong/value/name
+    - >-
+      #/changePasswordRestaurant/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/changePasswordRestaurant/post/requestBody/content/application~1json/examples/missingCurrentPassword/value
+    - >-
+      #/changePasswordRestaurant/post/requestBody/content/application~1json/examples/newPasswordTooShort/value/newPassword
+docs/api/paths/customer.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/registerCustomer/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/registerCustomer/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/registerCustomer/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/registerCustomer/post/requestBody/content/application~1json/examples/passwordTooShort/value/password
+    - >-
+      #/registerCustomer/post/requestBody/content/application~1json/examples/blankFirstName/value/firstName
+    - >-
+      #/loginCustomer/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/loginCustomer/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/loginCustomer/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/forgotPasswordCustomer/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/forgotPasswordCustomer/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/resetPasswordCustomer/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/resetPasswordCustomer/post/requestBody/content/application~1json/examples/missingToken/value
+    - >-
+      #/resetPasswordCustomer/post/requestBody/content/application~1json/examples/newPasswordTooShort/value/newPassword
+    - >-
+      #/customerProfile/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/customerProfile/patch/requestBody/content/application~1json/examples/firstNameTooLong/value/firstName
+    - >-
+      #/customerProfile/patch/requestBody/content/application~1json/examples/invalidDateOfBirth/value/dateOfBirth
+    - >-
+      #/customerProfile/patch/requestBody/content/application~1json/examples/invalidGender/value/gender
+    - >-
+      #/changePasswordCustomer/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/changePasswordCustomer/post/requestBody/content/application~1json/examples/missingCurrentPassword/value
+    - >-
+      #/changePasswordCustomer/post/requestBody/content/application~1json/examples/newPasswordTooShort/value/newPassword
+    - >-
+      #/deliveryAddresses/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/deliveryAddresses/post/requestBody/content/application~1json/examples/missingLabel/value
+    - >-
+      #/deliveryAddresses/post/requestBody/content/application~1json/examples/invalidCityId/value/cityId
+    - >-
+      #/deliveryAddresses/post/requestBody/content/application~1json/examples/latitudeTooLow/value/latitude
+    - >-
+      #/deliveryAddresses/post/requestBody/content/application~1json/examples/isDefaultWrongType/value/isDefault
+    - >-
+      #/deliveryAddress/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/deliveryAddress/patch/requestBody/content/application~1json/examples/invalidCityId/value/cityId
+    - >-
+      #/deliveryAddress/patch/requestBody/content/application~1json/examples/isDefaultWrongType/value/isDefault
+docs/api/paths/driver.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/registerDriver/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/registerDriver/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/registerDriver/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/registerDriver/post/requestBody/content/application~1json/examples/passwordTooShort/value/password
+    - >-
+      #/registerDriver/post/requestBody/content/application~1json/examples/blankFirstName/value/firstName
+    - >-
+      #/loginDriver/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/loginDriver/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/loginDriver/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/forgotPasswordDriver/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/forgotPasswordDriver/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/resetPasswordDriver/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/resetPasswordDriver/post/requestBody/content/application~1json/examples/missingToken/value
+    - >-
+      #/resetPasswordDriver/post/requestBody/content/application~1json/examples/newPasswordTooShort/value/newPassword
+    - >-
+      #/driverProfile/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/driverProfile/patch/requestBody/content/application~1json/examples/firstNameTooLong/value/firstName
+    - >-
+      #/driverProfile/patch/requestBody/content/application~1json/examples/invalidLicenseExpiryDate/value/licenseExpiryDate
+    - >-
+      #/driverProfile/patch/requestBody/content/application~1json/examples/invalidWorkingCityId/value/workingCityId
+    - >-
+      #/changePasswordDriver/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/changePasswordDriver/post/requestBody/content/application~1json/examples/missingCurrentPassword/value
+    - >-
+      #/changePasswordDriver/post/requestBody/content/application~1json/examples/newPasswordTooShort/value/newPassword
+    - >-
+      #/driverVehicles/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/driverVehicles/post/requestBody/content/application~1json/examples/missingVehicleType/value
+    - >-
+      #/driverVehicles/post/requestBody/content/application~1json/examples/invalidVehicleType/value/vehicleType
+    - >-
+      #/driverVehicles/post/requestBody/content/application~1json/examples/blankBrand/value/brand
+    - >-
+      #/driverVehicles/post/requestBody/content/application~1json/examples/colorTooLong/value/color
+    - >-
+      #/driverVehicle/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/driverVehicle/patch/requestBody/content/application~1json/examples/colorTooLong/value/color
+    - >-
+      #/driverVehicle/patch/requestBody/content/application~1json/examples/invalidInsuranceExpiryDate/value/insuranceExpiryDate
+    - >-
+      #/driverAvailability/patch/requestBody/content/application~1json/examples/missingAvailabilityStatus/value
+    - >-
+      #/driverAvailability/patch/requestBody/content/application~1json/examples/invalidAvailabilityStatus/value/availabilityStatus
+    - >-
+      #/driverLocation/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/driverLocation/post/requestBody/content/application~1json/examples/missingLatitude/value
+    - >-
+      #/driverLocation/post/requestBody/content/application~1json/examples/latitudeTooLow/value/latitude
+    - >-
+      #/driverLocation/post/requestBody/content/application~1json/examples/invalidRecordedAt/value/recordedAt
+docs/api/paths/admin.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/loginAdmin/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/loginAdmin/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/loginAdmin/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/forgotPasswordAdmin/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/forgotPasswordAdmin/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/resetPasswordAdmin/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/resetPasswordAdmin/post/requestBody/content/application~1json/examples/missingToken/value
+    - >-
+      #/resetPasswordAdmin/post/requestBody/content/application~1json/examples/newPasswordTooShort/value/newPassword
+    - >-
+      #/adminProfile/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/changePasswordAdmin/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/changePasswordAdmin/post/requestBody/content/application~1json/examples/missingCurrentPassword/value
+    - >-
+      #/changePasswordAdmin/post/requestBody/content/application~1json/examples/newPasswordTooShort/value/newPassword
+    - >-
+      #/adminCities/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/adminCities/post/requestBody/content/application~1json/examples/missingName/value
+    - >-
+      #/adminCities/post/requestBody/content/application~1json/examples/blankName/value/name
+    - >-
+      #/adminCity/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/adminCity/patch/requestBody/content/application~1json/examples/isActiveWrongType/value/isActive
+    - >-
+      #/adminCustomer/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/adminCustomer/patch/requestBody/content/application~1json/examples/firstNameTooLong/value/firstName
+    - >-
+      #/adminCustomerAccountStatus/patch/requestBody/content/application~1json/examples/missingAccountStatus/value
+    - >-
+      #/adminCustomerAccountStatus/patch/requestBody/content/application~1json/examples/invalidAccountStatus/value/accountStatus
+    - >-
+      #/adminRestaurant/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/adminRestaurant/patch/requestBody/content/application~1json/examples/minimumOrderAmountTooLow/value/minimumOrderAmount
+    - >-
+      #/adminRestaurantAccountStatus/patch/requestBody/content/application~1json/examples/missingAccountStatus/value
+    - >-
+      #/adminRestaurantAccountStatus/patch/requestBody/content/application~1json/examples/invalidAccountStatus/value/accountStatus
+    - >-
+      #/adminDriver/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/adminDriver/patch/requestBody/content/application~1json/examples/invalidLicenseExpiryDate/value/licenseExpiryDate
+    - >-
+      #/adminDriverStatus/patch/requestBody/content/application~1json/examples/missingStatus/value
+    - >-
+      #/adminDriverStatus/patch/requestBody/content/application~1json/examples/invalidStatus/value/status
+    - >-
+      #/adminDriverAccountStatus/patch/requestBody/content/application~1json/examples/missingAccountStatus/value
+    - >-
+      #/adminDriverAccountStatus/patch/requestBody/content/application~1json/examples/invalidAccountStatus/value/accountStatus
+    - >-
+      #/adminDriverDocument/patch/requestBody/content/application~1json/examples/missingStatus/value
+    - >-
+      #/adminDriverDocument/patch/requestBody/content/application~1json/examples/invalidStatus/value/status
+    - >-
+      #/adminOrderStatus/patch/requestBody/content/application~1json/examples/missingStatus/value
+    - >-
+      #/adminOrderStatus/patch/requestBody/content/application~1json/examples/invalidStatus/value/status
+    - >-
+      #/adminPaymentRefunds/post/requestBody/content/application~1json/examples/missingAmount/value
+    - >-
+      #/adminPaymentRefunds/post/requestBody/content/application~1json/examples/amountTooLow/value/amount
+    - >-
+      #/adminPaymentRefund/patch/requestBody/content/application~1json/examples/missingStatus/value
+    - >-
+      #/adminPaymentRefund/patch/requestBody/content/application~1json/examples/invalidStatus/value/status
+    - >-
+      #/adminModerateRestaurantReview/patch/requestBody/content/application~1json/examples/missingStatus/value
+    - >-
+      #/adminModerateRestaurantReview/patch/requestBody/content/application~1json/examples/invalidStatus/value/status
+    - >-
+      #/adminModerateDriverReview/patch/requestBody/content/application~1json/examples/missingStatus/value
+    - >-
+      #/adminModerateDriverReview/patch/requestBody/content/application~1json/examples/invalidStatus/value/status
+    - >-
+      #/adminPayouts/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/adminPayouts/post/requestBody/content/application~1json/examples/missingDriverId/value
+    - >-
+      #/adminPayouts/post/requestBody/content/application~1json/examples/invalidDriverId/value/driverId
+    - >-
+      #/adminPayouts/post/requestBody/content/application~1json/examples/invalidPeriodStart/value/periodStart
+    - >-
+      #/adminPayout/patch/requestBody/content/application~1json/examples/missingStatus/value
+    - >-
+      #/adminPayout/patch/requestBody/content/application~1json/examples/invalidStatus/value/status
+    - >-
+      #/adminPayout/patch/requestBody/content/application~1json/examples/invalidPaidAt/value/paidAt
+    - >-
+      #/adminAdmins/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/adminAdmins/post/requestBody/content/application~1json/examples/missingEmail/value
+    - >-
+      #/adminAdmins/post/requestBody/content/application~1json/examples/invalidEmail/value/email
+    - >-
+      #/adminAdmins/post/requestBody/content/application~1json/examples/passwordTooShort/value/password
+    - >-
+      #/adminAdmins/post/requestBody/content/application~1json/examples/blankFirstName/value/firstName
+    - >-
+      #/adminAdminAccountStatus/patch/requestBody/content/application~1json/examples/missingAccountStatus/value
+    - >-
+      #/adminAdminAccountStatus/patch/requestBody/content/application~1json/examples/invalidAccountStatus/value/accountStatus
+    - >-
+      #/adminOrderDispatchAssignment/put/requestBody/content/application~1json/examples/missingDriverId/value
+    - >-
+      #/adminOrderDispatchAssignment/put/requestBody/content/application~1json/examples/invalidDriverId/value/driverId
+docs/api/paths/cart.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/cartItems/post/requestBody/content/application~1json/examples/missingMenuItemId/value
+    - >-
+      #/cartItems/post/requestBody/content/application~1json/examples/invalidMenuItemId/value/menuItemId
+    - >-
+      #/cartItems/post/requestBody/content/application~1json/examples/quantityTooLow/value/quantity
+    - >-
+      #/cartItem/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/cartItem/patch/requestBody/content/application~1json/examples/quantityTooLow/value/quantity
+docs/api/paths/order.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/orders/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/orders/post/requestBody/content/application~1json/examples/missingDeliveryAddressId/value
+    - >-
+      #/orders/post/requestBody/content/application~1json/examples/invalidDeliveryAddressId/value/deliveryAddressId
+    - >-
+      #/orders/post/requestBody/content/application~1json/examples/invalidPaymentMethod/value/paymentMethod
+docs/api/paths/payment.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/orderPayment/post/requestBody/content/application~1json/examples/missingPaymentToken/value
+docs/api/paths/review.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/orderRestaurantReview/post/requestBody/content/application~1json/examples/missingRating/value
+    - >-
+      #/orderRestaurantReview/post/requestBody/content/application~1json/examples/ratingTooLow/value/rating
+    - >-
+      #/orderDriverReview/post/requestBody/content/application~1json/examples/missingRating/value
+    - >-
+      #/orderDriverReview/post/requestBody/content/application~1json/examples/ratingTooLow/value/rating
+    - >-
+      #/restaurantReview/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantReview/patch/requestBody/content/application~1json/examples/ratingTooLow/value/rating
+    - >-
+      #/driverReview/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/driverReview/patch/requestBody/content/application~1json/examples/ratingTooLow/value/rating
+    - >-
+      #/ownerReviewReply/post/requestBody/content/application~1json/examples/missingReply/value
+    - >-
+      #/ownerReviewReply/post/requestBody/content/application~1json/examples/blankReply/value/reply
+    - >-
+      #/ownerReviewReply/patch/requestBody/content/application~1json/examples/missingReply/value
+    - >-
+      #/ownerReviewReply/patch/requestBody/content/application~1json/examples/blankReply/value/reply
+docs/api/paths/menu.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/restaurantMenuItems/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantMenuItems/post/requestBody/content/application~1json/examples/missingCategoryId/value
+    - >-
+      #/restaurantMenuItems/post/requestBody/content/application~1json/examples/invalidCategoryId/value/categoryId
+    - >-
+      #/restaurantMenuItems/post/requestBody/content/application~1json/examples/blankName/value/name
+    - >-
+      #/restaurantMenuItems/post/requestBody/content/application~1json/examples/basePriceTooLow/value/basePrice
+    - >-
+      #/restaurantMenuItem/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantMenuItem/patch/requestBody/content/application~1json/examples/basePriceTooLow/value/basePrice
+    - >-
+      #/restaurantMenuItemAvailability/patch/requestBody/content/application~1json/examples/missingIsAvailable/value
+    - >-
+      #/restaurantMenuItemAvailability/patch/requestBody/content/application~1json/examples/isAvailableWrongType/value/isAvailable
+    - >-
+      #/restaurantMenuItemOptions/post/requestBody/content/application~1json/examples/missingName/value
+    - >-
+      #/restaurantMenuItemOptions/post/requestBody/content/application~1json/examples/blankName/value/name
+    - >-
+      #/restaurantMenuItemOptions/post/requestBody/content/application~1json/examples/minSelectionTooLow/value/minSelection
+    - >-
+      #/restaurantMenuItemOptions/post/requestBody/content/application~1json/examples/isRequiredWrongType/value/isRequired
+    - >-
+      #/restaurantMenuItemOption/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantMenuItemOption/patch/requestBody/content/application~1json/examples/maxSelectionTooLow/value/maxSelection
+    - >-
+      #/restaurantMenuItemOptionValues/post/requestBody/content/application~1json/examples/missingName/value
+    - >-
+      #/restaurantMenuItemOptionValues/post/requestBody/content/application~1json/examples/blankName/value/name
+    - >-
+      #/restaurantMenuItemOptionValues/post/requestBody/content/application~1json/examples/priceAdjustmentWrongType/value/priceAdjustment
+    - >-
+      #/restaurantMenuItemOptionValues/post/requestBody/content/application~1json/examples/displayOrderTooLow/value/displayOrder
+    - >-
+      #/restaurantMenuItemOptionValue/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantMenuItemOptionValue/patch/requestBody/content/application~1json/examples/priceAdjustmentWrongType/value/priceAdjustment
+docs/api/paths/promotion.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/restaurantPromotions/post/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantPromotions/post/requestBody/content/application~1json/examples/missingTitle/value
+    - >-
+      #/restaurantPromotions/post/requestBody/content/application~1json/examples/blankTitle/value/title
+    - >-
+      #/restaurantPromotions/post/requestBody/content/application~1json/examples/invalidDiscountType/value/discountType
+    - >-
+      #/restaurantPromotions/post/requestBody/content/application~1json/examples/discountValueTooLow/value/discountValue
+    - >-
+      #/restaurantPromotion/patch/requestBody/content/application~1json/examples/emptyBody/value
+    - >-
+      #/restaurantPromotion/patch/requestBody/content/application~1json/examples/discountValueTooLow/value/discountValue
+    - >-
+      #/restaurantPromotion/patch/requestBody/content/application~1json/examples/isActiveWrongType/value/isActive
+docs/api/paths/verification.yaml:
+  no-invalid-media-type-examples:
+    - >-
+      #/verifyEmailConfirm/post/requestBody/content/application~1json/examples/missingCode/value
+    - >-
+      #/verifyEmailConfirm/post/requestBody/content/application~1json/examples/codeBadFormat/value/code
+    - >-
+      #/verifyPhoneConfirm/post/requestBody/content/application~1json/examples/missingCode/value
+    - >-
+      #/verifyPhoneConfirm/post/requestBody/content/application~1json/examples/codeBadFormat/value/code

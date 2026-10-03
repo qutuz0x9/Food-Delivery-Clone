@@ -67,8 +67,18 @@ verifyEmailConfirm:
         application/json:
           schema:
             $ref: "../schemas/verification.yaml#/ConfirmVerificationRequest"
-          example:
-            code: "482913"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                code: "482913"
+            missingCode:
+              summary: Missing required `code` (400)
+              value: {}
+            codeBadFormat:
+              summary: "`code` does not match the required format (400)"
+              value:
+                code: "!!invalid!!"
 
     responses:
       "200":
@@ -170,8 +180,18 @@ verifyPhoneConfirm:
         application/json:
           schema:
             $ref: "../schemas/verification.yaml#/ConfirmVerificationRequest"
-          example:
-            code: "482913"
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                code: "482913"
+            missingCode:
+              summary: Missing required `code` (400)
+              value: {}
+            codeBadFormat:
+              summary: "`code` does not match the required format (400)"
+              value:
+                code: "!!invalid!!"
 
     responses:
       "200":

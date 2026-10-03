@@ -25,10 +25,33 @@ orders:
         application/json:
           schema:
             $ref: "../schemas/order.yaml#/PlaceOrderRequest"
-          example:
-            deliveryAddressId: deebf84a-2ed2-579a-80d7-b820d7e655c4
-            paymentMethod: credit_card
-            customerNote: Please ring the bell
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                deliveryAddressId: deebf84a-2ed2-579a-80d7-b820d7e655c4
+                paymentMethod: credit_card
+                customerNote: Please ring the bell
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            missingDeliveryAddressId:
+              summary: Missing required `deliveryAddressId` (400)
+              value:
+                paymentMethod: credit_card
+                customerNote: Please ring the bell
+            invalidDeliveryAddressId:
+              summary: "`deliveryAddressId` is not a valid UUID (400)"
+              value:
+                deliveryAddressId: not-a-uuid
+                paymentMethod: credit_card
+                customerNote: Please ring the bell
+            invalidPaymentMethod:
+              summary: "`paymentMethod` is not one of the allowed values (400)"
+              value:
+                deliveryAddressId: deebf84a-2ed2-579a-80d7-b820d7e655c4
+                paymentMethod: not_a_valid_value
+                customerNote: Please ring the bell
 
     responses:
       "201":

@@ -10,7 +10,7 @@ Conventions for writing and maintaining the OpenAPI documentation under `docs/ap
 
 ## File Layout
 
-```
+```txt
 docs/api/
   openapi.yaml        # root document: info, servers, tags, security, and $ref index only
   paths/
@@ -34,18 +34,22 @@ docs/api/
 
 - Each file under `paths/<domain>.yaml` is a map keyed by an internal name (not the URL), whose value is a
   full Path Item Object, e.g.:
+
   ```yaml
   # paths/customer.yaml
   registerCustomer:
     post:
       ...
   ```
+
   Reference it from the root document by URL:
+
   ```yaml
   paths:
     /auth/register/customer:
       $ref: "./paths/customer.yaml#/registerCustomer"
   ```
+
 - When multiple HTTP methods share the same URL (e.g. `GET`/`PATCH`/`DELETE` on `/customers/me/addresses/{addressId}`),
   define **one** Path Item key containing all of them (`get`, `patch`, `delete`, ...) rather than a
   separate key per method — the root document should reference it with a single `$ref` for that path.
@@ -56,6 +60,7 @@ docs/api/
   `schemas/`).
 - Mirror every schema/response used by a path in the root `components.schemas` / `components.responses` map
   via a `$ref`, so tooling (Swagger UI, Redoc) can list all models/responses from the root document:
+
   ```yaml
   components:
     schemas:
@@ -79,6 +84,13 @@ docs/api/
   `/restaurants/{restaurantId}`) and must not repeat `/api/v1`, or Swagger UI would call `/api/v1/api/v1/...`.
 - Every operation must include example values in its `requestBody` (when it has one) and in each response's
   `content`.
+- A JSON `requestBody` uses named `examples`, not a single `example`: `valid` (summary `Valid request`) plus negative
+  examples that each break one schema rule (`emptyBody`, `missing<Field>`, `invalid<Field>`, `<field>TooShort`, ...),
+  with a summary ending in the status they get, e.g. ``Missing required `email` (400)``. Apidog imports them as
+  selectable request bodies for testing failures. The negative ones are invalid on purpose, so add their
+  `no-invalid-media-type-examples` warnings to `.redocly.lint-ignore.yaml` (run
+  `npx redocly lint docs/api/openapi.yaml --generate-ignore-file --max-problems 10000` once every other problem is
+  fixed). Never ignore a warning on a `valid` example.
 
 ## Response Envelope & Errors
 

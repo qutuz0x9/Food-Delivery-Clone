@@ -120,13 +120,42 @@ cartItems:
         application/json:
           schema:
             $ref: "../schemas/cart.yaml#/AddCartItemRequest"
-          example:
-            menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
-            quantity: 2
-            specialInstructions: No onions
-            options:
-              - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
-                optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                quantity: 2
+                specialInstructions: No onions
+                options:
+                  - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                    optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
+            missingMenuItemId:
+              summary: Missing required `menuItemId` (400)
+              value:
+                quantity: 2
+                specialInstructions: No onions
+                options:
+                  - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                    optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
+            invalidMenuItemId:
+              summary: "`menuItemId` is not a valid UUID (400)"
+              value:
+                menuItemId: not-a-uuid
+                quantity: 2
+                specialInstructions: No onions
+                options:
+                  - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                    optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
+            quantityTooLow:
+              summary: "`quantity` below the minimum of 1 (400)"
+              value:
+                menuItemId: 31e9dc29-fd80-5f86-8c09-06b6ee1ef963
+                quantity: 0
+                specialInstructions: No onions
+                options:
+                  - optionGroupId: 56658202-efc2-556c-97f7-bd7b0ad03a99
+                    optionValueId: 205313e7-080a-56ba-ae8f-17b29d6058cb
 
     responses:
       "201":
@@ -217,8 +246,18 @@ cartItem:
         application/json:
           schema:
             $ref: "../schemas/cart.yaml#/UpdateCartItemRequest"
-          example:
-            quantity: 3
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                quantity: 3
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            quantityTooLow:
+              summary: "`quantity` below the minimum of 1 (400)"
+              value:
+                quantity: 0
 
     responses:
       "200":

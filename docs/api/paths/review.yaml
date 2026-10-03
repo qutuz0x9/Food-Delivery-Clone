@@ -31,10 +31,24 @@ orderRestaurantReview:
         application/json:
           schema:
             $ref: "../schemas/review.yaml#/CreateReviewRequest"
-          example:
-            rating: 4
-            title: Great grills
-            comment: Tasty food, a bit late.
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                rating: 4
+                title: Great grills
+                comment: Tasty food, a bit late.
+            missingRating:
+              summary: Missing required `rating` (400)
+              value:
+                title: Great grills
+                comment: Tasty food, a bit late.
+            ratingTooLow:
+              summary: "`rating` below the minimum of 1 (400)"
+              value:
+                rating: 0
+                title: Great grills
+                comment: Tasty food, a bit late.
 
     responses:
       "201":
@@ -116,10 +130,24 @@ orderDriverReview:
         application/json:
           schema:
             $ref: "../schemas/review.yaml#/CreateReviewRequest"
-          example:
-            rating: 5
-            title: Fast and polite
-            comment: Arrived early and the food was still hot.
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                rating: 5
+                title: Fast and polite
+                comment: Arrived early and the food was still hot.
+            missingRating:
+              summary: Missing required `rating` (400)
+              value:
+                title: Fast and polite
+                comment: Arrived early and the food was still hot.
+            ratingTooLow:
+              summary: "`rating` below the minimum of 1 (400)"
+              value:
+                rating: 0
+                title: Fast and polite
+                comment: Arrived early and the food was still hot.
 
     responses:
       "201":
@@ -444,9 +472,20 @@ restaurantReview:
         application/json:
           schema:
             $ref: "../schemas/review.yaml#/UpdateReviewRequest"
-          example:
-            rating: 5
-            comment: Even better than last time.
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                rating: 5
+                comment: Even better than last time.
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            ratingTooLow:
+              summary: "`rating` below the minimum of 1 (400)"
+              value:
+                rating: 0
+                comment: Even better than last time.
 
     responses:
       "200":
@@ -755,9 +794,20 @@ driverReview:
         application/json:
           schema:
             $ref: "../schemas/review.yaml#/UpdateReviewRequest"
-          example:
-            rating: 4
-            comment: Good, but a little late.
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                rating: 4
+                comment: Good, but a little late.
+            emptyBody:
+              summary: Empty body (400)
+              value: {}
+            ratingTooLow:
+              summary: "`rating` below the minimum of 1 (400)"
+              value:
+                rating: 0
+                comment: Good, but a little late.
 
     responses:
       "200":
@@ -1037,8 +1087,18 @@ ownerReviewReply:
         application/json:
           schema:
             $ref: "../schemas/review.yaml#/ReplyToReviewRequest"
-          example:
-            reply: Thank you, we are working on delivery times.
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                reply: Thank you, we are working on delivery times.
+            missingReply:
+              summary: Missing required `reply` (400)
+              value: {}
+            blankReply:
+              summary: "`reply` is empty (400)"
+              value:
+                reply: ""
 
     responses:
       "201":
@@ -1109,8 +1169,18 @@ ownerReviewReply:
         application/json:
           schema:
             $ref: "../schemas/review.yaml#/ReplyToReviewRequest"
-          example:
-            reply: Thanks! Delivery is faster now.
+          examples:
+            valid:
+              summary: Valid request
+              value:
+                reply: Thanks! Delivery is faster now.
+            missingReply:
+              summary: Missing required `reply` (400)
+              value: {}
+            blankReply:
+              summary: "`reply` is empty (400)"
+              value:
+                reply: ""
 
     responses:
       "200":
