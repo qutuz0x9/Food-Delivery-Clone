@@ -36,6 +36,7 @@
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
     "lint:api": "redocly lint docs/api/openapi.yaml",
+    "bundle:api": "redocly bundle docs/api/openapi.yaml -o dist/openapi.bundled.yaml",
     "prebuild": "prisma contract emit",
     "contract:emit": "prisma contract emit",
     "contract:infer": "prisma contract infer",
@@ -44,6 +45,7 @@
     "db:migrate": "prisma db migrate --advance-ref db",
     "db:migrate:show": "prisma db migrate --show",
     "db:seed": "tsx src/scripts/seed.ts",
+    "postman:cases": "tsx src/scripts/spec-to-postman.ts",
     "db:verify": "prisma db verify",
     "db:schema": "prisma db schema",
     "migration:plan": "prisma migration plan --name",
@@ -54,6 +56,7 @@
   "devDependencies": {
     "@prisma/cli-engine": "^0.4.0",
     "@redocly/cli": "^2.57.0",
+    "@stoplight/prism-cli": "^5.15.11",
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.1",
     "@types/swagger-ui-express": "^4.1.8",

@@ -90,6 +90,8 @@ npm start       # run compiled dist/index.js
 npm run lint    # oxlint with type-aware rules (config: .oxlintrc.json)
 npm run lint:fix  # same, applying safe auto-fixes
 npm run lint:api  # Redocly lint of docs/api/openapi.yaml (config: redocly.yaml)
+npm run bundle:api  # bundle the split spec into one file, dist/openapi.bundled.yaml (for Apidog/Postman import)
+npm run postman:cases [-- --only <operationId,...>]  # Postman collection with success + failure cases for every operation (Apidog imports them as cases)
 npm run contract:emit  # regenerate src/prisma/contract.json and contract.d.ts after editing contract.prisma
 npm run migration:plan -- <name>  # plan a migration for a contract change; review it, then apply it
 npm run db:migrate  # apply planned migrations to the local database

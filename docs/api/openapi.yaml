@@ -11,7 +11,9 @@ info:
 
 servers:
   - url: http://localhost:3000/api/v1
-    description: Local development server
+    description: Development  Server
+  - url: http://127.0.0.1:4010
+    description: Mock Server
 
 security:
   - bearerAuth: []
