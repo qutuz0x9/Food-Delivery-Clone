@@ -82,11 +82,21 @@ Unauthorized:
     application/json:
       schema:
         $ref: "../schemas/common.yaml#/ErrorResponse"
-      example:
-        success: false
-        message: Invalid email or password
-        error:
-          code: INVALID_CREDENTIALS
+      examples:
+        invalidCredentials:
+          summary: Wrong email or password (login)
+          value:
+            success: false
+            message: Invalid email or password
+            error:
+              code: INVALID_CREDENTIALS
+        missingToken:
+          summary: No access token was sent (protected endpoint)
+          value:
+            success: false
+            message: Access token is required
+            error:
+              code: INVALID_ACCESS_TOKEN
 
 InvalidResetToken:
   description: Password reset token is invalid, expired, or already used
