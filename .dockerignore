@@ -1,0 +1,34 @@
+# Keeps the build context small and secrets out of images.
+# The image only needs: package*.json, tsconfig*.json, prisma.config.ts, nodemon.json, src/, migrations/, docs/api/.
+
+# Dependencies and build output (installed and built inside the image)
+node_modules
+dist
+
+# Secrets: every env file, including the examples
+.env*
+
+# Git and CI
+.git
+.gitignore
+.gitattributes
+.github
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+compose*.yaml
+
+# Editor, AI and lint config (used on the host, not by the app)
+.claude
+.mcp.json
+.oxlintrc.json
+.markdownlint.jsonc
+.markdownlint-cli2.jsonc
+redocly.yaml
+.redocly.lint-ignore.yaml
+
+# Docs: only the OpenAPI spec is read at runtime (app.ts serves it at /api-docs)
+docs
+!docs/api
+*.md

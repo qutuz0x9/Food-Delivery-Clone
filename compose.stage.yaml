@@ -1,0 +1,7 @@
+# Staging: prod's twin for final checks. Same image, restarts on its own, database not published to the host.
+services:
+  db:
+    restart: unless-stopped
+
+  api:
+    restart: unless-stopped

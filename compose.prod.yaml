@@ -1,0 +1,12 @@
+# Prod: like staging, plus a locked-down api container (read-only filesystem, no privilege escalation).
+services:
+  db:
+    restart: always
+
+  api:
+    restart: always
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true

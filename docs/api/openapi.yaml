@@ -14,6 +14,10 @@ servers:
     description: Development  Server
   - url: http://127.0.0.1:4010
     description: Mock Server
+  - url: http://localhost:3001/api/v1
+    description: Staging Server
+  - url: https://localhost:3002/api/v1
+    description: Production Server
 
 security:
   - bearerAuth: []
