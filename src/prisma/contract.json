@@ -12765,7 +12765,7 @@
     "storageHash": "c0f7632f4e179314a360fcf417f5370eb6b0987b5edd22ec8787df585a9aa3d9"
   },
   "execution": {
-    "executionHash": "c7383a38623f75c4ebb17fbaf4c5c055cbf27ab16d0c8f4e4148ba4f057850ed",
+    "executionHash": "92e6ad5e0d7410c3d847c8fcf89e4ed24a0a7f07833b0e51e4c2f874acb8f7ab",
     "mutations": {
       "defaults": [
         {
@@ -12788,6 +12788,17 @@
             "column": "id",
             "namespace": "identity",
             "table": "audit_log"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "customers"
           }
         },
         {

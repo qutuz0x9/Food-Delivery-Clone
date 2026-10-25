@@ -324,7 +324,7 @@ model MenuItemOptionValue {
 }
 
 model Customer {
-  id              Uuid                @id
+  id              Uuid                @id @default(uuid())
   userId          Uuid                @unique @map("user_id")
   firstName       String              @map("first_name")
   lastName        String              @map("last_name")

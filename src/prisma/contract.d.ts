@@ -36,7 +36,7 @@ import type {
 export type StorageHash =
   StorageHashBase<'c0f7632f4e179314a360fcf417f5370eb6b0987b5edd22ec8787df585a9aa3d9'>;
 export type ExecutionHash =
-  ExecutionHashBase<'c7383a38623f75c4ebb17fbaf4c5c055cbf27ab16d0c8f4e4148ba4f057850ed'>;
+  ExecutionHashBase<'92e6ad5e0d7410c3d847c8fcf89e4ed24a0a7f07833b0e51e4c2f874acb8f7ab'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -11416,6 +11416,14 @@ type ContractBase = Omit<
           readonly ref: {
             readonly namespace: 'identity';
             readonly table: 'audit_log';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv4' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
+            readonly table: 'customers';
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv4' };
