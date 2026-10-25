@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Attach to the api container started by `npm run docker:dev:up` (compose.dev.yaml opens port 9229).
+      "name": "Attach to Docker (api)",
+      "type": "node",
+      "request": "attach",
+      "address": "localhost",
+      "port": 9229,
+      // The container runs the code from /app; map it to this folder so breakpoints match.
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/app",
+      // nodemon restarts the app on every save; reconnect automatically.
+      "restart": true,
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/node_modules/**"]
+    }
+  ]
+}

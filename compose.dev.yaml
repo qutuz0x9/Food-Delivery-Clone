@@ -7,6 +7,12 @@ services:
   api:
     build:
       target: dev
+    # Same as `npm run dev`, plus Node's debugger on 9229 for VS Code to attach to (.vscode/launch.json).
+    # The flag is on tsx only: NODE_OPTIONS would give it to npm and nodemon too, and they'd take the port first.
+    command: ["npx", "nodemon", "--exec", "tsx --inspect=0.0.0.0:9229 ./src/index.ts"]
+    ports:
+      # 127.0.0.1 only: whoever reaches the debugger can run any code in the app.
+      - "127.0.0.1:9229:9229"
     volumes:
       - ./src:/app/src
       - ./docs/api:/app/docs/api
