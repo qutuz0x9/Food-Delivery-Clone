@@ -10,8 +10,8 @@ API versioned under `/api/v1`.
 
 **Current status: design/documentation phase.** The data contract (`src/prisma/contract.prisma`) and its migrations
 exist and are applied to the local dev database, and the OpenAPI spec (`docs/api/`) documents all four actors. There is
-no business logic or `src/modules/` structure yet — only a minimal Express scaffold (`src/app.ts`, `src/index.ts`) that
-serves the OpenAPI spec via Swagger UI. Most work right now is on the spec and the contract.
+no business logic yet (the `src/modules/` domain folders exist but are empty) — only a minimal Express scaffold
+(`src/app.ts`, `src/index.ts`) that serves the OpenAPI spec via Swagger UI. Most work right now is on the spec and the contract.
 
 ## Source of Truth
 
@@ -128,26 +128,61 @@ implemented routes. That rule is repeated here because the rules file doesn't lo
 
 ## Planned Architecture (once implementation starts)
 
-Organize by feature/module, not technical layer:
+Organize by business domain, not by actor or technical layer. Most data is touched by several actors (an order is
+placed by the customer, moved along by the restaurant and the driver, and overridden by an admin), so one module owns all
+the rules for its tables in one service, and each actor gets a thin route file inside that module. The module folders
+exist under `src/modules/` (empty until each one is built):
 
 ```txt
 src/
-  modules/<feature>/       # auth, customers, restaurants, menu, orders, payments, drivers, admin (see note below)
-    <feature>.routes.ts        # HTTP -> controller wiring only
-    <feature>.controller.ts    # parse/validate input, format responses — no Prisma calls or business logic
-    <feature>.service.ts       # business logic, orchestrates repositories
-    <feature>.repository.ts    # only layer that imports the Prisma client
-    <feature>.validation.ts    # zod schemas / DTOs
-    <feature>.types.ts
-  middlewares/              # auth, error handler, role guard, request validation
-  common/                    # shared utils, error classes, pagination helpers
-  config/                    # env loading, prisma client instance, logger
-  prisma/contract.prisma   # Prisma 8 data contract (exists today), plus generated contract.json / contract.d.ts
+  index.ts                 # starts the server
+  app.ts                   # builds the Express app (middleware, Swagger UI, routes)
+  routes.ts                # mounts every module router under /api/v1
+  config/                  # env loading and validation, logger
+  prisma/                  # contract.prisma, generated contract.json / contract.d.ts, db.ts
+  common/                  # error classes, pagination, shared helpers
+  middlewares/             # authenticate (JWT), role guard, request validation, error handler
+  modules/
+    auth/                  # register/login/logout/refresh/password reset for all actors, email and phone verification
+    customers/             # customer profile, saved delivery_addresses
+    restaurants/           # restaurant profile, branches, operating hours, cuisine tags (restaurant_categories)
+    menu/                  # menu_categories, menu items, option groups/values, images
+    cart/                  # shopping_cart, items, item options
+    orders/                # orders, order items/options, delivery_address snapshot, order_status_history
+    payments/              # payments, payment_refunds
+    deliveries/            # dispatch: delivery_offers, driver_assignments, driver_locations
+    drivers/               # driver profile, vehicles, documents, earnings, payouts
+    reviews/               # restaurant and driver reviews, review images, restaurant replies
+    promotions/            # restaurant_promotions
+    cities/                # cities (public list, admin management)
+    admins/                # admin accounts only
+  scripts/                 # seed.ts, spec-to-postman.ts
 ```
 
-The contract also implies features outside this module list: cart (`shopping_cart*`), reviews, promotions, cities and
-branches, delivery dispatch (`delivery_offers`, `driver_assignments`), payouts, and dashboards/reports. Decide where each
-one lives (its own module or inside an existing one) before implementing it.
+Inside a module (`orders` shown; a small module like `cities` keeps one routes and one controller file instead of the
+`routes/` and `controllers/` folders):
+
+```txt
+modules/orders/
+  index.ts                 # the module's public API: its service and types, never its repository
+  orders.service.ts        # every business rule for the module's tables
+  orders.repository.ts     # the only layer that imports the Prisma client
+  orders.validation.ts     # zod schemas and the DTO types inferred from them
+  orders.types.ts
+  routes/                  # HTTP -> controller wiring only, one file per actor:
+    customer.routes.ts     #   /customers/me/orders
+    restaurant.routes.ts   #   /restaurants/me/orders
+    admin.routes.ts        #   /admin/orders
+  controllers/             # parse/validate input, format responses; no Prisma calls or business logic
+```
+
+- A module writes only its own tables. When it needs another domain (placing an order reads the cart and menu, creates
+  the payment and starts dispatch), it calls that module's service through its `index.ts`, never its repository.
+- "Admin" is an actor, not a domain: admin actions live in an `admin.routes.ts` inside the domain they change, behind
+  the role guard. The `admins` module only manages administrator accounts.
+- Modules follow the files in `docs/api/paths/` (`order.yaml`, `cart.yaml`, `delivery.yaml`, ...), so a route change
+  maps straight to the yaml file to update.
+- Not placed yet: dashboards and reports. Decide where they live before building them.
 
 Coding conventions (async/await and error handling, zod validation, DTOs, Prisma mapping, transactions, soft deletes,
 order status history, role guards, `audit_log`) are in `.claude/rules/coding-conventions.md`. It loads automatically
