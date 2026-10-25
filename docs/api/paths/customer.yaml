@@ -8,8 +8,15 @@ registerCustomer:
       Creates a new customer account.
 
       The registration process validates the supplied information,
-      verifies email uniqueness (`409` if the email is taken), creates
-      the user identity, and creates the associated customer profile.
+      verifies email uniqueness (`409` `EMAIL_ALREADY_EXISTS`, compared
+      case-insensitively) and phone number uniqueness (`409`
+      `VALUE_ALREADY_IN_USE`), creates the user identity with the
+      Customer role, and creates the associated customer profile.
+
+      Registering also logs the customer in, exactly like login: a JWT
+      access token in the response body and a refresh token in an
+      `HttpOnly` cookie (`Set-Cookie`). The refresh token is never
+      returned in the body.
 
     operationId: registerCustomer
 
@@ -64,10 +71,27 @@ registerCustomer:
                 firstName: ""
                 lastName: Doe
                 phoneNumber: "+201234567890"
+            invalidPhoneNumber:
+              summary: "`phoneNumber` is not in E.164 format (400)"
+              value:
+                email: john@example.com
+                password: StrongPassword123!
+                firstName: John
+                lastName: Doe
+                phoneNumber: "01234567890"
 
     responses:
       "201":
-        description: Customer account created successfully
+        description: Customer account created successfully, and the customer is logged in
+        headers:
+          Set-Cookie:
+            description: |
+              Sets the `refreshToken` cookie, valid for 7 days. It is `HttpOnly`, `Secure` and `SameSite=Strict`, and
+              sent only to `/api/v1/auth`, so scripts cannot read it and the browser sends it back on its own. It is
+              never returned in the response body.
+            schema:
+              type: string
+            example: refreshToken=Vh3k9Qm2xR7tYp1LwZ8nB4cD6fG0jH5sA2eK9uI3oPq; Max-Age=604800; Path=/api/v1/auth; HttpOnly; Secure; SameSite=Strict
         content:
           application/json:
             schema:
@@ -82,6 +106,7 @@ registerCustomer:
                   firstName: John
                   lastName: Doe
                   phoneNumber: "+201234567890"
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.abc123signature
 
       "400":
         $ref: "../responses/common.yaml#/ValidationError"

@@ -10,33 +10,36 @@ RegisterCustomerRequest:
     email:
       type: string
       format: email
-      description: Customer email address.
+      maxLength: 254
+      description: Customer email address. Surrounding spaces are removed. Uniqueness is checked case-insensitively.
       example: john@example.com
 
     password:
       type: string
       format: password
       minLength: 8
-      description: Customer account password.
+      maxLength: 128
+      description: Customer account password. Spaces are kept as typed.
       example: StrongPassword123!
 
     firstName:
       type: string
       minLength: 1
       maxLength: 100
-      description: Customer first name.
+      description: Customer first name. Surrounding spaces are removed before the length is checked.
       example: John
 
     lastName:
       type: string
       minLength: 1
       maxLength: 100
-      description: Customer last name.
+      description: Customer last name. Surrounding spaces are removed before the length is checked.
       example: Doe
 
     phoneNumber:
       type: string
-      description: Customer phone number.
+      pattern: '^\+[1-9]\d{7,14}$'
+      description: Customer phone number in E.164 format (`+`, country code, number; 8 to 15 digits).
       example: "+201234567890"
 
 RegisterCustomerResponse:
@@ -58,9 +61,15 @@ RegisterCustomerResponse:
       type: object
       required:
         - customer
+        - accessToken
       properties:
         customer:
           $ref: "#/Customer"
+
+        accessToken:
+          type: string
+          description: JWT access token used to authenticate subsequent requests. Valid for 15 minutes.
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZDhjNWU5YSJ9.abc123signature
 
 LoginCustomerRequest:
   type: object

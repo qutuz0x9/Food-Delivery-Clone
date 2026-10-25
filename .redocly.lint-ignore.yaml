@@ -102,6 +102,8 @@ docs/api/paths/customer.yaml:
     - >-
       #/registerCustomer/post/requestBody/content/application~1json/examples/blankFirstName/value/firstName
     - >-
+      #/registerCustomer/post/requestBody/content/application~1json/examples/invalidPhoneNumber/value/phoneNumber
+    - >-
       #/loginCustomer/post/requestBody/content/application~1json/examples/emptyBody/value
     - >-
       #/loginCustomer/post/requestBody/content/application~1json/examples/missingEmail/value
