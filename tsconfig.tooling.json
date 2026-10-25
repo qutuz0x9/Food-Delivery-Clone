@@ -1,5 +1,5 @@
 {
-  // Root-level config files (prisma.config.ts). Type-check only, nothing is shipped.
+  // Root-level config files (prisma.config.ts, the Vitest configs). Type-check only, nothing is shipped.
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "composite": true,
@@ -9,5 +9,5 @@
     "declarationMap": false,
     "sourceMap": false
   },
-  "include": ["prisma.config.ts"]
+  "include": ["prisma.config.ts", "vitest.config.ts", "vitest.db.config.ts"]
 }

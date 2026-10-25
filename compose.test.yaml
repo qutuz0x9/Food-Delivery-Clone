@@ -1,0 +1,20 @@
+# Test database only: an empty Postgres for the integration tests (`npm run test:db`). Separate from the dev stack on
+# purpose, so tests never touch dev data. Its data lives in memory (tmpfs): every `test:db:up` starts empty.
+name: food-delivery-test
+
+services:
+  db-test:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: food
+      POSTGRES_PASSWORD: food_test_password
+      POSTGRES_DB: food_test
+    ports:
+      - "127.0.0.1:5434:5432"
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U food -d food_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15

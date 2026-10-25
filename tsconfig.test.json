@@ -1,0 +1,12 @@
+{
+  // Vitest test files under src/**/__tests__. Type-check only (`npm run typecheck`); Vitest runs them without tsc.
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.json"],
+  "exclude": ["node_modules", "dist"]
+}

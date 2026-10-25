@@ -106,8 +106,25 @@ because typescript-eslint can't load TypeScript 7 (no JS compiler API). Two rule
 CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run lint`, `npm run lint:api` and `npm run build` on pushes to `main` and on PRs. Pin
 any new action to a full commit SHA with a version comment, as the existing steps do.
 
-No test runner is configured yet (`npm test` is a placeholder). Once implementation starts, use `jest` + `supertest`
-for HTTP integration tests.
+Tests use Vitest + Supertest (Vitest runs ESM TypeScript with no config; jest does not). They live in
+`src/**/__tests__/`, are excluded from `npm run build`, and are type-checked by `tsconfig.test.json`:
+
+```bash
+npm test            # vitest run
+npm run test:watch  # vitest in watch mode
+npm run typecheck   # type-check src/ including tests
+```
+
+Repository integration tests (`*.db.test.ts`) run against a separate, in-memory Postgres (`compose.test.yaml`,
+`.env.test` copied from `.env.test.example`), never the dev database. Each test runs in a transaction that is rolled
+back (`src/test/with-rollback.ts`). `npm test` skips them (`vitest.config.ts`).
+
+```bash
+npm run test:db:up       # start the db-test container (port 5434, starts empty)
+npm run test:db:migrate  # apply the migrations to it
+npm run test:db          # run the *.db.test.ts files (vitest.db.config.ts)
+npm run test:db:down     # stop it (its data is gone)
+```
 
 The TypeScript setup is strict and ESM (relative imports need `.js`, no `enum`, `import type`), and the app bundles the
 OpenAPI spec at startup. Details are in `.claude/rules/typescript-setup.md`, which loads when you work on

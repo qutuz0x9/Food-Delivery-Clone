@@ -50,5 +50,6 @@
     "resolveJsonModule": true
   },
   "include": ["src/**/*.ts", "src/**/*.json"],
-  "exclude": ["node_modules", "dist"]
+  // Tests are type-checked by tsconfig.test.json and never shipped in dist/.
+  "exclude": ["node_modules", "dist", "src/**/__tests__/**", "src/test/**"]
 }
