@@ -28,17 +28,17 @@ valid relative links/anchors. The conventions are in `.claude/rules/markdown.md`
 3. **Read the report** markdownlint-cli2 prints for anything it couldn't fix automatically.
 4. **Fix what is left by hand.** Use this table, then read the file's context before editing:
 
-   | Rule or message                     | Fix                                                                             |
-   |--------------------------------------|----------------------------------------------------------------------------------|
-   | `MD036` emphasis used as heading    | Make it a real heading, or end the bold label with a colon (`**Label:**`)       |
-   | `MD040` fence without a language    | Add `sh` (commands), `txt` (output), `sql` (DDL), `ts`, `yaml`, ...              |
-   | `MD024` duplicate heading           | Rename one so each heading is unique                                            |
-   | `MD034` bare URL                    | Wrap it in `<...>` or write `[text](url)`                                       |
-   | `MD001` heading level jumps         | Use the next level down (`##` then `###`)                                       |
-   | `MD031`, `MD032`, `MD022`, `MD058`  | Add the blank line before and after the fence, list, heading or table           |
-   | `MD012`, `MD009`, `MD010`, `MD047`  | Remove extra blank lines, trailing spaces and tabs; end with one newline        |
+   | Rule or message                            | Fix                                                                                  |
+   |--------------------------------------------|--------------------------------------------------------------------------------------|
+   | `MD036` emphasis used as heading           | Make it a real heading, or end the bold label with a colon (`**Label:**`)            |
+   | `MD040` fence without a language           | Add `sh` (commands), `txt` (output), `sql` (DDL), `ts`, `yaml`, ...                  |
+   | `MD024` duplicate heading                  | Rename one so each heading is unique                                                 |
+   | `MD034` bare URL                           | Wrap it in `<...>` or write `[text](url)`                                            |
+   | `MD001` heading level jumps                | Use the next level down (`##` then `###`)                                            |
+   | `MD031`, `MD032`, `MD022`, `MD058`         | Add the blank line before and after the fence, list, heading or table                |
+   | `MD012`, `MD009`, `MD010`, `MD047`         | Remove extra blank lines, trailing spaces and tabs; end with one newline             |
    | `MD060` or "table columns are not aligned" | Run `npx markdownlint-cli2 --fix <path>`, or fix a malformed row (uneven cell count) |
-   | broken link or anchor               | Point it at the real file, or at the heading's GitHub slug (lowercase, hyphens) |
+   | broken link or anchor                      | Point it at the real file, or at the heading's GitHub slug (lowercase, hyphens)      |
 
 5. **Run `npx markdownlint-cli2 <files>` again** and repeat step 4 until it passes. Stop after three rounds and
    tell the user what is left instead of guessing.

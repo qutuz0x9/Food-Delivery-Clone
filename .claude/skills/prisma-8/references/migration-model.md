@@ -53,7 +53,7 @@ pnpm prisma migration ref delete <name>
 ### Who advances refs
 
 | Command | Ref advancement |
-|---|---|
+| --- | --- |
 | `db init` / `db update` (default URL) | Implicitly advance `db` (override the name with `--advance-ref <name>`; suppressed whenever `--db` is passed without `--advance-ref`, regardless of the URL — even `--db $DATABASE_URL` pointing at the default database) |
 | `db sign` | Advances `db` after a successful signature (override the name with `--advance-ref <name>`; `--no-advance-ref` skips it, writing no ref and no snapshot); an existing ref is overwritten and the previous hash is reported in the human output (the JSON `advancedRef` carries name and hash only). `--db` does **not** suppress it, unlike init/update: sign never mutates the schema, and adoption is normally done via `--db` |
 | `db migrate --advance-ref <name>` | The **only** apply-time advancement |

@@ -18,6 +18,7 @@ This is a TypeScript / Node.js / Express / Prisma (PostgreSQL) API. Scripts are 
 `npm run lint:api` (Redocly, config in `redocly.yaml`), which CI already runs. Read `CLAUDE.md` first.
 
 Reasonable first workflows for this project:
+
 - CI: install, `npm run build`, tests once they exist, and a check that `contract.json`/`contract.d.ts` are up to date with `src/prisma/contract.prisma` (Prisma 8 has no
   `prisma validate`; the check is `npx prisma contract emit` followed by `git diff --exit-code`)
 - Spec lint: `npm run lint:api` is already a CI step; consider running it only when `docs/api/**` or `redocly.yaml` change
@@ -42,11 +43,13 @@ Before creating or modifying workflows, ask about anything you can't determine f
 
 ## Security-First Principles
 
-**Permissions**
+### Permissions
+
 - Default to `contents: read` at workflow level.
 - Override at job level only when needed, with the minimum required.
 
-**Action pinning**
+### Action pinning
+
 - Pin every action to a full-length commit SHA with a version comment, e.g.
   `actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1`.
 - Never use mutable references (`@main`, `@latest`, `@v4`). Tags can be moved to malicious commits, which lets an
@@ -54,13 +57,15 @@ Before creating or modifying workflows, ask about anything you can't determine f
 - This applies to all actions, first-party (`actions/`) and third-party alike.
 - Use Dependabot or Renovate to update the SHAs.
 
-**Secrets**
+### Secrets
+
 - Access them through environment variables only, and never log or echo them.
 - Use environment-specific secrets for production. Prefer OIDC over long-lived credentials.
 
 ## OIDC Authentication
 
 Requires `id-token: write`.
+
 - **AWS**: IAM role with a trust policy for the GitHub OIDC provider
 - **Azure**: workload identity federation
 - **GCP**: workload identity provider

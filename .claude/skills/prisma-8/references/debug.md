@@ -66,7 +66,7 @@ If the user only pasted the human summary, ask for `--json` output (machine enve
 These symptoms are not structured envelopes — route on the message text and chain to `references/runtime.md` § *Running as a script (teardown)*.
 
 | Symptom | Next move |
-|---|---|
+| --- | --- |
 | `TypeError: db.end is not a function` | The runtime client does not expose `db.end()` — that's the `node-postgres` pool API (`pool.end()`). The right call is `await db.close()`. See `references/runtime.md` § *Running as a script (teardown)*. |
 | Script hangs after queries print / process won't exit | On Postgres the façade-owned `pg.Pool` keeps the event loop alive. Call `await db.close()` before the script returns, or `await using db = postgres<Contract>(...)` at the top of a script module (do NOT put `await using` inside a request handler — block-scoped, would close per-request). See `references/runtime.md` § *Running as a script (teardown)*. |
 | `Error('Postgres client is closed')` / `Error('SQLite client is closed')` / `Error('Mongo client is closed')` | The client was closed via `db.close()` (terminal state). Remove the early `close()`, reorder so `close()` runs last after all queries, or construct a new `db` if reconnection is intended. See `references/runtime.md` § *Running as a script (teardown)*. |
@@ -76,7 +76,7 @@ These symptoms are not structured envelopes — route on the message text and ch
 The single source of truth: read the envelope, find the row by `code`, follow the next move. Every code below has an entry in `docs/reference/error-reference.md` (anchored `#<CODE>`); when a code is missing here, read it there.
 
 | Code | Where it surfaces | Next move |
-|---|---|---|
+| --- | --- | --- |
 | `CONFIG.FILE_NOT_FOUND` | Most `prisma` commands | Run `prisma orm init`, or pass `--config <path>`. |
 | `CONFIG.CONTRACT_MISSING` | `contract emit`, `db *` | Add `contract: './src/prisma/contract.prisma'` to the `ormConfig({...})` section of `prisma.config.ts`. See `references/contract.md`. |
 | `CONFIG.VERSION_MARKER_MISSING` | Any command loading config | The default export was not built by the current `definePrismaConfig` / `ormConfig` pair (plain object, spread copy, or a Prisma 7 config). Rewrite to the envelope form in `references/contract.md`. |

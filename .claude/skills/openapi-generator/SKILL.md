@@ -15,7 +15,7 @@ file first and follow it exactly. This skill only describes the workflow.
 
 ## Usage
 
-```
+```txt
 /openapi-generator
 /openapi-generator <domain-or-feature>    # e.g. identity verification, dispatch monitoring
 ```

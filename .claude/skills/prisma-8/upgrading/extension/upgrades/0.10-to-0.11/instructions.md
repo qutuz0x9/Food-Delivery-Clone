@@ -105,7 +105,7 @@ type ContractUnderTest = Contract<
 ### Mapping table
 
 | Namespace family | Discriminator literal | Where it surfaces in handcrafted types |
-|---|---|---|
+| --- | --- | --- |
 | SQL (`SqlNamespace`, `SqlUnboundNamespace`) | `'sql-namespace'` | Anywhere you write `Contract<{ namespaces: { … } }>` with a SQL-style namespace |
 | Mongo (`MongoNamespace`, `MongoUnboundNamespace`) | `'mongo-namespace'` | Anywhere you write `Contract<{ namespaces: { … } }>` with a Mongo-style namespace |
 | Postgres (`PostgresSchema`, when handcrafted) | `'postgres-schema'` or `'postgres-unbound-schema'` | Rare in extension code; only needed if you handcraft a literal with a Postgres-specific namespace class |
@@ -261,6 +261,7 @@ const ast = InsertAst.into(TableSource.named(tableName))
 ```
 
 The change is:
+
 - Replace `.withValues(expr)` with `.withRows([expr])` — the single-row overload is removed; `withRows` accepts an array of assignment maps.
 
 Walk every `.ts` / `.tsx` file matched by the `detection.glob` above. For each call site matching `.withValues(`, apply the replacement. The argument remains a single expression; it just needs to be wrapped in an array.

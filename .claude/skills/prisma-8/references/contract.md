@@ -76,7 +76,7 @@ Both files are **emitted artefacts**. Edit the source; never the JSON or `.d.ts`
 `prisma contract emit` surfaces structured errors with stable codes; branch on `code` rather than message text.
 
 | Code | Meaning | Next move |
-|---|---|---|
+| --- | --- | --- |
 | `CONFIG.CONTRACT_MISSING` | `contract` not set in `prisma.config.ts`. | Add `contract: './src/prisma/contract.prisma'` (app layout) or `'./src/contract.prisma'` (contract-space-package layout) — likewise for `.ts` sources — to the `ormConfig({...})` section. |
 | `CONFIG.VERSION_MARKER_MISSING` | The default export was not produced by `definePrismaConfig` / `ormConfig` (a flat `defineConfig({...})`, a plain object, or a Prisma 7 config). | Rewrite to the envelope form in *Key Concepts* above. |
 | `CONTRACT.VALIDATION_FAILED` | Source loaded but the Contract IR failed structural validation. | Read `meta.errors` for the offending model/field, fix the source, re-emit. |

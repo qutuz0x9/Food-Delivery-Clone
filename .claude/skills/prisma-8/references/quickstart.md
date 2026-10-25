@@ -258,7 +258,7 @@ Then run the snippet from *Your first arc — connect, write, read* above, using
 A reference table — not a script to recite at the user. Commands surface in the workflow above as the user's next move requires them; this table is here for the moment the user asks for a wider view (typically after the first round-trip), and as a one-glance summary anyone newly oriented to Prisma 8 can scan. For flag-level detail, run `<command> --help`; the help output is the source of truth.
 
 | What you want to do | Command | Deeper skill |
-|---|---|---|
+| --- | --- | --- |
 | Apply the current contract to the DB the first time | `prisma db init` | this skill |
 | Re-emit `contract.json` + `contract.d.ts` after editing the contract source | `prisma contract emit` | `references/contract.md` |
 | Quick dev-only schema sync (no migration history kept) | `prisma db update` | `references/migrations.md` |

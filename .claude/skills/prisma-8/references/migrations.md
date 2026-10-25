@@ -65,7 +65,7 @@ Treat the rendered import lines as framework-managed on both targets:
 ## Diagnostic codes you route on
 
 | Code | Source | Move |
-|---|---|---|
+| --- | --- | --- |
 | `MIGRATION.UNFILLED_PLACEHOLDER` | Throwing `placeholder(...)` at emit time | Open `migration.ts`, replace the `placeholder("<slot>")` call named by `meta.slot` with the real query closure, self-emit. |
 | `MIGRATION.FILE_MISSING` | Reading a migration package | `migration.ts`, `migration.json`, or `ops.json` is absent. Recover from version control, re-emit via `migration.ts`, or run `prisma migration new` for a fresh one. |
 | `MIGRATION.INVALID_DEFAULT_EXPORT` | Loading `migration.ts` | The file's default export is not a `Migration` subclass or factory function. Restore the planner-emitted scaffold from version control or re-run `migration plan` for a clean package. |
@@ -78,7 +78,7 @@ Treat the rendered import lines as framework-managed on both targets:
 ## Decision — which path do you take?
 
 | Situation | Path | Why |
-|---|---|---|
+| --- | --- | --- |
 | Local dev, schema in flux | `db update` | Fast, interactive, no migration files. |
 | Shared branch with other developers | `migration plan` + `db migrate` | Replayable, reviewable, content-hashed. |
 | Anything reaching production | `migration plan` + `db migrate` | Production must run a reviewed, hashed migration. |
@@ -493,10 +493,10 @@ Interactively, consent is typing the database name back (the prompt names it). I
 5. **Routine `db verify` after a successful `db update` or `db migrate`.** Redundant on the happy path — reserve `db verify` for drift diagnosis (manual edits, restore, failed `db migrate`).
 6. **Aggregate `check` closure in Postgres `this.dataTransform`.** Returning `count(*)` or `bool_and(...)` breaks the precheck/postcheck contract — both sides resolve to constants. Use a rowset shape: `select('id').where(<violation>).limit(1)`.
 7. **Two contract references in one migration.** Building a query plan against a different contract than the one passed to `this.dataTransform(endContract, ...)` raises `MIGRATION.DATA_TRANSFORM_CONTRACT_MISMATCH`. Always import `endContract` once at module scope and use the same reference.
-11. **Calling Postgres operations as free functions.** `addColumn('public', 'user', {...})` does not exist as an import; the operations are `this.addColumn({ schema, table, column })` and friends on the `Migration` base class, with `col(...)` building the column. Only `col`, `rawSql`, `placeholder`, `Migration`, and `MigrationCLI` are imported.
-8. **Renaming and expecting the planner to detect it (Postgres).** Prisma 8 has no in-contract rename hint today; the planner emits a destructive drop+add. Hand-edit `migration.ts` to rewrite the destructive op as a `rawSql({ ... })` that issues `ALTER TABLE ... RENAME COLUMN ...` (or use the two-migration keep / backfill / drop pattern), then self-emit. See `references/contract.md` § *Edit a field — rename*.
-9. **Planning with no `db` ref and no `--from` in a project that already has migrations.** The origin falls through to the empty database, which would make the plan a full-create migration; `migration plan` refuses with `MIGRATION.PLAN_ORIGIN_UNKNOWN` rather than writing it. Pick the exit that matches your intent — the error lists them, and `references/migration-model.md` § *The trap* explains which to choose.
-10. **Hand-authoring `migration.ts` from a blank file, or rewriting the rendered import line.** Migration files are framework-rendered — let `prisma migration plan` (or `migration new`) render the package, then edit only the holes the framework leaves for you. On Postgres leave the rendered `@internal/postgres/migration` (or `@internal/sqlite/migration`) import path alone; on Mongo leave `@prisma/orm-mongo/target/migration` as rendered. Add symbols to the existing import line rather than introducing new import paths.
+8. **Calling Postgres operations as free functions.** `addColumn('public', 'user', {...})` does not exist as an import; the operations are `this.addColumn({ schema, table, column })` and friends on the `Migration` base class, with `col(...)` building the column. Only `col`, `rawSql`, `placeholder`, `Migration`, and `MigrationCLI` are imported.
+9. **Renaming and expecting the planner to detect it (Postgres).** Prisma 8 has no in-contract rename hint today; the planner emits a destructive drop+add. Hand-edit `migration.ts` to rewrite the destructive op as a `rawSql({ ... })` that issues `ALTER TABLE ... RENAME COLUMN ...` (or use the two-migration keep / backfill / drop pattern), then self-emit. See `references/contract.md` § *Edit a field — rename*.
+10. **Planning with no `db` ref and no `--from` in a project that already has migrations.** The origin falls through to the empty database, which would make the plan a full-create migration; `migration plan` refuses with `MIGRATION.PLAN_ORIGIN_UNKNOWN` rather than writing it. Pick the exit that matches your intent — the error lists them, and `references/migration-model.md` § *The trap* explains which to choose.
+11. **Hand-authoring `migration.ts` from a blank file, or rewriting the rendered import line.** Migration files are framework-rendered — let `prisma migration plan` (or `migration new`) render the package, then edit only the holes the framework leaves for you. On Postgres leave the rendered `@internal/postgres/migration` (or `@internal/sqlite/migration`) import path alone; on Mongo leave `@prisma/orm-mongo/target/migration` as rendered. Add symbols to the existing import line rather than introducing new import paths.
 
 ## What Prisma 8 doesn't do yet
 

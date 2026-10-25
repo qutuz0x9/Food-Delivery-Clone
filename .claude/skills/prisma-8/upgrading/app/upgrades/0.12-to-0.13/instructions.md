@@ -288,6 +288,7 @@ namespace public {
 ```
 
 On emit, `contract.json` gains:
+
 - A `types.Uuid` entry under `storage` for the named-type alias.
 - The `userId` column with `typeRef: "Uuid"` on the storage table.
 - A cross-space `foreignKey` entry on the storage table pointing at the extension space's table.

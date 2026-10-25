@@ -169,7 +169,6 @@ beyond what the `sqlite-create-table-method` entry in the 0.12-to-0.13 instructi
 already covers. Incidental substrate diff only.
 -->
 
-
 <!--
 TML-2785: the sql-orm-client runtime gained M:N correlated include
 reads — `.include()` of an N:M relation resolves child rows through the
@@ -429,21 +428,21 @@ The SQL/ORM type machinery now resolves columns, fields, and models **by namespa
 
 1. **Emitted TypeMaps nest by namespace.** `ExtractFieldOutputTypes<C>` / `ExtractFieldInputTypes<C>` (from `@internal/sql-contract`) now return `{ [namespace]: { [model]: { [field]: <type> } } }` instead of the flat `{ [model]: { [field] } }`. Index the namespace first:
 
-```ts
-// Before
-type Row = ExtractFieldOutputTypes<C>['User'];
-// After — name the namespace the model is declared in
-type Row = ExtractFieldOutputTypes<C>['public']['User'];
-```
+   ```ts
+   // Before
+   type Row = ExtractFieldOutputTypes<C>['User'];
+   // After — name the namespace the model is declared in
+   type Row = ExtractFieldOutputTypes<C>['public']['User'];
+   ```
 
 2. **`TableProxy` takes a required namespace coordinate.** `TableProxy<C, Name>` (from `@internal/sql-builder`) becomes `TableProxy<C, NsId, Name>`:
 
-```ts
-// Before
-let p: TableProxy<C, 'users'>;
-// After
-let p: TableProxy<C, 'public', 'users'>;
-```
+   ```ts
+   // Before
+   let p: TableProxy<C, 'users'>;
+   // After
+   let p: TableProxy<C, 'public', 'users'>;
+   ```
 
 Use `public` for a standard single-schema SQL contract; for an unbound/SQLite contract use the late-bound namespace (`UNBOUND_NAMESPACE_ID` from `@internal/framework-components/ir`); for a multi-namespace contract, name the namespace each model/table actually sits in. There is no codemod — the correct namespace is call-site-specific. `pnpm typecheck` pins every remaining flat access (`Property '<model>' does not exist on type '{ public: ... }'`). Extensions that only contribute codecs, native types, or migrations — and never reference `ExtractFieldOutputTypes` / `ExtractFieldInputTypes` / `TableProxy` directly — need no change.
 

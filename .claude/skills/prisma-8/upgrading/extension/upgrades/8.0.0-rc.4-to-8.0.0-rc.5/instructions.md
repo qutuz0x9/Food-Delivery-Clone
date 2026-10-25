@@ -77,6 +77,7 @@ const pool = suppressIdleConnectionErrors(
 This is the same translation applied to the in-repo `@internal/postgres` and `@internal/extension-supabase` runtimes in this transition. The helper only attaches a no-op `'error'` listener (connect/query failures still reject their own promises), so behavior is otherwise unchanged; without it, a dropped idle connection crashes the process that hosts the extension.
 
 If your extension's test suite fakes the `pg` module, the fakes need an `on` method (`on = vi.fn().mockReturnThis()` on a class fake, or `on: vi.fn()` on an object literal) — the runtime now calls `.on('error', ...)` on every pool, client, and checked-out pool client.
+
 ## `distinct-on-requires-postgres-capability`
 
 `Collection#distinctOn(...)` used to compile and run on any target, but only Postgres ever

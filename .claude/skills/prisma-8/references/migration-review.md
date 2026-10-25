@@ -57,7 +57,7 @@ The graph is a static, committed artifact. Several branch tips may coexist, roll
 `migration status` answers with a document (`--json`): `spaces[]`, each with `currentContract` (the marker hash, or `null` when the database has no marker for that space), `targetContract`, and `migrations[]` carrying the `applied` / `pending` / `unreachable` status above; a `summary` line; and `diagnostics[]`. The ordinary states — up to date, N pending, no marker yet, marker on another branch, no path to the target — are read from `spaces[]` and the summary, not from diagnostic codes. The three diagnostics it can attach are all `warn`, and each carries a `message` and `hints` — the same hints the CLI prints under the summary line:
 
 | Code | Meaning in the navigation model | Next move |
-|---|---|---|
+| --- | --- | --- |
 | `MIGRATION.MARKER_NOT_IN_HISTORY` | Online; marker hash is not a node in the graph. The database was changed outside the migration system. | Decide which side is truth: `db sign` (accept DB as truth), `db update` (push contract to DB), `contract infer` (re-derive contract from DB), or `db verify` (inspect first). **Not** the same as `MIGRATION.MARKER_MISMATCH`, which `db migrate` raises as an error before any DDL when the marker hash is not a graph node. |
 | `MIGRATION.MISSING_INVARIANTS` | Marker reached the destination structurally but lacks invariants the target ref declares. | `db migrate --to <name> --db $URL` to take a path that covers them. |
 | `CONTRACT.UNREADABLE` | `contract.json` couldn't be read. | `contract emit` to regenerate it. |
@@ -78,7 +78,7 @@ Both flags are also available on `migration list` and `migration graph`. `migrat
 These codes surface on `migration plan`, `migration ref set`, and `db migrate` — not on `migration status`. See [Migration System § Recovery affordances](https://github.com/prisma/orm/blob/main/docs/architecture%20docs/subsystems/7.%20Migration%20System.md#recovery-affordances) and [ADR 218](https://github.com/prisma/orm/blob/main/docs/architecture%20docs/adrs/ADR%20218%20-%20Refs%20with%20paired%20contract%20snapshots%20and%20universal%20graph-node%20invariant.md).
 
 | Code | When | Meaning | Next move |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `MIGRATION.HASH_NOT_IN_GRAPH` | `migration plan` (non-empty graph) or `migration ref set` | Resolved hash is not a node in the on-disk migration graph — typical when the default `db` ref points past the graph tip after dev-only `db update` cycles. | `migration plan --from <reachable-ref>` (e.g. `--from production`); or realign the ref with `migration ref set db <graph-node-hash>`. |
 | `MIGRATION.SNAPSHOT_MISSING` | `migration plan` | A named ref has no pointer file (`<name>.json`), and the hash being resolved isn't a node in the migration graph either. | `migration ref set <name> <hash>` to create the ref, `db update --advance-ref <name>` to advance it, or pass a hash that is a graph node. |
 | `MIGRATION.MARKER_MISMATCH` | `db migrate` (pre-DDL, before the runner) | Live DB marker hash is not a graph node — drift the offline planner cannot see. | `migration plan --from <graph-tip>` if the marker is canonical; `migration ref set db <marker-hash>` if the on-disk graph is canonical; investigate out-of-band applies. |

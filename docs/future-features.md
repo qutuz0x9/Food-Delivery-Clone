@@ -59,6 +59,7 @@ that can be shown to the customer and tracked against actual `delivered_at`
 for SLA/performance reporting.
 
 ## 8. `orders` timestamp/attribute cleanup
+
 Reviewing `orders.placed_at`, `accepted_at`, and related columns surfaced
 five smaller issues worth revisiting together:
 

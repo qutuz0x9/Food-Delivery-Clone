@@ -16,7 +16,7 @@ Reach for the ORM first; drop to `db.query` when the ORM can't express the shape
 **Lane decision table:**
 
 | Need | Choose | Why |
-|---|---|---|
+| --- | --- | --- |
 | Standard CRUD with reference relations | **ORM (`db.orm.<root>`)** | Collection-shaped; object `.where({ ... })`; `.create` / `.update` / `.delete` / `.upsert`. |
 | Eager-load a reference relation | **ORM `.include('<relation>')`** | Lowers to `$lookup`; composes with `.where` / `.select` / `.orderBy` / `.limit`. |
 | Polymorphic root (discriminated variants) | **ORM `.variant('<VariantName>')`** | Narrows to one variant and injects the discriminator filter. |

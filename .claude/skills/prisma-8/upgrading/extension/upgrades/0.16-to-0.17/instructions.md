@@ -614,6 +614,7 @@ Relational JSON container AST construction now requires an explicit value-projec
 `FunctionSource.of(fn, args, alias)` now groups alias state so returned-column aliases cannot exist without a table alias. Replace a string third argument such as `FunctionSource.of(fn, args, 'rows')` with `FunctionSource.of(fn, args, { alias: 'rows' })`; when returned-column names are required, pass `{ alias: 'rows', columnAliases: ['value', 'ordinality'] }`. Calls that omit the alias remain unchanged.
 
 When an extension forwards an existing `ProjectionItem` through a derived-table or row-number wrapper, preserve its known codec in the reconstructed projection: use `ProjectionItem.of(item.alias, ColumnRef.of(wrapperAlias, item.alias), item.codec)`. Leave the codec undefined only for computed or otherwise unknown projected results. After applying the applicable edits, run the extension's typecheck and tests; update AST-shape fixtures to assert the explicit wrapper nodes and preserved codec metadata.
+
 ## `rls-wire-name-helpers-moved-to-sql-schema-ir-naming`
 
 The wire-name mechanics are family-shared from 0.17 (they now serve secondary indexes as well as RLS policies), so the helpers moved from the target-postgres RLS module to `@internal/sql-schema-ir/naming` under generalized names. Apply the mechanical rename:

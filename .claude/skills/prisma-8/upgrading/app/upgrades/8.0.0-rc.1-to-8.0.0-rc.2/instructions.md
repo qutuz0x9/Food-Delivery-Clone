@@ -434,7 +434,6 @@ Convert each to the column's own type — `BigInt(value)` for a `bigint` column,
 
 Schema-written defaults need nothing. `BigInt @default(0)` still emits and still migrates: the JSON side of these codecs accepts a safe-integer number, because a schema language writes no `bigint` literal, and only the query-parameter side requires the exact type.
 
-
 ## `config-file-is-prisma-config-with-an-orm-section`
 
 Two mechanical steps, in either order:
@@ -483,6 +482,7 @@ PR #30031: `changes: []`. Dependabot's weekly runtime-dependency bumps (`esbuild
 and mints the wire names every later step refers to. Do it before editing migration files, so
 the constraint names you paste into `addCheckConstraint` / `checkExpression` are the ones the
 contract actually declares.
+
 ## What the first plan after upgrading looks like
 
 For each enum-restricted column: a DROP of the old unsuffixed constraint and an ADD of the

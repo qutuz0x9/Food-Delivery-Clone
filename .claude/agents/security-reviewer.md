@@ -85,7 +85,8 @@ await prisma.$queryRawUnsafe(`SELECT * FROM orders WHERE id = '${id}'`);
 await prisma.$queryRaw`SELECT * FROM orders WHERE id = ${id}`;
 ```
 
-**A04 - Insecure Design / Business Logic**
+**A04 - Insecure Design / Business Logic:**
+
 - Prices, totals and discounts are calculated server-side from the DB, never trusted from the client.
 - Order state transitions are validated, and every one appends to `order_status_history`.
 - Coupon and refund logic can't be replayed. Refunds can't exceed the paid amount.

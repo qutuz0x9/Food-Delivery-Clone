@@ -688,7 +688,7 @@ The default namespace a bare name resolves through is **inferred** from the cont
 ### Removed exports (old → new)
 
 | Removed | Replacement |
-|---|---|
+| --- | --- |
 | `contractModels(contract)` | `domainModelsAtDefaultNamespace(contract.domain)` (reads the sole namespace; throws on multi-namespace) |
 | `contractValueObjects(contract)` | `domainValueObjectsAtDefaultNamespace(contract.domain)` |
 | `resolveSingleDomainNamespaceId(domain)` | `soleDomainNamespaceId(domain)` (same fail-loud single-namespace behaviour) |

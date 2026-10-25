@@ -615,6 +615,7 @@ own normalized form — a `varchar` membership test comes back as
 drifts against the authored text. Equality for a wire-named check is name equality, because the
 hash already commits to the predicate; only an exact-named check compares its body, and then
 byte-for-byte.
+
 ## If your target pack authors checks
 
 Check emission is driven by a duck-typed `renderCheckExpressions` hook on the pack's
@@ -625,6 +626,7 @@ where `kind` is `'membership'` or `'elementNotNull'`. A pack without the hook em
 at all, which is how SQLite keeps its no-CHECK stance. Nothing in the return value is a name:
 the contract builder composes the prefix from the table, the column, and the kind, truncates it
 to 54 UTF-8 bytes, and appends the content hash.
+
 ## Hand-written checks are visible now
 
 Postgres introspection reads `pg_get_expr(c.conbin, c.conrelid)` and stores the predicate
