@@ -18,6 +18,10 @@ and ask before inventing a rule.
 - A user can log in only while `users.account_status` is `active`. Deactivating, locking or suspending any actor sets
   `account_status`, and leaving `active` revokes the user's refresh tokens. Deleting a customer, restaurant or driver is
   a soft delete of the `users` row (`deleted_at`); orders, payments and reviews are kept.
+- A deleted account's email and phone number stay taken: the plain `@unique` constraints still count the soft-deleted
+  row, so registering with them again answers 409 (`EMAIL_ALREADY_EXISTS` / `VALUE_ALREADY_IN_USE`). Deletion is rare,
+  so this is accepted; the delete confirmation warns that the email and phone can't be reused. A deleted account can
+  never log in. Decided 2026-10-22; anonymizing on delete is the planned path if this ever needs to change.
 - Email and phone are verified with a 6-digit code (`emailVerifiedAt`, `phoneVerifiedAt`). The code is stored hashed,
   with its expiry, in `user_tokens` (provider `verification`, name `email` or `phone`); a new code replaces the old one.
   Verification does not block login, and changing the email or phone clears the matching timestamp.
