@@ -154,8 +154,11 @@ If changes span several scopes, omit the scope or split the commit.
 ## Body Guidelines
 
 - Separate from the subject with a blank line
+- Default to **2-3 lines**, only the information needed to understand *why* — not a bulleted
+  breakdown of every file or sub-change. Draft short the first time; don't wait for the user to ask twice.
 - Explain **why** the change was made, not just what files changed
-- Use bullet points for multiple related changes
+- Only go longer than 2-3 lines when the user explicitly asks for more detail, or the change is genuinely too
+  complex to summarize that briefly — and even then, prefer a couple of dense sentences over a bullet list
 - Wrap lines at ~72 characters
 
 ## Footer Guidelines
@@ -184,9 +187,9 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 ```txt
 feat(auth): add JWT refresh token support
 
-- Issue refresh tokens on login alongside access tokens
-- Add POST /auth/refresh to exchange expired access tokens
-- Store refresh tokens hashed, never in plain text
+Access tokens expired with no way to renew them short of logging in
+again. Issue a hashed refresh token on login and add POST
+/auth/refresh to exchange an expired access token for a new one.
 
 Refs #88
 
