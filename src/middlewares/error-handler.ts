@@ -15,6 +15,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
         fields: err.fields,
       },
     });
+    return;
   }
   // ZodError (from validate) → 400 with the first message per field.
   if (err instanceof ZodError) {
