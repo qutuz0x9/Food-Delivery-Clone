@@ -43,7 +43,9 @@ export class AuthRepository {
     // 1. Find the user by normalizedEmail (a unique field).
     const user = await client.orm.identity.User.where({
       normalizedEmail,
-    }).first();
+    })
+      .where((u) => u.deletedAt.isNotNull())
+      .first();
     // 2. Return the row, or null.
     return user;
   }
@@ -56,7 +58,9 @@ export class AuthRepository {
     // Same as findUserByNormalizedEmail, by phoneNumber (same soft-delete rule).
     const user = await client.orm.identity.User.where({
       phoneNumber,
-    }).first();
+    })
+      .where((u) => u.deletedAt.isNotNull())
+      .first();
     return user;
   }
 
