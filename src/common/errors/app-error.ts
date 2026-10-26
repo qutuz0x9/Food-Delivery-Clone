@@ -4,8 +4,6 @@ export class AppError extends Error {
   readonly statusCode: number;
   readonly code: string;
   // Field name → message, only for errors about specific request fields.
-  readonly name: string;
-  readonly message: string;
   readonly fields: Readonly<Record<string, string>> | undefined;
 
   constructor(
