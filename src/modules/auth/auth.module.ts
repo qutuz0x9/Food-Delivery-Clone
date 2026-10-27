@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PasswordHasher } from "../../common/password-hasher.js";
 import { env } from "../../config/env.js";
+import { createRateLimiter } from "../../middlewares/rate-limit.js";
 import { db } from "../../prisma/db.js";
 import { customersService } from "../customers/index.js";
 import { AuthRepository } from "./auth.repository.js";
@@ -30,6 +31,9 @@ const customerController = new CustomerAuthController(authService, {
   path: "/api/v1/auth",
 });
 
+// 10 login attempts per IP every 15 minutes: plenty for a person, far too few for a password-guessing script.
+const loginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 10 });
+
 // Mounted at /api/v1/auth by src/routes.ts. Driver and admin auth routers join this one later.
 export const authRouter = Router();
-authRouter.use(buildCustomerAuthRouter(customerController));
+authRouter.use(buildCustomerAuthRouter(customerController, loginLimiter));

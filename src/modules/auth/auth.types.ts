@@ -1,3 +1,5 @@
+import type { UserRow } from "./auth.repository.js";
+
 // Role names as stored in identity.roles.name (src/scripts/seed.ts creates them). The lookup uses the upper-case
 // normalizedName.
 export const ROLE_NAMES = {
@@ -36,3 +38,10 @@ export interface RegisterCustomerResult {
   readonly accessToken: string;
   readonly refreshToken: IssuedRefreshToken;
 }
+
+// Same shape as register's, so the controller answers both the same way.
+export type LoginCustomerResult = RegisterCustomerResult;
+
+// users.account_status values. Only "active" may log in; the others get a 403 with their own code.
+export type AccountStatus = UserRow["accountStatus"];
+export type InactiveAccountStatus = Exclude<AccountStatus, "active">;

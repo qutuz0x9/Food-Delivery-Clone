@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { registerCustomerSchema } from "../auth.validation.js";
+import { loginCustomerSchema, registerCustomerSchema } from "../auth.validation.js";
 
 const valid = {
   email: "John@Example.com",
@@ -88,5 +88,50 @@ describe("registerCustomerSchema", () => {
   it("accepts phone numbers of 8 and 15 digits", () => {
     expect(failedFields({ ...valid, phoneNumber: "+12345678" })).toEqual([]);
     expect(failedFields({ ...valid, phoneNumber: "+123456789012345" })).toEqual([]);
+  });
+});
+
+describe("loginCustomerSchema", () => {
+  const validLogin = { email: "John@Example.com", password: "StrongPassword123!" };
+
+  const failedLoginFields = (body: unknown): string[] => {
+    const result = loginCustomerSchema.safeParse(body);
+    return result.success ? [] : [...new Set(result.error.issues.map((issue) => issue.path.join(".")))];
+  };
+
+  it("accepts a valid body", () => {
+    expect(loginCustomerSchema.safeParse(validLogin).success).toBe(true);
+  });
+
+  it("trims the email, keeps its case, and does not trim the password", () => {
+    const result = loginCustomerSchema.parse({ email: "  John@Example.com ", password: " secret " });
+    expect(result).toEqual({ email: "John@Example.com", password: " secret " });
+  });
+
+  it("rejects a body with both fields missing", () => {
+    expect(failedLoginFields({}).sort()).toEqual(["email", "password"]);
+  });
+
+  it("rejects an invalid email", () => {
+    expect(failedLoginFields({ ...validLogin, email: "not-an-email" })).toEqual(["email"]);
+  });
+
+  it("accepts a 254-character email and rejects a 255-character one", () => {
+    expect(failedLoginFields({ ...validLogin, email: emailOfLength(254) })).toEqual([]);
+    expect(failedLoginFields({ ...validLogin, email: emailOfLength(255) })).toEqual(["email"]);
+  });
+
+  it("rejects an empty password", () => {
+    expect(failedLoginFields({ ...validLogin, password: "" })).toEqual(["password"]);
+  });
+
+  it("rejects a password longer than 128 characters", () => {
+    expect(failedLoginFields({ ...validLogin, password: "a".repeat(128) })).toEqual([]);
+    expect(failedLoginFields({ ...validLogin, password: "a".repeat(129) })).toEqual(["password"]);
+  });
+
+  it("has no strength rules: a short or simple password still reaches the password check", () => {
+    expect(failedLoginFields({ ...validLogin, password: "password" })).toEqual([]);
+    expect(failedLoginFields({ ...validLogin, password: "a" })).toEqual([]);
   });
 });

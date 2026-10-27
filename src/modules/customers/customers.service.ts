@@ -15,4 +15,9 @@ export class CustomersService {
   async createProfile(data: NewCustomerProfile, client?: DbClient): Promise<CustomerProfile> {
     return this.customersRepository.createProfile(data, client);
   }
+
+  // Login asks this to tell a customer account from a driver, restaurant or admin one.
+  async findProfileByUserId(userId: string): Promise<CustomerProfile | null> {
+    return this.customersRepository.findByUserId(userId);
+  }
 }

@@ -14,6 +14,7 @@ Trains reading code you didn't just write, and thinking about the impact of a ch
 3. **Compare** in a **You vs me** table, with the same verdicts and rating as the design round in `build.md`. Agree on the change. Write the **Design Review** note (see `notes.md`), with the impact list as "My answers".
 4. **Plan:** a short plan covering only what changes, using the plan template sections that apply.
 5. **Scaffold** (after `go`):
+   - First create the branch `enhance/<change-slug>`, as in `build.md` (Phase 2, "First, the branch").
    - Claude makes the boilerplate changes.
    - The user's changes inside existing code get `LEARN-TODO (extend, <stage>)` markers at the exact spot, with no `throw`, so existing behavior keeps working.
    - Update or add tests so they fail until the change is made.

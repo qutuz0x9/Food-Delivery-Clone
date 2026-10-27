@@ -1,9 +1,12 @@
-import { PasswordHasher } from "../../common/password-hasher.js";
+import type { PasswordHasher } from "../../common/password-hasher.js";
 import type { TransactionRunner } from "../../prisma/db.js";
 import type { CustomersService } from "../customers/index.js";
 import { toCustomerResponse } from "./auth.mapper.js";
 import {
+  AccountNotActiveError,
   EmailAlreadyExistsError,
+  InvalidCredentialsError,
+  NotACustomerError,
   PhoneNumberInUseError,
 } from "./auth.errors.js";
 import type {
@@ -13,12 +16,15 @@ import type {
 } from "./auth.repository.js";
 import {
   ROLE_NAMES,
-  type CustomerResponse,
   type IssuedRefreshToken,
+  type LoginCustomerResult,
   type RegisterCustomerResult,
   type RequestContext,
 } from "./auth.types.js";
-import type { RegisterCustomerInput } from "./auth.validation.js";
+import type {
+  LoginCustomerInput,
+  RegisterCustomerInput,
+} from "./auth.validation.js";
 import type { AccessTokenClaims, TokenService } from "./token.service.js";
 
 // Every auth rule: who may register and log in, and which tokens they get.
@@ -121,5 +127,54 @@ export class AuthService {
     };
 
     return RegisterCustomerResult;
+  }
+
+  async loginCustomer(
+    input: LoginCustomerInput,
+    context: RequestContext,
+  ): Promise<LoginCustomerResult> {
+    // LEARN-TODO (core, guided): AuthService.loginCustomer
+    // 1. Normalize input.email, the same way registerCustomer does.
+    const normalizedEmail = input.email.toLowerCase();
+    // 2. Find the user by the normalized email (this.authRepository).
+    const user =
+      await this.authRepository.findUserByNormalizedEmail(normalizedEmail);
+    // 3. Verify the password with this.hasher, even when there is no user (plan §8).
+    const passVerify: boolean = await this.hasher.verify(
+      input.password,
+      user?.passwordHash ?? null,
+    );
+    // 4.  No user throw InvalidCredentialsError. Wrong password: throw InvalidCredentialsError.
+    if (!user) throw new InvalidCredentialsError();
+    if (!passVerify) throw new InvalidCredentialsError();
+    // 5. Account not active: throw AccountNotActiveError with its status.
+    const userStatus = user.accountStatus;
+    if (userStatus !== "active") throw new AccountNotActiveError(userStatus);
+    // 6. Find the customer profile (this.customers); none: throw NotACustomerError.
+    const customer = await this.customers.findProfileByUserId(user.id);
+    if (!customer) throw new NotACustomerError();
+    // 7. Create the refresh token and save its hash, with the ip address (plan §7).
+    const issuedRefreshToken: IssuedRefreshToken =
+      this.tokens.createRefreshToken();
+    const newRefreshToken: NewRefreshToken = {
+      userId: user.id,
+      tokenHash: issuedRefreshToken.tokenHash,
+      expiresAt: issuedRefreshToken.expiresAt,
+      ipAddress: context.ipAddress,
+    };
+    await this.authRepository.createRefreshToken(newRefreshToken);
+    // 8. Sign the access token; return the mapped customer and both tokens.
+    const accessTokenClaims: AccessTokenClaims = {
+      userId: user.id,
+      role: ROLE_NAMES.customer,
+    };
+    const accessToken = this.tokens.signAccessToken(accessTokenClaims);
+    const loginCustomerResult: LoginCustomerResult = {
+      customer: toCustomerResponse(user, customer),
+      refreshToken: issuedRefreshToken,
+      accessToken: accessToken,
+    };
+
+    return loginCustomerResult;
   }
 }

@@ -1140,6 +1140,8 @@ components:
       $ref: "./responses/common.yaml#/InvalidVerificationCode"
     NotFound:
       $ref: "./responses/common.yaml#/NotFound"
+    TooManyRequests:
+      $ref: "./responses/common.yaml#/TooManyRequests"
     InternalServerError:
       $ref: "./responses/common.yaml#/InternalServerError"
 
