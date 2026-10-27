@@ -13,6 +13,11 @@ const app: Express = express();
 app.use(requestLogger);
 app.use(express.json());
 
+// Docker's healthcheck calls this every few seconds to see the app is up. Outside /api/v1, since it isn't part of the API.
+app.get("/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok" });
+});
+
 const openApiPath = path.join(process.cwd(), "docs/api/openapi.yaml");
 const openApiDocument = await SwaggerParser.bundle(openApiPath);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
