@@ -107,6 +107,7 @@ Write the plan to `.learning/plans/<feature-slug>.md` and show it in chat.
 # Plan: <Feature>
 
 Notes: <vault feature folder, see notes.md>
+Branch: feature/<feature-slug>
 
 ## 1. Goal and assumptions
 What the feature does, and the assumptions.
@@ -159,6 +160,16 @@ End with: **Reply `go` to create the files, or tell me what to change.**
 **Stop here.** Do not create code files or install anything until the user approves.
 
 ## Phase 2: Scaffold (after `go`)
+
+**First, the branch.** Before writing or installing anything, put the feature on its own branch, so `main` never
+holds unfinished work:
+
+- Run `git status` and `git branch --show-current`. If there are uncommitted changes that don't belong to this
+  feature, stop and ask what to do with them.
+- Create the branch from the current branch (normally `main`): `git switch -c feature/<feature-slug>` (extend mode:
+  `enhance/<change-slug>`). The plan and progress files written in Phase 1 move with it, since they're uncommitted.
+- If the branch already exists (a feature resumed later), switch to it instead.
+- Say the branch name in one line, and add it to the Build Log. Never commit, push or merge without asking.
 
 1. **Project setup** (if planned): install the dependencies and create the base files.
 2. **Prisma:** add the model.
