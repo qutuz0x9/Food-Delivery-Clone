@@ -9,6 +9,17 @@ import {
 } from "./auth.errors.js";
 import type { RoleName } from "./auth.types.js";
 
+const uniqueViolationConstraint = (error: unknown): string | null => {
+  if (typeof error !== "object" || error === null) return null;
+  const { sqlState, constraint } = error as {
+    sqlState?: unknown;
+    constraint?: unknown;
+  };
+  return sqlState === "23505" && typeof constraint === "string"
+    ? constraint
+    : null;
+};
+
 export type UserRow = Scalars<Models.identity_User>;
 
 export interface NewUser {
@@ -71,14 +82,24 @@ export class AuthRepository {
     // LEARN-TODO (core, guided): AuthRepository.createUser
     // 1. Insert the user from `data` and return the row.
     // 2. Catch a unique violation: SqlQueryError with sqlState "23505" (plan §7).
+    // 3. Email constraint → EmailAlreadyExistsError, phone → PhoneNumberInUseError (plan §5).
+    // 4. Rethrow any other error.
     try {
       const user = await client.orm.identity.User.create(data);
       return user;
     } catch (error) {
-      throw SqlQueryError;
+      const constraint = uniqueViolationConstraint(error); // ← new
+      if (
+        constraint === "users_email_key" ||
+        constraint === "users_normalized_email_key"
+      ) {
+        // ← new
+        throw new EmailAlreadyExistsError(); // ← new
+      }
+      if (constraint === "users_phone_number_key")
+        throw new PhoneNumberInUseError(); // ← new
+      throw error;
     }
-    // 3. Email constraint → EmailAlreadyExistsError, phone → PhoneNumberInUseError (plan §5).
-    // 4. Rethrow any other error.
   }
 
   // Returns the id of a role that is not soft-deleted, or null when it does not exist.
