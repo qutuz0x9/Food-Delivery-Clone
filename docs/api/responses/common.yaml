@@ -206,3 +206,26 @@ NotFound:
             message: Resource not found
             error:
               code: RESOURCE_NOT_FOUND
+
+TooManyRequests:
+  description: |
+    Too many requests from this IP address in the current time window (rate limited). Try again after the number of
+    seconds in `Retry-After`.
+  headers:
+    Retry-After:
+      description: Seconds to wait before trying again.
+      schema:
+        type: integer
+      example: 900
+  content:
+    application/json:
+      schema:
+        $ref: "../schemas/common.yaml#/ErrorResponse"
+      examples:
+        tooManyAttempts:
+          summary: Too many login attempts
+          value:
+            success: false
+            message: Too many attempts. Please try again later
+            error:
+              code: TOO_MANY_REQUESTS
