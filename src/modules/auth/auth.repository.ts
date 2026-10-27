@@ -5,7 +5,7 @@ import type { DbClient } from "../../prisma/db.js";
 import {
   EmailAlreadyExistsError,
   PhoneNumberInUseError,
-  SqlQueryError,
+  
 } from "./auth.errors.js";
 import type { RoleName } from "./auth.types.js";
 
@@ -55,7 +55,7 @@ export class AuthRepository {
     const user = await client.orm.identity.User.where({
       normalizedEmail,
     })
-      .where((u) => u.deletedAt.isNotNull())
+      .where((u) => u.deletedAt.isNull())
       .first();
     // 2. Return the row, or null.
     return user;
@@ -70,7 +70,7 @@ export class AuthRepository {
     const user = await client.orm.identity.User.where({
       phoneNumber,
     })
-      .where((u) => u.deletedAt.isNotNull())
+      .where((u) => u.deletedAt.isNull())
       .first();
     return user;
   }
