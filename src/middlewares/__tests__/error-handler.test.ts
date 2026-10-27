@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { AppError } from "../../common/errors/app-error.js";
 import { ConflictError, ValidationError } from "../../common/errors/http-errors.js";
+import { logger } from "../../config/logger.js";
 import { EmailAlreadyExistsError } from "../../modules/auth/auth.errors.js";
 import { errorHandler } from "../error-handler.js";
 
@@ -85,7 +86,8 @@ describe("errorHandler", () => {
   });
 
   it("logs an unknown error and responds 500 without leaking its message", async () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    // No request logger in this small app, so errorHandler falls back to the app logger.
+    const log = vi.spyOn(logger, "error");
     const secret = new Error("connection to db-internal:5432 refused");
 
     const res = await request(appThrowing(secret)).get("/");
@@ -97,6 +99,6 @@ describe("errorHandler", () => {
       error: { code: "INTERNAL_SERVER_ERROR" },
     });
     expect(res.text).not.toContain("db-internal");
-    expect(log).toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith({ err: secret }, "unhandled error");
   });
 });

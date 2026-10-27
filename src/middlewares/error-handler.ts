@@ -1,9 +1,10 @@
 import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { AppError } from "../common/errors/app-error.js";
+import { logger } from "../config/logger.js";
 
 // Last middleware in app.ts. Its 4 parameters mark it as an error handler, so keep `_next`.
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   // LEARN-TODO (foundation, guided): errorHandler
   // 1. AppError → its status code and the error envelope (no `fields` when empty).
   if (err instanceof AppError) {
@@ -35,7 +36,10 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   }
 
   // Anything else is a bug or an outage. Log everything for us; tell the client nothing about the cause.
-  console.error(err);
+  // res.err hands the error to requestLogger, so the request's one log line carries the real error and its stack
+  // (otherwise pino-http adds a stand-in "failed with status code 500" error). Without requestLogger, log it here.
+  res.err = err;
+  if (!req.log) logger.error({ err }, "unhandled error");
   res.status(500).json({
     success: false,
     message: "An unexpected error occurred",

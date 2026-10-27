@@ -4,10 +4,13 @@ import swaggerUi from "swagger-ui-express";
 import SwaggerParser from "@apidevtools/swagger-parser";
 import path from "path";
 import { errorHandler } from "./middlewares/error-handler.js";
+import { requestLogger } from "./middlewares/request-logger.js";
 import { apiRouter } from "./routes.js";
 
 const app: Express = express();
 
+// First, so every request gets an id and a log line, including the ones that fail in later middleware.
+app.use(requestLogger);
 app.use(express.json());
 
 const openApiPath = path.join(process.cwd(), "docs/api/openapi.yaml");

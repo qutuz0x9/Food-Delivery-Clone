@@ -20,6 +20,17 @@ code.
 - Throw typed application errors (`NotFoundError`, `ValidationError`, `ForbiddenError`, ...) from services; the
   error middleware maps them to HTTP status + a consistent JSON error shape.
 
+## Logging
+
+- Log with pino, never `console.*` (oxlint's `no-console` enforces it outside `src/scripts/`). Inside a request, use
+  `req.log`, which carries the request id; elsewhere, import `logger` from `src/config/logger.ts`.
+- Pass data as the first argument and a short message as the second: `req.log.info({ orderId }, "order placed")`.
+  Errors go under `err` so pino prints the stack: `logger.error({ err }, "...")`.
+- Never log request bodies, passwords, tokens or full user records. `logger.ts` redacts the known secret fields, but
+  that is a safety net, not permission.
+- `requestLogger` already writes one line per request (4xx at `warn`, 5xx at `error`), and `errorHandler` attaches every
+  unexpected error to that line (`res.err`), stack included. Don't log the same failure again in services.
+
 ## Input, Output and Security
 
 - Validate all request input with zod at the route boundary.
