@@ -53,5 +53,5 @@
       }
     }
   ],
-  "ignorePatterns": ["dist", "node_modules", "docs", "migrations"]
+  "ignorePatterns": ["dist", "node_modules", "docs", "migrations", ".learning"]
 }
