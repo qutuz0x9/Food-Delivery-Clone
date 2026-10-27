@@ -135,6 +135,15 @@ loginCustomer:
       A `suspended`, `locked` or `inactive` account is rejected with
       `403`, and only after the email and password have been verified,
       so the response does not reveal whether an email is registered.
+      An account with no customer profile (a driver, restaurant or
+      admin) gets `403 FORBIDDEN`, also only after the password matched.
+
+      An unknown email, a soft-deleted account (`deleted_at` set) and a
+      wrong password all get the same `401 INVALID_CREDENTIALS`, in the
+      same time, so nobody can test which emails are registered.
+
+      Each IP address may try 10 times every 15 minutes; the next
+      attempt gets `429` with a `Retry-After` header.
 
     operationId: loginCustomer
 
@@ -200,6 +209,9 @@ loginCustomer:
 
       "403":
         $ref: "../responses/common.yaml#/Forbidden"
+
+      "429":
+        $ref: "../responses/common.yaml#/TooManyRequests"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"

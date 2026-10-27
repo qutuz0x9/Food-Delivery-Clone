@@ -35,3 +35,21 @@ export const registerCustomerSchema = z.object({
     ), // ← new
 });
 export type RegisterCustomerInput = z.infer<typeof registerCustomerSchema>;
+
+// LEARN-TODO (core, guided): loginCustomerSchema rules
+// - email: trimmed, valid email, at most 254 characters, case kept
+// - password: required (at least 1 character), at most 128 characters, not trimmed
+// - password: no strength rules (plan §6)
+// - messages: written for the client (shown under `fields`)
+export const loginCustomerSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .max(254, "Email must be at most 254 characters")
+    .pipe(z.email("Invalid email address")),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .max(128, "Password must be at most 128 characters"),
+});
+export type LoginCustomerInput = z.infer<typeof loginCustomerSchema>;

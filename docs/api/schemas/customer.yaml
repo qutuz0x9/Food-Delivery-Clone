@@ -80,13 +80,17 @@ LoginCustomerRequest:
     email:
       type: string
       format: email
-      description: Customer email address.
+      maxLength: 254
+      description: Customer email address. Surrounding spaces are removed; the lookup ignores case.
       example: john@example.com
 
     password:
       type: string
       format: password
-      description: Customer account password.
+      minLength: 1
+      maxLength: 128
+      description: |
+        Customer account password, kept as typed. No strength rules at login: they apply only when a password is set.
       example: StrongPassword123!
 
 LoginCustomerResponse:

@@ -2,11 +2,17 @@ import { describe, expect, it, vi } from "vitest";
 import type { PasswordHasher } from "../../../common/password-hasher.js";
 import type { TransactionRunner, Tx } from "../../../prisma/db.js";
 import type { CustomerProfile, CustomersService } from "../../customers/index.js";
-import { EmailAlreadyExistsError, PhoneNumberInUseError } from "../auth.errors.js";
-import type { AuthRepository, UserRow } from "../auth.repository.js";
+import {
+  AccountNotActiveError,
+  EmailAlreadyExistsError,
+  InvalidCredentialsError,
+  NotACustomerError,
+  PhoneNumberInUseError,
+} from "../auth.errors.js";
+import type { AuthRepository, NewRefreshToken, UserRow } from "../auth.repository.js";
 import { AuthService } from "../auth.service.js";
-import type { IssuedRefreshToken } from "../auth.types.js";
-import type { RegisterCustomerInput } from "../auth.validation.js";
+import type { InactiveAccountStatus, IssuedRefreshToken } from "../auth.types.js";
+import type { LoginCustomerInput, RegisterCustomerInput } from "../auth.validation.js";
 import type { TokenService } from "../token.service.js";
 
 // Input as the validate middleware hands it over: already trimmed.
@@ -62,10 +68,16 @@ const setup = () => {
     findRoleIdByName: vi.fn(async (): Promise<string | null> => "role-customer"),
     createUser: vi.fn(async (): Promise<UserRow> => createdUser),
     assignRole: vi.fn(async (): Promise<void> => undefined),
-    createRefreshToken: vi.fn(async (): Promise<void> => undefined),
+    createRefreshToken: vi.fn(async (_data: NewRefreshToken, _client?: unknown): Promise<void> => undefined),
   };
-  const customers = { createProfile: vi.fn(async (): Promise<CustomerProfile> => profile) };
-  const hasher = { hash: vi.fn(async () => "hashed-password") };
+  const customers = {
+    createProfile: vi.fn(async (): Promise<CustomerProfile> => profile),
+    findProfileByUserId: vi.fn(async (_userId: string): Promise<CustomerProfile | null> => profile),
+  };
+  const hasher = {
+    hash: vi.fn(async () => "hashed-password"),
+    verify: vi.fn(async (_password: string, _storedHash: string | null): Promise<boolean> => true),
+  };
   const tokens = {
     createRefreshToken: vi.fn(() => refreshToken),
     signAccessToken: vi.fn(() => "access-token"),
@@ -178,6 +190,107 @@ describe("AuthService", () => {
 
       await expect(service.registerCustomer(input, context)).rejects.toBeInstanceOf(EmailAlreadyExistsError);
       expect(tokens.signAccessToken).not.toHaveBeenCalled();
+    });
+  });
+  describe("loginCustomer", () => {
+    const loginInput: LoginCustomerInput = { email: "John@Example.com", password: "StrongPassword123!" };
+    const asUser = (overrides: Partial<UserRow>): UserRow => ({ ...createdUser, ...overrides }) as UserRow;
+
+    // Everything the fakes saw that could carry a token or a session: none of it may happen on a failed login.
+    const expectNothingIssued = (fakes: ReturnType<typeof setup>): void => {
+      expect(fakes.authRepository.createRefreshToken).not.toHaveBeenCalled();
+      expect(fakes.tokens.signAccessToken).not.toHaveBeenCalled();
+    };
+
+    it("returns the customer and both tokens, and saves the refresh token's hash with the ip address", async () => {
+      const { service, authRepository, tokens } = setup();
+      authRepository.findUserByNormalizedEmail.mockResolvedValue(createdUser);
+
+      const result = await service.loginCustomer(loginInput, context);
+
+      expect(result).toEqual({
+        customer: {
+          id: "customer-1",
+          email: "John@Example.com",
+          firstName: "John",
+          lastName: "Doe",
+          phoneNumber: "+201234567890",
+        },
+        accessToken: "access-token",
+        refreshToken,
+      });
+      expect(authRepository.createRefreshToken).toHaveBeenCalledTimes(1);
+      expect(authRepository.createRefreshToken.mock.calls[0]?.[0]).toEqual({
+        userId: "user-1",
+        tokenHash: "refresh-token-hash",
+        expiresAt: refreshToken.expiresAt,
+        ipAddress: "203.0.113.7",
+      });
+      expect(tokens.signAccessToken).toHaveBeenCalledWith({ userId: "user-1", role: "Customer" });
+    });
+
+    it("looks the user up by the lowercased email and checks the password against the stored hash", async () => {
+      const { service, authRepository, hasher } = setup();
+      authRepository.findUserByNormalizedEmail.mockResolvedValue(createdUser);
+
+      await service.loginCustomer(loginInput, context);
+
+      expect(authRepository.findUserByNormalizedEmail.mock.calls[0]?.[0]).toBe("john@example.com");
+      expect(hasher.verify).toHaveBeenCalledWith("StrongPassword123!", "hashed-password");
+    });
+
+    it("throws InvalidCredentialsError for an unknown email, and still runs the password check", async () => {
+      const fakes = setup();
+      fakes.authRepository.findUserByNormalizedEmail.mockResolvedValue(null);
+      fakes.hasher.verify.mockResolvedValue(false);
+
+      await expect(fakes.service.loginCustomer(loginInput, context)).rejects.toBeInstanceOf(InvalidCredentialsError);
+      // The dummy check makes "no such email" as slow as "wrong password" (plan §8).
+      expect(fakes.hasher.verify).toHaveBeenCalledWith("StrongPassword123!", null);
+      expectNothingIssued(fakes);
+    });
+
+    it("throws InvalidCredentialsError for a wrong password, before looking at anything else", async () => {
+      const fakes = setup();
+      fakes.authRepository.findUserByNormalizedEmail.mockResolvedValue(createdUser);
+      fakes.hasher.verify.mockResolvedValue(false);
+
+      await expect(fakes.service.loginCustomer(loginInput, context)).rejects.toBeInstanceOf(InvalidCredentialsError);
+      expect(fakes.customers.findProfileByUserId).not.toHaveBeenCalled();
+      expectNothingIssued(fakes);
+    });
+
+    it.each<[InactiveAccountStatus, string]>([
+      ["inactive", "ACCOUNT_INACTIVE"],
+      ["locked", "ACCOUNT_LOCKED"],
+      ["suspended", "ACCOUNT_SUSPENDED"],
+    ])("throws a 403 AccountNotActiveError for a %s account with the right password", async (status, code) => {
+      const fakes = setup();
+      fakes.authRepository.findUserByNormalizedEmail.mockResolvedValue(asUser({ accountStatus: status }));
+
+      const error: unknown = await fakes.service.loginCustomer(loginInput, context).catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(AccountNotActiveError);
+      expect(error).toMatchObject({ statusCode: 403, code });
+      expectNothingIssued(fakes);
+    });
+
+    it("answers a wrong password on a suspended account with 401, not 403, so the status isn't revealed", async () => {
+      const fakes = setup();
+      fakes.authRepository.findUserByNormalizedEmail.mockResolvedValue(asUser({ accountStatus: "suspended" }));
+      fakes.hasher.verify.mockResolvedValue(false);
+
+      await expect(fakes.service.loginCustomer(loginInput, context)).rejects.toBeInstanceOf(InvalidCredentialsError);
+    });
+
+    it("throws NotACustomerError when the account has no customer profile", async () => {
+      const fakes = setup();
+      fakes.authRepository.findUserByNormalizedEmail.mockResolvedValue(createdUser);
+      fakes.customers.findProfileByUserId.mockResolvedValue(null);
+
+      await expect(fakes.service.loginCustomer(loginInput, context)).rejects.toBeInstanceOf(NotACustomerError);
+      expect(fakes.customers.findProfileByUserId).toHaveBeenCalledWith("user-1");
+      expectNothingIssued(fakes);
     });
   });
 });
