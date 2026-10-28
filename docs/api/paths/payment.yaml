@@ -8,12 +8,14 @@ paymentMethods:
     description: |
       Returns the ways a customer can pay: `cash`, `credit_card`, `debit_card`, `apple_pay`,
       `google_pay` and `wallet`. All of them are always offered, because there is no setting to switch
-      a method off.
+      a method off. The `method` values are what `POST /orders` expects as `paymentMethod`.
+
+      Offline methods come first, then the online methods sorted by `label`. The list is the same
+      for every caller. Publicly accessible; no authentication required.
 
     operationId: listPaymentMethods
 
-    security:
-      - bearerAuth: []
+    security: []
 
     responses:
       "200":
@@ -30,14 +32,14 @@ paymentMethods:
                   - method: cash
                     label: Cash on delivery
                     online: false
+                  - method: apple_pay
+                    label: Apple Pay
+                    online: true
                   - method: credit_card
                     label: Credit card
                     online: true
                   - method: debit_card
                     label: Debit card
-                    online: true
-                  - method: apple_pay
-                    label: Apple Pay
                     online: true
                   - method: google_pay
                     label: Google Pay
@@ -45,12 +47,6 @@ paymentMethods:
                   - method: wallet
                     label: Wallet
                     online: true
-
-      "401":
-        $ref: "../responses/common.yaml#/Unauthorized"
-
-      "403":
-        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"

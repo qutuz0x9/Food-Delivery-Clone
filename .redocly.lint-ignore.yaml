@@ -362,6 +362,8 @@ docs/api/paths/order.yaml:
     - >-
       #/orders/post/requestBody/content/application~1json/examples/invalidPaymentMethod/value/paymentMethod
 docs/api/paths/payment.yaml:
+  operation-4xx-response:
+    - '#/paymentMethods/get/responses'
   no-invalid-media-type-examples:
     - >-
       #/orderPayment/post/requestBody/content/application~1json/examples/missingPaymentToken/value
