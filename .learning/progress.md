@@ -3,8 +3,8 @@
 ## Tracks
 
 - Design stage: questions (Strong rounds: 1)
-- Last design ratings: Strong (list-cities, 2026-10-28: missed the sort order, the empty list and the edge cases, none must-fix); Needs work (login-customer, 2026-10-27: no 403 for non-active accounts, deleted accounts could log in, no brute-force limit); Needs work (register-customer: cookie flags, insert-time duplicates, missing role)
-- Test writing: on (from the next feature)
+- Last design ratings: OK (payment-methods, 2026-10-28: no compile-time check that every enum value has a label; where label/online live and the edge cases were "don't know"); Strong (list-cities, 2026-10-28: missed the sort order, the empty list and the edge cases, none must-fix); Needs work (login-customer, 2026-10-27: no 403 for non-active accounts, deleted accounts could log in, no brute-force limit); Needs work (register-customer: cookie flags, insert-time duplicates, missing role)
+- Test writing: on (payment-methods' 2 user tests were skipped; the next feature has the first ones)
 - Features done: 2
 - Bug hunt level: 1
 - Last solo: never
@@ -32,12 +32,14 @@
 | narrowing unknown | Language | Guided | 0 | 0 | 0 | | 2026-10-25 |
 | method chains and call order | Language | Guided | 0 | 0 | 0 | | 2026-10-25 |
 | null and undefined handling (`?.`, `??`, `!`) | Language | Guided | 0 | 0 | 1 | focus | 2026-10-27 |
+| unit test with fakes | Tests | Guided | 0 | 0 | 0 | | |
+| route test with Supertest | Tests | Guided | 0 | 0 | 0 | | |
 
 ## Foundations
 
 | Foundation | Status (todo / written / explained) | Date |
 | --- | --- | --- |
-| Error classes + errorHandler | todo (register-customer: AppError written; errorHandler AppError branch needs a `return`; Zod + 500 branches skipped. login-customer: explain-back not answered. list-cities: answered; Q2 mostly right, Q1 misses Express 5 forwarding rejected promises, Q3 misses the 4-parameter rule and registration order) | 2026-10-28 |
+| Error classes + errorHandler | todo (register-customer: AppError written; errorHandler AppError branch needs a `return`; Zod + 500 branches skipped. login-customer: explain-back not answered. list-cities: answered; Q2 mostly right, Q1 misses Express 5 forwarding rejected promises, Q3 misses the 4-parameter rule and registration order. payment-methods: explain-back skipped with the feature; the 3 questions in plan §10 still apply) | 2026-10-28 |
 | Zod validate middleware | todo | |
 | Controller + router | todo | |
 | Module wiring (constructor DI) | todo | |
@@ -56,6 +58,8 @@
 | Register customer (JWT + refresh token) | build | Needs work | `.learning/plans/register-customer.md` | final-reviewed (5.6/10) | 2026-10-25 |
 | Login customer | build | Needs work | `.learning/plans/login-customer.md` | done (8.5/10, merged in PR #1) | 2026-10-27 |
 | List cities | build | Strong | `.learning/plans/list-cities.md` | done (8.3/10, committed 98a9a52; PR practice skipped) | 2026-10-28 |
+| Payment methods | build | OK | `.learning/plans/payment-methods.md` | built by Claude at the user's request: all 4 pieces skipped, not counted in Features done (branch `feature/payment-methods`) | 2026-10-28 |
+| List cuisines | build (not learning) | — | none | built by Claude at the user's request, no design round; not counted (branch `feature/payment-methods`) | 2026-10-28 |
 
 ## Bug hunts
 
