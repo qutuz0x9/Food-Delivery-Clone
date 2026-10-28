@@ -26,16 +26,16 @@ If the vault has a **Design Checklist** (`03- Development/Features/00- Design Ch
 
 ### Design stage `questions`
 
-Interview the user one question at a time. Start with one line: it takes about 10 minutes, short answers are fine, "I don't know" is a fine answer, `skip` skips a question, and `back` changes the last answer.
+Interview the user one section at a time: all the questions of a section go in one message, and the user answers them together. Start with one line: it takes about 10 minutes, short answers are fine, "I don't know" is a fine answer, `skip` leaves a question empty, and `back` changes an earlier section.
 
 Go through these 6 sections in order. Adapt the questions to the feature: drop the ones that don't apply, and add one when the feature needs it (for example, "Should register also log the user in?").
 
 1. **Endpoint:** method → route → request body → success status → response body
-2. **Errors:** one error case per question, with its status code. After each one, ask "Another case, or `done`?"
+2. **Errors:** every error case the user can think of, one per line, each with its status code
 3. **Data:** tables → fields and types → values the app must generate → constraints (required, unique, length) → indexes
 4. **Validation:** rules for each field → which rules go in the Zod schema and which in the service
 5. **Transaction:** is one needed? → what goes inside → what runs after it
-6. **Edge cases and security:** one case per question, until `done`. The first question of this section gives
+6. **Edge cases and security:** every case the user can think of, one per line. Give
    four thinking prompts, with no answers, because beginners often have nothing to start from here:
    - *two requests at the same moment?*
    - *a step fails halfway?*
@@ -44,14 +44,14 @@ Go through these 6 sections in order. Adapt the questions to the feature: drop t
 
 Each message:
 
-- Starts with `Phase 1: Your Design · <Section> (<n>/6) · question <k> of <m>`. In Errors and Edge cases, use `case <k>` instead of `question <k> of <m>`.
-- Asks **one** short question, then stops and waits for the answer.
+- Starts with `Phase 1: Your Design · <Section> (<n>/6)`.
+- Lists the section's questions as a numbered list, in the order above, then stops and waits for the answers. Ask the user to answer with the same numbers (`1. POST`, `2. ...`).
 - May point to where to look (for example, "read `src/prisma/contract.prisma`"), but never hints at the answer.
-- Does not judge the answer. Keep all feedback for the You vs me table. If an answer is unclear, ask one short follow-up.
+- Does not judge the answers. Keep all feedback for the You vs me table. If an answer is unclear or a number is missing, ask about only those numbers in one short follow-up.
 
-If the user answers several questions at once, record them all and skip ahead.
+In Errors and Edge cases, the user lists cases instead of answering numbered questions. After their list, ask once "More cases, or `done`?" before moving on.
 
-When a section is finished, show it filled in, then ask the first question of the next section:
+When a section is finished, show it filled in, then ask all the questions of the next section in the same message:
 
 ```txt
 Endpoint
