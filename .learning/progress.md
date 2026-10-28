@@ -2,10 +2,10 @@
 
 ## Tracks
 
-- Design stage: questions (Strong rounds: 0)
-- Last design ratings: Needs work (login-customer, 2026-10-27: no 403 for non-active accounts, deleted accounts could log in, no brute-force limit); Needs work (register-customer: cookie flags, insert-time duplicates, missing role)
-- Test writing: off
-- Features done: 0
+- Design stage: questions (Strong rounds: 1)
+- Last design ratings: Strong (list-cities, 2026-10-28: missed the sort order, the empty list and the edge cases, none must-fix); Needs work (login-customer, 2026-10-27: no 403 for non-active accounts, deleted accounts could log in, no brute-force limit); Needs work (register-customer: cookie flags, insert-time duplicates, missing role)
+- Test writing: on (from the next feature)
+- Features done: 2
 - Bug hunt level: 1
 - Last solo: never
 
@@ -14,12 +14,13 @@
 | Concept | Area | Stage | Guided ✓ | Unguided ✓ | Assisted | Focus | Last practiced |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | find by unique field, existence check | Repository | Unguided | 2 | 0 | 1 | | 2026-10-27 |
+| filter + pagination | Repository | Guided | 1 | 0 | 0 | | 2026-10-28 |
 | create, update, delete | Repository | Guided | 1 | 0 | 0 | | 2026-10-25 |
 | translate Prisma errors | Repository | Guided | 0 | 0 | 0 | | 2026-10-25 |
 | required and format rules | Validation | Guided | 1 | 0 | 1 | | 2026-10-27 |
 | length and range rules | Validation | Guided | 1 | 0 | 1 | | 2026-10-27 |
 | transforms (trim, lowercase, coerce) | Validation | Guided | 1 | 0 | 1 | | 2026-10-27 |
-| orchestration flow | Service | Guided | 0 | 0 | 2 | | 2026-10-27 |
+| orchestration flow | Service | Guided | 1 | 0 | 2 | | 2026-10-28 |
 | uniqueness check with DB constraint | Service | Guided | 0 | 0 | 1 | | 2026-10-25 |
 | multi-write interactive transaction | Service | Guided | 0 | 0 | 1 | | 2026-10-25 |
 | password hashing usage | Service | Guided | 1 | 0 | 1 | | 2026-10-27 |
@@ -36,7 +37,7 @@
 
 | Foundation | Status (todo / written / explained) | Date |
 | --- | --- | --- |
-| Error classes + errorHandler | todo (register-customer: AppError written; errorHandler AppError branch needs a `return`; Zod + 500 branches skipped. login-customer: explain-back not answered) | 2026-10-27 |
+| Error classes + errorHandler | todo (register-customer: AppError written; errorHandler AppError branch needs a `return`; Zod + 500 branches skipped. login-customer: explain-back not answered. list-cities: answered; Q2 mostly right, Q1 misses Express 5 forwarding rejected promises, Q3 misses the 4-parameter rule and registration order) | 2026-10-28 |
 | Zod validate middleware | todo | |
 | Controller + router | todo | |
 | Module wiring (constructor DI) | todo | |
@@ -53,7 +54,8 @@
 | Feature | Type (build / extend) | Design rating | Plan | Status | Date |
 | --- | --- | --- | --- | --- | --- |
 | Register customer (JWT + refresh token) | build | Needs work | `.learning/plans/register-customer.md` | final-reviewed (5.6/10) | 2026-10-25 |
-| Login customer | build | Needs work | `.learning/plans/login-customer.md` | final-reviewed (8.5/10) | 2026-10-27 |
+| Login customer | build | Needs work | `.learning/plans/login-customer.md` | done (8.5/10, merged in PR #1) | 2026-10-27 |
+| List cities | build | Strong | `.learning/plans/list-cities.md` | done (8.3/10, committed 98a9a52; PR practice skipped) | 2026-10-28 |
 
 ## Bug hunts
 
