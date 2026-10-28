@@ -2056,9 +2056,13 @@ listCuisines:
     summary: List cuisines
 
     description: |
-      Returns the distinct cuisine names offered by approved restaurants, for building a filter. Use a
-      name as the `cuisine` filter of `GET /restaurants`. Publicly accessible; no authentication
-      required.
+      Returns the distinct cuisine names offered by restaurants customers can see, for building a
+      filter. Use a name as the `cuisine` filter of `GET /restaurants`. Publicly accessible; no
+      authentication required.
+
+      A name is listed when at least one restaurant has it as an active cuisine tag and that
+      restaurant is approved, its account is active and not deleted, and it has an active branch.
+      Each name appears once, sorted A to Z. With no such restaurant the list is empty.
 
     operationId: listPublicCuisines
 
