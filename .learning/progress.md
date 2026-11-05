@@ -3,8 +3,8 @@
 ## Tracks
 
 - Design stage: questions (Strong rounds: 1)
-- Last design ratings: OK (payment-methods, 2026-10-28: no compile-time check that every enum value has a label; where label/online live and the edge cases were "don't know"); Strong (list-cities, 2026-10-28: missed the sort order, the empty list and the edge cases, none must-fix); Needs work (login-customer, 2026-10-27: no 403 for non-active accounts, deleted accounts could log in, no brute-force limit); Needs work (register-customer: cookie flags, insert-time duplicates, missing role)
-- Test writing: on (payment-methods' 2 user tests were skipped; the next feature has the first ones)
+- Last design ratings: Needs work (refresh-token-rotation, 2026-11-02: GET for a state change; unknown/expired/revoked tokens and deleted users had no error case; "one save", so no transaction and no guard against double rotation; edge cases "don't know"); OK (payment-methods, 2026-10-28: no compile-time check that every enum value has a label; where label/online live and the edge cases were "don't know"); Strong (list-cities, 2026-10-28: missed the sort order, the empty list and the edge cases, none must-fix); Needs work (login-customer, 2026-10-27: no 403 for non-active accounts, deleted accounts could log in, no brute-force limit); Needs work (register-customer: cookie flags, insert-time duplicates, missing role)
+- Test writing: on (refresh-token-rotation's reuse test was skipped; the next feature has the first user test)
 - Features done: 2
 - Bug hunt level: 1
 - Last solo: never
@@ -13,7 +13,7 @@
 
 | Concept | Area | Stage | Guided ✓ | Unguided ✓ | Assisted | Focus | Last practiced |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| find by unique field, existence check | Repository | Unguided | 2 | 0 | 1 | | 2026-10-27 |
+| find by unique field, existence check | Repository | Unguided | 2 | 1 | 1 | | 2026-11-02 |
 | filter + pagination | Repository | Guided | 1 | 0 | 0 | | 2026-10-28 |
 | create, update, delete | Repository | Guided | 1 | 0 | 0 | | 2026-10-25 |
 | translate Prisma errors | Repository | Guided | 0 | 0 | 0 | | 2026-10-25 |
@@ -39,7 +39,7 @@
 
 | Foundation | Status (todo / written / explained) | Date |
 | --- | --- | --- |
-| Error classes + errorHandler | todo (register-customer: AppError written; errorHandler AppError branch needs a `return`; Zod + 500 branches skipped. login-customer: explain-back not answered. list-cities: answered; Q2 mostly right, Q1 misses Express 5 forwarding rejected promises, Q3 misses the 4-parameter rule and registration order. payment-methods: explain-back skipped with the feature; the 3 questions in plan §10 still apply) | 2026-10-28 |
+| Error classes + errorHandler | todo (register-customer: AppError written; errorHandler AppError branch needs a `return`; Zod + 500 branches skipped. login-customer: explain-back not answered. list-cities: answered; Q2 mostly right, Q1 misses Express 5 forwarding rejected promises, Q3 misses the 4-parameter rule and registration order. payment-methods: explain-back skipped with the feature. refresh-token-rotation: explain-back not answered, feature skipped; the 3 questions in its plan §10 still apply) | 2026-11-05 |
 | Zod validate middleware | todo | |
 | Controller + router | todo | |
 | Module wiring (constructor DI) | todo | |
@@ -60,6 +60,7 @@
 | List cities | build | Strong | `.learning/plans/list-cities.md` | done (8.3/10, committed 98a9a52; PR practice skipped) | 2026-10-28 |
 | Payment methods | build | OK | `.learning/plans/payment-methods.md` | built by Claude at the user's request: all 4 pieces skipped, not counted in Features done (branch `feature/payment-methods`) | 2026-10-28 |
 | List cuisines | build (not learning) | — | none | built by Claude at the user's request, no design round; not counted (branch `feature/payment-methods`) | 2026-10-28 |
+| Refresh token rotation | build | Needs work | `.learning/plans/refresh-token-rotation.md` | final-reviewed (7.5/10): design 5, `findRefreshTokenByHash` 10 (independent, Unguided); `revokeRefreshTokenIfActive`, `refreshCustomer` and the reuse test skipped (written by Claude at the user's request); explain-back not answered. Not counted in Features done (branch `feature/refresh-token-rotation`, not committed) | 2026-11-05 |
 
 ## Bug hunts
 
