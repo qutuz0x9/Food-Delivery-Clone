@@ -12,9 +12,10 @@ them, with `00- Overview.md` as the hub:
 | `00- Overview.md` | Phase 1, together with the Database Diagram; **updated after every step below** |
 | `01- Database Diagram.md` | Phase 1: before the first design question (extend: before the impact analysis) |
 | `02- Design Review (You vs Me).md` | Phase 1: after the You vs me table, the rating and the plan, before "Reply `go`" |
-| `03- Build Log.md` | Phase 2: after Verify and Progress, before the report |
-| `04- To-Do.md` | Phase 2: right after the Build Log |
-| `NN- (Review) <headline>.md` (05, 06, ...) | every `/feature-build review` of this feature, one note per review |
+| `03- Logic & Flow.md` | Phase 1: right after the Design Review, from the agreed design; Phase 2 adds the real code names |
+| `04- Build Log.md` | Phase 2: after Verify and Progress, before the report |
+| `05- To-Do.md` | Phase 2: right after the Build Log |
+| `NN- (Review) <headline>.md` (06, 07, ...) | every `/feature-build review` of this feature, one note per review |
 | `NN- (Review) Piece Reviews.md` | the first `/feature-build review <piece>`; every later piece review is appended (see `review.md`) |
 | `NN- (Final Review) <Feature>.md` | `/feature-build final-review`; its format is in `final-review.md` |
 
@@ -50,13 +51,13 @@ review (scores, status), the feature becoming `done`. Rewrite only the sections 
     is missing.
   - Extend mode: `NN- (Extend) <Change Title>`.
   - The title is short and in Title Case, e.g. `01- Register Customer`, `02- Login Customer`.
-- **No matching project folder:** ask once. If there is no vault for this project, write the three notes to
+- **No matching project folder:** ask once. If there is no vault for this project, write the notes to
   `.learning/notes/<feature-slug>/` in the repo instead.
 - **Never** write into the project's `Tasks/` folder: those files belong to another tool.
 - Put the folder in the plan, as the line `Notes: <vault feature folder>` under the plan title, so later steps and
   review mode can find it.
 
-## Format (all three notes)
+## Format (all feature notes)
 
 - **Frontmatter:** copy the shape of the notes already in the project folder.
   - `tags`: 1–2 `topic/` (reuse the ones sibling notes use, e.g. `topic/express`, `topic/typescript`), exactly one
@@ -120,54 +121,137 @@ In the first interview message, give the note's path in one line ("the tables ar
 1. A `>[!Note]` callout: the date, the feature, the mode (build or extend) and design stage, the plan's path in the
    repo, and a link to the Build Log once it exists.
 2. `# (Review) <Feature>: My Design vs Claude's`
-3. A `>[!Summary]` callout: the rating and its must-fix gaps in a few words, the strengths, the biggest lesson.
-4. `## My answers`: the user's design exactly as they gave it.
-   - Stage `questions`: one `###` per interview section, with the filled-in block shown in chat.
-   - Stage `draft`: the user's plan sections 1–3 and 5–8.
-   - Extend: the user's impact list.
-5. `## The comparison`: the You vs me table exactly as shown in chat, plus one line explaining the verdicts.
-6. `## The must-fix gaps, explained`: one `###` per gap. Say why it matters, with a concrete failure from this
-   feature (a request sequence, a bad row, an attack). A small table or a `txt` timeline helps.
-7. `## What I did well`: the real strengths, the same ones you gave in chat.
-8. `## Edge cases and security`: your list, when the user's was missing or short.
-9. `## Rating`: the rating table with this round marked, and the user's design stage after this round.
-10. `## Think before you code`: plan section 11, as questions without answers.
+3. A `>[!Summary]` callout: the total score and the rating, the biggest gaps in a few words, the strengths, the
+   biggest lesson.
+4. `## My answers`: every answer the user gave, each one checked right under it. The user already knows their own
+   answers, so the check is what they read this note for: never list an answer without it.
+   - Stage `questions`: one `###` per interview section, and one `####` per numbered answer or listed case.
+   - Stage `draft`: one `###` per plan section (1–3 and 5–8), and one `####` per decision in it.
+   - Extend: one `###` per part of the impact list (files and layers, migration, API contract, tests, risks), and one
+     `####` per item.
+   - Every `####` has this shape, so the user can move fast on the Notes and read a Full Explain only when they need
+     it:
+
+     ```markdown
+     #### 2. Route: 🔴 Wrong
+
+     | My answer | Claude |
+     | --- | --- |
+     | `/api/v1/auth/login` | `/api/v1/auth/login/customer`<br><br>**Note:** the project's routes name the actor. |
+
+     **Full Explain:** The project's convention is `/auth/<action>/<actor>`, and the spec already uses it. ...
+     ```
+
+   - **Heading:** the item's name, then its verdict: `✅ Match`, `✅ Different, valid`, `🟡 Different, risky`,
+     `🔴 Missed` or `🔴 Wrong`, from `build.md`. Add `(must-fix)` when the item is a must-fix gap.
+   - **Table:** two columns and one row, and nothing else. "My answer" quotes the user's words exactly. "Claude" gives
+     Claude's answer, then the Note. A cell can't hold a code fence, so break lines with `<br>` and escape a pipe as
+     `\|`.
+   - **Note:** one short sentence on why Claude's answer is what it is. It must make sense without the Full Explain.
+   - **Full Explain:** never empty, even for a match, and it must add to the Note, not repeat it: the full reason, what
+     goes wrong otherwise, and the right way to think about it.
+   - **A must-fix item** also shows a concrete failure from this feature in its Full Explain (a request sequence, a bad
+     row, an attack). A small table or a `txt` timeline helps.
+   - **Things the user missed** get their own `####` at the end of the section they belong to, in the same shape, with
+     `—` as "My answer".
+5. `## Score`: a table with one row per `###` of "My answers": section | me | Claude. No other columns.
+   - Each `####` is worth 1 point. **Match** and **Different, valid** score 1, **Different, risky** ½, **Missed** and
+     **Wrong** 0. Claude's column is the number of items in the section.
+   - Under the table, the total on its own line: `**Total: 17 / 24**`.
+   - Then one line with the rating, what it means and the design stage:
+     **Rating:** Needs work (3 must-fix gaps; Strong means none) · **Design stage:** `questions` (Strong rounds: 0).
+     The rating still decides the design stage, not the score.
+6. `## What I did well`: the real strengths, the same ones you gave in chat.
+7. `## More edge cases and security`: Claude's cases that aren't already under "My answers", each with why it matters.
+   They are extra learning and aren't scored. Leave the section out when nothing is left.
+8. `## Think before you code`: plan section 11, as questions without answers.
 
 If the user changes the design after the table and before `go`, update the note to the agreed design before you
 scaffold.
 
-## 03- Build Log.md
+## 03- Logic & Flow.md
 
-`type/concept`. Everything Claude did after `go`. Sections, in order:
+`type/concept`, tags `topic/express` (or the sibling notes' topic) and `concept/architecture`. The feature's business
+logic in pictures: what the rules are, in which order the code applies them, and why each decision goes the way it
+does. The user reads it before coding and comes back to it while coding, so it describes the **agreed design**
+(Claude's design after the You vs me table), never the user's first answers.
 
-1. A `>[!Note]` callout: the date, links to the Design Review and To-Do notes, and a line saying this note
-   describes the real code.
+It must not give away the user's pieces: show **what** happens and **why**, in plain words, never code, exact ORM or
+Zod calls, or query shapes. The plan already holds this level of detail, so the note adds no new hints.
+
+Sections, in order:
+
+1. A `>[!Note]` callout: the date, the feature, a link to the Design Review and the Overview, and "describes the agreed
+   design; the code names are added after `go`".
+2. `# <Feature> Logic & Flow`
+3. A `>[!Summary]` callout: what the feature does in business terms (one line), the 3–5 rules that matter most, and
+   the one idea the whole feature depends on (e.g. "a token works once").
+4. `## Business rules`: a table of # | rule | source (contract, rules file, design decision) | enforced where
+   (layer, and the database constraint when one backs it up).
+5. `## The whole flow`: **one** Mermaid `flowchart TD`, from "client sends" to "client gets the response". Every
+   check is a diamond (`{...}`), every write a box, every error exit a box with its status and code, and the success
+   path ends at the response. Mark the user's pieces with `👤` in the node label.
+6. `## Through the layers`: **one** Mermaid `sequenceDiagram` with a participant per layer (Client, Router or
+   middleware, Controller, Service, Repository, Database), showing the happy path, and one `alt` block for the most
+   important failure.
+7. `## Decisions, one by one`: one `###` per decision point of the flow, in the order the code reaches them. Each has:
+   - a small Mermaid `flowchart LR` of just that decision (the condition and its branches);
+   - **Rule:** the business rule behind it, in one line;
+   - **Why here:** why it sits at this point of the flow (what goes wrong if it runs earlier or later);
+   - **If it were missing:** a concrete failure from this feature (a request, a bad row, an attack), one or two lines.
+8. `## State changes`: one Mermaid `stateDiagram-v2` per row or entity whose state changes, with every allowed
+   transition labelled by what causes it. Then one line on what must never happen. Leave the section out when nothing
+   changes state.
+9. `## Two requests at once`: a Mermaid `sequenceDiagram` of the race the design guards against, and the line of the
+   design that stops it. Leave it out when the feature has no race.
+10. `## Where each rule lives`: rule # → file and method. Before `go`, write the planned names from plan §4; after
+    the scaffold, update it with the real ones.
+
+**Mermaid rules** (Obsidian renders Mermaid, but a syntax error shows nothing):
+
+- Put every label that has spaces, symbols or parentheses in double quotes: `A["revoked_at set?"]`, `B{"expired?"}`.
+- No `"` inside a label; use `'` instead. No raw `<`, `>` or `|` inside a label.
+- Keep labels short (a few words). Long explanations go in the text under the diagram, not in the nodes.
+- Node ids are short and unique within one diagram (`check1`, `revoke`); never reuse an id with another label.
+- Label edges with the condition: `-->|yes|`, `-->|no|`.
+
+## 04- Build Log.md
+
+`type/concept`. Helps the user understand the code Claude wrote after `go`. It explains the code, not the story of
+writing it.
+
+- **Short:** about 200 lines for a normal feature, less for a small one. Cut before adding.
+- **One fact, one place:** never say the same thing in two sections.
+- **No process story:** leave out install commands, docs you looked up, probe scripts and lockfile details.
+
+Sections, in order:
+
+1. A `>[!Note]` callout: the date, the branch, links to the Design Review, To-Do and Overview notes, and a line saying
+   this note describes the real code.
 2. `# <Feature> Build Log`
-3. A `>[!Summary]` callout: the steps below as a numbered list of one line each.
-4. `## Step by step`: what happened, in order.
-   - Packages installed: the command, and a table of package | version | what it is.
-   - Anything you investigated before writing code (docs, a probe script against the database) and what you
-     learned. Say that probe scripts were rolled back and deleted.
-   - The checks you ran, with their real results.
-   - Anything that surprised you or that you corrected (e.g. a test that passed by accident), and the lesson in it.
-5. `## The map`: a `txt` tree of every file, marked **New**, **Edit** or **Me** (the user writes a piece in it).
-   A second tree for files outside `src/`.
-6. `## The files, in the order a request runs`: one `###` per file. A short real excerpt, what it does and why it is
-   built that way. For a user's stub, show the signature and the first steps, not a solution.
-7. `## The tests`: a table of file | number of tests | what they use (fakes, Supertest, ...). Show the key trick of
-   the service tests. Say which tests already pass and why, and which tests were skipped and why.
-8. `## Config and docs changes`: one `###` per changed area (scripts, tsconfig, env files, Docker, spec, project
-   docs, plan, progress), each with a short excerpt.
-9. `## How it fits together`: a `txt` diagram of the request flow, including where each error goes.
-10. `## New ideas in this code`: every pattern or language feature in Claude's code that the user hasn't met in an
-    earlier feature (check the earlier Build Logs and the vault's Explanations and Learning Topics). For each, a
-    `###` with 3 lines: what it is, a real excerpt (1–3 lines), and why the project uses it. Link a deeper vault
-    note when one exists; otherwise end with "Ask for a deeper note with `/codebase-output`". Examples: a factory
-    function, constructor injection, a closure, a derived type like `Parameters<...>`.
-11. `## Things to notice`: 3–5 design points the user should remember.
-12. `## Still open`: setup the user must do, and decisions that are waiting for the user.
+3. A `>[!Summary]` callout: 2–3 lines on what now works, what waits for the user's pieces, and the test result.
+4. `## How it works`: a `txt` diagram of the request flow, with where each error goes and its status code. Mark the
+   user's pieces with `← Me`.
+5. `## What changed`: a `txt` tree of every file in `src/`, marked **New**, **Edit** or **Me** (the user writes a piece
+   in it), with a few words on each, including how many tests a test file gained. A second tree for files outside
+   `src/` (spec, config, plan). One line per new package: name, version, what it is.
+6. `## The code worth reading`: one `###` per file, for the 3–5 files that hold a real decision, in the order a request
+   runs. A real excerpt of at most 10 lines, then 1–3 sentences on why it's built that way. Skip wiring and one-line
+   files, because the tree covers them, and the user's stubs, because the To-Do covers them.
+7. `## New ideas in this code`: every pattern or language feature in Claude's code that the user hasn't met in an
+   earlier feature (check the earlier Build Logs and the vault's Explanations and Learning Topics). A clever trick in
+   a test counts too. For each, a `###` with 3 lines: what it is, a real excerpt (1–3 lines), and why the project uses
+   it. Link a deeper vault note when one exists. End the section, once, with "Ask for a deeper note with
+   `/codebase-output`". Examples: a factory function, constructor injection, a closure, a derived type like
+   `Parameters<...>`.
+8. `## Test results`: a table of check | real result, then 1–2 sentences on which failures are expected (the user's
+   pieces) and which tests were skipped and why.
+9. `## Surprises`: at most 3 bullets on something that went wrong or that you corrected, each with its lesson (e.g. a
+   test that passed by accident). Leave the section out when there are none.
 
-## 04- To-Do.md
+Anything still open goes in the To-Do note, not here.
+
+## 05- To-Do.md
 
 `type/study-guide`. A checklist the user follows, step by step, to finish the feature. Use Obsidian checkboxes
 (`- [ ]`), so the user can tick them off. Sections, in order:
@@ -192,7 +276,8 @@ scaffold.
    `<API>`?" for a free API example (it doesn't count as a hint); paste an error to get it explained (not fixed).
 6. `## Finish`: checkboxes for the full test run (`npm test` shows `<total> passed`), the type check, lint, and
    `/feature-build review`.
-7. `## Can wait`: open points that do not block the user's pieces, so they don't worry about them now.
+7. `## Can wait`: open points left by the build that do not block the user's pieces (a decision for later, a container
+   still running), so they don't worry about them now.
 
 In the chat report, give the To-Do path and the first piece. Don't repeat the whole list in the terminal.
 
@@ -202,7 +287,7 @@ One note per review, directly in the feature's folder (no subfolder), so every n
 root and the user can go back over their mistakes feature by feature.
 
 - **Name:** `NN- (Review) <headline>.md`. `NN` continues the numbering of the feature folder, so the first review
-  is `05-` (after `04- To-Do.md`). The headline names the main problem in a few words, e.g.
+  is `06-` (after `05- To-Do.md`). The headline names the main problem in a few words, e.g.
   `06- (Review) errorHandler Returns 200 and Hangs`. When a review approves with nothing to fix, use
   `NN- (Review) <piece> Approved`.
 - **Frontmatter:** `type/bug`, plus `Date: <today>` as sibling notes use.
@@ -228,8 +313,8 @@ user's own mistakes, so it teaches without giving away the answers for a new fea
 
 - **When:** created on the first design round; updated after every round's You vs me table (`build.md`) and every
   extend comparison (`practice.md`).
-- **Shape:** grouped by the 6 interview sections (Endpoint, Errors, Data, Validation, Transaction, Edge cases and
-  security). Each item is a **question**, not an answer, with where it came from:
+- **Shape:** grouped by the 7 interview sections (Endpoint, Business logic and flow, Errors, Data, Validation,
+  Transaction, Edge cases and security). Each item is a **question**, not an answer, with where it came from:
   `- [ ] Can two requests pass my uniqueness check at the same moment? (Register Customer: insert-time duplicates)`
 - Don't repeat an item that is already there; add the new feature's name to it instead. When the user gets an item
   right in a later round, mark it `✅ <feature>` so they can see it sticking.

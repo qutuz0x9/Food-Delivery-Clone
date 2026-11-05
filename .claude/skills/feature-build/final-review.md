@@ -25,7 +25,11 @@ final review, or when every piece is attempted.
 6. **Write the final review note** (see "The note" below) in the feature's folder.
 7. **Progress:** update `.learning/progress.md` (see "Progress"), and the feature's `00- Overview.md` (scores,
    status `final-reviewed (<score>/10)`, what's next).
-8. **Report briefly in chat:** the note path, the overall score, the scores table, and the 3 fixes to type first.
+8. **CV Log:** run the `cv-log` skill in `feature <name>` mode (it lives in `~/.claude/skills/cv-log`), so what this
+   feature taught is recorded with the scores of this review as evidence. If the skill isn't installed, skip this
+   step and say so in one line.
+9. **Report briefly in chat:** the note path, the overall score, the scores table, the 3 fixes to type first, and the
+   new CV Log items in one line.
 
 ## Scoring rubric
 

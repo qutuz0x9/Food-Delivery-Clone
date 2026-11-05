@@ -10,8 +10,11 @@ Trains reading code you didn't just write, and thinking about the impact of a ch
    - whether a migration is needed, and what happens to **existing rows** (e.g. a new required column on a table that already has data)
    - whether the API contract changes, and whether that breaks existing clients
    - tests to update and tests to add
+   - business rules and flow steps that change: a new rule, a new check, or a step that moves
    - risks
-3. **Compare** in a **You vs me** table, with the same verdicts and rating as the design round in `build.md`. Agree on the change. Write the **Design Review** note (see `notes.md`), with the impact list as "My answers".
+3. **Compare** in a **You vs me** table, with the same verdicts and rating as the design round in `build.md`. Agree on the change. Write the **Design Review** note (see `notes.md`), with the impact list as "My answers", and the **Logic & Flow**
+   note (see `notes.md`) for the changed flow: the whole flow after the change, and in "Decisions, one by one" only the
+   decisions the change adds or moves, each marked **New** or **Changed**.
 4. **Plan:** a short plan covering only what changes, using the plan template sections that apply.
 5. **Scaffold** (after `go`):
    - First create the branch `enhance/<change-slug>`, as in `build.md` (Phase 2, "First, the branch").

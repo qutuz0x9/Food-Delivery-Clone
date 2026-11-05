@@ -28,14 +28,25 @@ If the vault has a **Design Checklist** (`03- Development/Features/00- Design Ch
 
 Interview the user one section at a time: all the questions of a section go in one message, and the user answers them together. Start with one line: it takes about 10 minutes, short answers are fine, "I don't know" is a fine answer, `skip` leaves a question empty, and `back` changes an earlier section.
 
-Go through these 6 sections in order. Adapt the questions to the feature: drop the ones that don't apply, and add one when the feature needs it (for example, "Should register also log the user in?").
+Go through these 7 sections in order. Adapt the questions to the feature: drop the ones that don't apply, and add one when the feature needs it (for example, "Should register also log the user in?").
 
 1. **Endpoint:** method → route → request body → success status → response body
-2. **Errors:** every error case the user can think of, one per line, each with its status code
-3. **Data:** tables → fields and types → values the app must generate → constraints (required, unique, length) → indexes
-4. **Validation:** rules for each field → which rules go in the Zod schema and which in the service
-5. **Transaction:** is one needed? → what goes inside → what runs after it
-6. **Edge cases and security:** every case the user can think of, one per line. Give
+2. **Business logic and flow:** the questions below, in this order. Point to `.claude/rules/domain-rules.md` (or the
+   project's rules file) and the contract as places to look, without hinting at the answers:
+   - **Actors:** who sends the request, and who else is affected by what it does?
+   - **Rules:** every business rule this feature must follow, one per line, and where each one comes from (the
+     contract, the rules file, or "my own decision").
+   - **Flow:** every step from "the client sends the request" to "the client gets the response", one per line, in
+     order: what is read, checked, decided, written and returned. Plain words are fine; layer names are a bonus.
+   - **Decisions:** at each point where the flow can go two ways, the condition and what happens on each side.
+   - **State changes:** which rows move from one state to another (for example `active → revoked`), and what may
+     never happen (for example "a token is never rotated twice").
+   - **After the response:** anything that runs later or elsewhere (an email, a job), or "nothing".
+3. **Errors:** every error case the user can think of, one per line, each with its status code
+4. **Data:** tables → fields and types → values the app must generate → constraints (required, unique, length) → indexes
+5. **Validation:** rules for each field → which rules go in the Zod schema and which in the service
+6. **Transaction:** is one needed? → what goes inside → what runs after it
+7. **Edge cases and security:** every case the user can think of, one per line. Give
    four thinking prompts, with no answers, because beginners often have nothing to start from here:
    - *two requests at the same moment?*
    - *a step fails halfway?*
@@ -44,12 +55,13 @@ Go through these 6 sections in order. Adapt the questions to the feature: drop t
 
 Each message:
 
-- Starts with `Phase 1: Your Design · <Section> (<n>/6)`.
+- Starts with `Phase 1: Your Design · <Section> (<n>/7)`.
 - Lists the section's questions as a numbered list, in the order above, then stops and waits for the answers. Ask the user to answer with the same numbers (`1. POST`, `2. ...`).
 - May point to where to look (for example, "read `src/prisma/contract.prisma`"), but never hints at the answer.
 - Does not judge the answers. Keep all feedback for the You vs me table. If an answer is unclear or a number is missing, ask about only those numbers in one short follow-up.
 
-In Errors and Edge cases, the user lists cases instead of answering numbered questions. After their list, ask once "More cases, or `done`?" before moving on.
+In Errors and Edge cases, the user lists cases instead of answering numbered questions. In Business logic and
+flow, the Rules, Flow and Decisions answers are lists too: one item per line. After their list, ask once "More cases, or `done`?" before moving on.
 
 When a section is finished, show it filled in, then ask all the questions of the next section in the same message:
 
@@ -60,7 +72,7 @@ Endpoint
 3. Request body: ...
 ```
 
-When all 6 sections are done, compare in a **You vs me** table:
+When all 7 sections are done, compare in a **You vs me** table:
 
 | Topic | Your design | My design | Verdict | Why |
 | --- | --- | --- | --- | --- |
@@ -88,8 +100,11 @@ A **must-fix gap** is any of these:
 - a missing constraint that allows bad data
 - a missing or wrong transaction that can leave data inconsistent
 - a security problem
+- a missed business rule, or a flow step in the wrong order, that lets bad data in or lets an action happen that the
+  rules forbid
 
-Then write the plan from the agreed design, and the **Design Review** note (see `notes.md`). Add every **Missed**, **Wrong** and must-fix item of the You vs me table to the **Design Checklist** (create it on the first round).
+Then write the plan from the agreed design, the **Design Review** note and the **Logic & Flow** note (see
+`notes.md`). Add every **Missed**, **Wrong** and must-fix item of the You vs me table to the **Design Checklist** (create it on the first round).
 
 ### Design stage `draft`
 
@@ -97,7 +112,8 @@ Then write the plan from the agreed design, and the **Design Review** note (see 
 2. Tell the user to fill it in and say `ready`. Stop.
 3. **Design review:** for each section, list what's good and the issues as **Must fix / Should fix**. Write the issues as questions, not answers. Rate the round (same scale as above).
 4. The user revises until there are no Must-fix issues. Then Claude writes sections 4, 9, 10 and 11, and finalizes the plan.
-5. Write the **Design Review** note (see `notes.md`), with the user's plan sections as "My answers", and add the round's Must-fix issues to the **Design Checklist**.
+5. Write the **Design Review** note (see `notes.md`), with the user's plan sections as "My answers", and the **Logic
+   & Flow** note from the finalized plan. Add the round's Must-fix issues to the **Design Checklist**.
 
 ### Plan template
 
@@ -119,9 +135,13 @@ Project: <TS or JS, Express version, existing feature mirrored>. New dependencie
 - Success: status code and example JSON
 - Errors table: Case | Status | Error code / message
 
-## 3. Request → response flow
-Numbered list, one line per hop, saying what happens and why that layer owns it:
-router → validate middleware → controller → service → repository → Prisma → back up → errorHandler.
+## 3. Business logic and request flow
+- **Rules:** every business rule the feature follows, one per line, with its source (contract, rules file, decision).
+- **Flow:** numbered list, one line per hop, saying what happens and why that layer owns it:
+  router → validate middleware → controller → service → repository → Prisma → back up → errorHandler.
+  Inside the service, one line per check, decision and write, in the order they run.
+- **Decisions:** each branch point with its condition and both outcomes.
+- **State changes:** each row that changes state (from → to), and what must never happen.
 Show where each error is thrown and where it becomes a response.
 
 ## 4. Files
@@ -153,7 +173,7 @@ Design rating for this round, and the user's design stage.
 2–4 questions without answers, about things the user's design did not cover.
 ```
 
-Give the path of the Design Review note in one line.
+Give the paths of the Design Review and Logic & Flow notes in one line each.
 
 End with: **Reply `go` to create the files, or tell me what to change.**
 
@@ -189,9 +209,10 @@ holds unfinished work:
    - The user's `it.todo` tests show as todo.
 7. **Progress:** update `.learning/progress.md`. Add the feature as `in progress` and record the design rating. Follow `progress-rules.md`.
 8. **Notes:** write the **Build Log** and the **To-Do** notes (see `notes.md`), from the real files and the real
-   results of step 6.
+   results of step 6. Update the **Logic & Flow** note's "Where each rule lives" section with the real file and
+   method names.
 9. **Report briefly:**
-   - the paths of the three notes
+   - the paths of the Logic & Flow, Build Log and To-Do notes
    - files, grouped as "I wrote" and "You write"
    - the user's pieces in order, with file, method, kind and stage, and which one to start with
      (the full checklist is in the To-Do note)
