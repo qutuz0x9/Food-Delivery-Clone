@@ -1,11 +1,17 @@
+import cookieParser from "cookie-parser";
 import express from "express";
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 import { errorHandler } from "../../../middlewares/error-handler.js";
 import { createRateLimiter } from "../../../middlewares/rate-limit.js";
-import { AccountNotActiveError, EmailAlreadyExistsError, InvalidCredentialsError } from "../auth.errors.js";
+import {
+  AccountNotActiveError,
+  EmailAlreadyExistsError,
+  InvalidCredentialsError,
+  InvalidRefreshTokenError,
+} from "../auth.errors.js";
 import type { AuthService } from "../auth.service.js";
-import type { LoginCustomerResult, RegisterCustomerResult } from "../auth.types.js";
+import type { LoginCustomerResult, RefreshCustomerResult, RegisterCustomerResult } from "../auth.types.js";
 import { CustomerAuthController } from "../controllers/customer.controller.js";
 import { buildCustomerAuthRouter } from "../routes/customer.routes.js";
 
@@ -28,7 +34,12 @@ const registered = (): RegisterCustomerResult => ({
     phoneNumber: "+201234567890",
   },
   accessToken: "access-token",
-  refreshToken: { token: "raw-refresh-token", tokenHash: "refresh-token-hash", expiresAt: new Date(Date.now() + 7 * DAY_MS) },
+  refreshToken: {
+    id: "token-1",
+    token: "raw-refresh-token",
+    tokenHash: "refresh-token-hash",
+    expiresAt: new Date(Date.now() + 7 * DAY_MS),
+  },
 });
 
 // The real router, validation, controller, rate limiter and errorHandler, with a fake AuthService: no database.
@@ -36,18 +47,25 @@ const registered = (): RegisterCustomerResult => ({
 const setup = ({ loginLimit = 100 }: { loginLimit?: number } = {}) => {
   const registerCustomer = vi.fn(async (): Promise<RegisterCustomerResult> => registered());
   const loginCustomer = vi.fn(async (): Promise<LoginCustomerResult> => registered());
-  const controller = new CustomerAuthController({ registerCustomer, loginCustomer } as unknown as AuthService, {
+  const refreshCustomer = vi.fn(
+    async (_token: string | undefined, _context: unknown): Promise<RefreshCustomerResult> => ({
+      accessToken: "new-access-token",
+      refreshToken: { ...registered().refreshToken, token: "new-raw-refresh-token" },
+    }),
+  );
+  const controller = new CustomerAuthController({ registerCustomer, loginCustomer, refreshCustomer } as unknown as AuthService, {
     secure: false,
     path: "/api/v1/auth",
   });
   const app = express();
   app.use(express.json());
+  app.use(cookieParser());
   app.use(
     "/api/v1/auth",
     buildCustomerAuthRouter(controller, createRateLimiter({ windowMs: 60_000, limit: loginLimit })),
   );
   app.use(errorHandler);
-  return { app, registerCustomer, loginCustomer };
+  return { app, registerCustomer, loginCustomer, refreshCustomer };
 };
 
 describe("POST /api/v1/auth/register/customer", () => {
@@ -193,5 +211,61 @@ describe("POST /api/v1/auth/login/customer", () => {
     });
     expect(res.headers["retry-after"]).toEqual(expect.any(String));
     expect(loginCustomer).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("POST /api/v1/auth/refresh/customer", () => {
+  it("returns 200 with only the access token in the body, and the new refresh token in the same safe cookie", async () => {
+    const { app, refreshCustomer } = setup();
+
+    const res = await request(app).post("/api/v1/auth/refresh/customer").set("Cookie", "refreshToken=old-raw-token");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      message: "Access token refreshed successfully",
+      data: { accessToken: "new-access-token" },
+    });
+    expect(res.text).not.toContain("new-raw-refresh-token");
+    expect(refreshCustomer).toHaveBeenCalledWith("old-raw-token", { ipAddress: expect.any(String) });
+
+    const cookie = res.headers["set-cookie"]?.[0] ?? "";
+    expect(cookie).toMatch(/^refreshToken=new-raw-refresh-token;/);
+    expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("SameSite=Strict");
+    expect(cookie).toContain("Path=/api/v1/auth");
+  });
+
+  it("passes undefined to the service when there is no cookie, and answers its 401 without a cookie", async () => {
+    const { app, refreshCustomer } = setup();
+    refreshCustomer.mockRejectedValue(new InvalidRefreshTokenError("missing"));
+
+    const res = await request(app).post("/api/v1/auth/refresh/customer");
+
+    expect(res.status).toBe(401);
+    expect(res.body).toEqual({
+      success: false,
+      message: "Refresh token is required",
+      error: { code: "INVALID_REFRESH_TOKEN" },
+    });
+    expect(refreshCustomer.mock.calls[0]?.[0]).toBeUndefined();
+    expect(res.headers["set-cookie"]).toBeUndefined();
+  });
+
+  it("reads the token only from the cookie, never from the body", async () => {
+    const { app, refreshCustomer } = setup();
+
+    await request(app).post("/api/v1/auth/refresh/customer").send({ refreshToken: "body-token" });
+
+    expect(refreshCustomer.mock.calls[0]?.[0]).toBeUndefined();
+  });
+
+  it("does not answer GET: refresh changes server state", async () => {
+    const { app, refreshCustomer } = setup();
+
+    const res = await request(app).get("/api/v1/auth/refresh/customer").set("Cookie", "refreshToken=old-raw-token");
+
+    expect(res.status).toBe(404);
+    expect(refreshCustomer).not.toHaveBeenCalled();
   });
 });

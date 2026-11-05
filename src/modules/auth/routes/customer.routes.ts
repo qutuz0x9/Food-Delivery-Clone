@@ -9,5 +9,7 @@ export const buildCustomerAuthRouter = (controller: CustomerAuthController, logi
   const router = Router();
   router.post("/register/customer", validate({ body: registerCustomerSchema }), controller.register);
   router.post("/login/customer", loginLimiter, validate({ body: loginCustomerSchema }), controller.login);
+  // No limiter: the token is 32 random bytes, so there is nothing to guess.
+  router.post("/refresh/customer", controller.refresh);
   return router;
 };

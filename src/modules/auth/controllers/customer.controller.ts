@@ -46,6 +46,22 @@ export class CustomerAuthController {
     });
   };
 
+  // POST /auth/refresh/customer. No body and no validate: the cookie is the only input, and a missing one must be a
+  // 401 from the service, not Zod's 400. cookie-parser (app.ts) filled req.cookies.
+  refresh = async (req: Request, res: Response): Promise<void> => {
+    const cookie: unknown = req.cookies?.[REFRESH_TOKEN_COOKIE];
+    const result = await this.authService.refreshCustomer(typeof cookie === "string" ? cookie : undefined, {
+      ipAddress: req.ip ?? null,
+    });
+
+    this.setRefreshTokenCookie(res, result.refreshToken);
+    res.status(200).json({
+      success: true,
+      message: "Access token refreshed successfully",
+      data: { accessToken: result.accessToken },
+    });
+  };
+
   // HttpOnly: page scripts can't read it, so an XSS bug can't steal it. SameSite=Strict: other sites can't make
   // the browser send it.
   private setRefreshTokenCookie(res: Response, refreshToken: IssuedRefreshToken): void {

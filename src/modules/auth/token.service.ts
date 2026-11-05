@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import type { IssuedRefreshToken, RoleName } from "./auth.types.js";
 
@@ -34,13 +34,21 @@ export class TokenService {
     });
   }
 
+  // The id is made here, not by the database, so a rotation can point the old row at the new one
+  // (replaced_by_token) before the new row is inserted.
   createRefreshToken(now: Date = new Date()): IssuedRefreshToken {
     const token = randomBytes(REFRESH_TOKEN_BYTES).toString("base64url");
     return {
+      id: randomUUID(),
       token,
       tokenHash: hashRefreshToken(token),
       expiresAt: new Date(now.getTime() + this.config.refreshTtlDays * DAY_MS),
     };
+  }
+
+  // Refresh hashes the token from the cookie the same way, then looks the row up by token_hash.
+  hashRefreshToken(token: string): string {
+    return hashRefreshToken(token);
   }
 }
 

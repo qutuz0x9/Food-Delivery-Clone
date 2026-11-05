@@ -30,6 +30,17 @@ export class NotACustomerError extends ForbiddenError {
   }
 }
 
+// One code for every refresh failure (docs/api/responses/common.yaml#/InvalidRefreshToken), so the client handles them
+// all the same way: drop the session and log in again. Only a missing cookie gets its own message.
+export class InvalidRefreshTokenError extends UnauthorizedError {
+  constructor(reason: "missing" | "invalid" = "invalid") {
+    super(
+      reason === "missing" ? "Refresh token is required" : "Your session has expired. Please log in again",
+      "INVALID_REFRESH_TOKEN",
+    );
+  }
+}
+
 export class EmailAlreadyExistsError extends ConflictError {
   constructor() {
     super("Email address is already registered", "EMAIL_ALREADY_EXISTS");

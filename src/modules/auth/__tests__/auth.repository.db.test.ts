@@ -168,4 +168,167 @@ describe("AuthRepository (database)", () => {
       });
     });
   });
+
+  describe("refresh tokens", () => {
+    const inOneDay = (): TimestampString<6> => new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() as TimestampString<6>;
+    const anHourAgo = (): TimestampString<6> => new Date(Date.now() - 60 * 60 * 1000).toISOString() as TimestampString<6>;
+
+    // A token row as a rotation leaves it: pass revokedAt and replacedByToken to build a chain.
+    const insertToken = async (
+      tx: Tx,
+      userId: string,
+      overrides: { id?: string; revokedAt?: TimestampString<6>; replacedByToken?: string; revokedReason?: string } = {},
+    ) =>
+      tx.orm.identity.RefreshToken.create({
+        id: overrides.id ?? randomUUID(),
+        userId,
+        tokenHash: `hash-${randomUUID()}`,
+        expiresAt: inOneDay(),
+        revokedAt: overrides.revokedAt ?? null,
+        replacedByToken: overrides.replacedByToken ?? null,
+        revokedReason: overrides.revokedReason ?? null,
+      });
+
+    const tokenRow = async (tx: Tx, id: string) => tx.orm.identity.RefreshToken.where({ id }).first();
+
+    describe("createRefreshToken", () => {
+      it("uses the id it is given, so a rotation can link the old row to it", async () => {
+        await withRollback(async (tx) => {
+          const user = await tx.orm.identity.User.create(newUser());
+          const id = randomUUID();
+
+          await repository.createRefreshToken(
+            { id, userId: user.id, tokenHash: `hash-${randomUUID()}`, expiresAt: new Date(Date.now() + 60_000), ipAddress: null },
+            tx,
+          );
+
+          expect(await tokenRow(tx, id)).toMatchObject({ userId: user.id, revokedAt: null });
+        });
+      });
+    });
+
+    describe("findRefreshTokenByHash", () => {
+      it("returns the row with that token hash", async () => {
+        await withRollback(async (tx) => {
+          const user = await tx.orm.identity.User.create(newUser());
+          const token = await insertToken(tx, user.id);
+
+          const found = await repository.findRefreshTokenByHash(token.tokenHash, tx);
+
+          expect(found).toMatchObject({ id: token.id, userId: user.id, revokedAt: null });
+        });
+      });
+
+      it("returns a revoked row too, so refresh can detect reuse", async () => {
+        await withRollback(async (tx) => {
+          const user = await tx.orm.identity.User.create(newUser());
+          const token = await insertToken(tx, user.id, { revokedAt: anHourAgo(), revokedReason: "rotated" });
+
+          expect((await repository.findRefreshTokenByHash(token.tokenHash, tx))?.id).toBe(token.id);
+        });
+      });
+
+      it("returns null when no row has that hash", async () => {
+        await withRollback(async (tx) => {
+          expect(await repository.findRefreshTokenByHash(`hash-${randomUUID()}`, tx)).toBeNull();
+        });
+      });
+    });
+
+    describe("revokeRefreshTokenIfActive", () => {
+      it("revokes an active row, links it to its replacement and returns true", async () => {
+        await withRollback(async (tx) => {
+          const user = await tx.orm.identity.User.create(newUser());
+          const token = await insertToken(tx, user.id);
+          const replacement = randomUUID();
+
+          const changed = await repository.revokeRefreshTokenIfActive(
+            token.id,
+            { reason: "rotated", replacedByToken: replacement },
+            tx,
+          );
+
+          expect(changed).toBe(true);
+          const row = await tokenRow(tx, token.id);
+          expect(row).toMatchObject({ revokedReason: "rotated", replacedByToken: replacement });
+          expect(row?.revokedAt).toEqual(expect.any(String));
+        });
+      });
+
+      it("returns false and changes nothing when the row is already revoked", async () => {
+        await withRollback(async (tx) => {
+          const user = await tx.orm.identity.User.create(newUser());
+          const first = randomUUID();
+          const token = await insertToken(tx, user.id, { revokedAt: anHourAgo(), replacedByToken: first, revokedReason: "rotated" });
+
+          const changed = await repository.revokeRefreshTokenIfActive(
+            token.id,
+            { reason: "rotated", replacedByToken: randomUUID() },
+            tx,
+          );
+
+          expect(changed).toBe(false);
+          expect(await tokenRow(tx, token.id)).toMatchObject({ replacedByToken: first, revokedAt: token.revokedAt });
+        });
+      });
+
+      it("returns false when no row has that id", async () => {
+        await withRollback(async (tx) => {
+          expect(
+            await repository.revokeRefreshTokenIfActive(randomUUID(), { reason: "rotated", replacedByToken: randomUUID() }, tx),
+          ).toBe(false);
+        });
+      });
+    });
+
+    describe("revokeTokenChain", () => {
+      it("revokes every active row rotated from the given one, and leaves revoked rows and other users alone", async () => {
+        await withRollback(async (tx) => {
+          const user = await tx.orm.identity.User.create(newUser());
+          const other = await tx.orm.identity.User.create(newUser());
+          // A → B → C: A and B were rotated, C is the live token.
+          const c = await insertToken(tx, user.id);
+          const b = await insertToken(tx, user.id, { revokedAt: anHourAgo(), replacedByToken: c.id, revokedReason: "rotated" });
+          const a = await insertToken(tx, user.id, { revokedAt: anHourAgo(), replacedByToken: b.id, revokedReason: "rotated" });
+          const otherDevice = await insertToken(tx, user.id);
+          const otherUsers = await insertToken(tx, other.id);
+
+          const revoked = await repository.revokeTokenChain(a.id, "reuse_detected", tx);
+
+          expect(revoked).toBe(1);
+          expect(await tokenRow(tx, c.id)).toMatchObject({ revokedReason: "reuse_detected" });
+          expect((await tokenRow(tx, c.id))?.revokedAt).toEqual(expect.any(String));
+          expect(await tokenRow(tx, a.id)).toMatchObject({ revokedReason: "rotated", revokedAt: a.revokedAt });
+          expect(await tokenRow(tx, b.id)).toMatchObject({ revokedReason: "rotated", revokedAt: b.revokedAt });
+          // Another login of the same user (another device) is not part of this chain.
+          expect(await tokenRow(tx, otherDevice.id)).toMatchObject({ revokedAt: null });
+          expect(await tokenRow(tx, otherUsers.id)).toMatchObject({ revokedAt: null });
+        });
+      });
+
+      it("revokes nothing more for a token revoked without a replacement (e.g. a logout)", async () => {
+        await withRollback(async (tx) => {
+          const user = await tx.orm.identity.User.create(newUser());
+          const token = await insertToken(tx, user.id, { revokedAt: anHourAgo(), revokedReason: "logout" });
+
+          expect(await repository.revokeTokenChain(token.id, "reuse_detected", tx)).toBe(0);
+          expect(await tokenRow(tx, token.id)).toMatchObject({ revokedReason: "logout" });
+        });
+      });
+    });
+
+    describe("findUserById", () => {
+      it("returns the user, but not a soft-deleted or missing one", async () => {
+        await withRollback(async (tx) => {
+          const user = await tx.orm.identity.User.create(newUser());
+
+          expect((await repository.findUserById(user.id, tx))?.id).toBe(user.id);
+          expect(await repository.findUserById(randomUUID(), tx)).toBeNull();
+
+          await softDelete(user.id, tx);
+          expect(await repository.findUserById(user.id, tx)).toBeNull();
+        });
+      });
+    });
+  });
 });

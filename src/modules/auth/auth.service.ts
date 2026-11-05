@@ -1,4 +1,5 @@
 import type { PasswordHasher } from "../../common/password-hasher.js";
+import { parseUtcTimestamp } from "../../common/timestamps.js";
 import type { TransactionRunner } from "../../prisma/db.js";
 import type { CustomersService } from "../customers/index.js";
 import { toCustomerResponse } from "./auth.mapper.js";
@@ -6,6 +7,7 @@ import {
   AccountNotActiveError,
   EmailAlreadyExistsError,
   InvalidCredentialsError,
+  InvalidRefreshTokenError,
   NotACustomerError,
   PhoneNumberInUseError,
 } from "./auth.errors.js";
@@ -15,9 +17,11 @@ import type {
   NewUser,
 } from "./auth.repository.js";
 import {
+  REVOKED_REASONS,
   ROLE_NAMES,
   type IssuedRefreshToken,
   type LoginCustomerResult,
+  type RefreshCustomerResult,
   type RegisterCustomerResult,
   type RequestContext,
 } from "./auth.types.js";
@@ -176,5 +180,80 @@ export class AuthService {
     };
 
     return loginCustomerResult;
+  }
+
+  async refreshCustomer(
+    refreshToken: string | undefined,
+    context: RequestContext,
+  ): Promise<RefreshCustomerResult> {
+    // LEARN-TODO (core, guided, skipped: written by Claude): AuthService.refreshCustomer
+    // 1. No refreshToken (or empty): throw InvalidRefreshTokenError("missing").
+    if (!refreshToken) throw new InvalidRefreshTokenError("missing");
+    // 2. Find the row by the token's hash (this.tokens); none: InvalidRefreshTokenError.
+    const stored = await this.authRepository.findRefreshTokenByHash(
+      this.tokens.hashRefreshToken(refreshToken),
+    );
+    if (!stored) throw new InvalidRefreshTokenError();
+    // 3. Row revoked: revokeTokenChain with REVOKED_REASONS.reuseDetected, then throw.
+    if (stored.revokedAt !== null) {
+      await this.authRepository.revokeTokenChain(
+        stored.id,
+        REVOKED_REASONS.reuseDetected,
+      );
+      throw new InvalidRefreshTokenError();
+    }
+    // 4. Row expired (read expiresAt with parseUtcTimestamp): InvalidRefreshTokenError.
+    if (parseUtcTimestamp(stored.expiresAt) <= new Date())
+      throw new InvalidRefreshTokenError();
+    // 5. Check the token's user like login: deleted, not active, no profile (plan §3).
+    const user = await this.authRepository.findUserById(stored.userId);
+    if (!user) throw new InvalidRefreshTokenError();
+    if (user.accountStatus !== "active")
+      throw new AccountNotActiveError(user.accountStatus);
+    const customer = await this.customers.findProfileByUserId(user.id);
+    if (!customer) throw new NotACustomerError();
+    // 6. Create the new refresh token (this.tokens), before the transaction.
+    const issuedRefreshToken: IssuedRefreshToken =
+      this.tokens.createRefreshToken();
+    // 7. In one transaction: revokeRefreshTokenIfActive; only if true, insert the new row.
+    const rotated = await this.db.transaction(async (tx) => {
+      const revoked = await this.authRepository.revokeRefreshTokenIfActive(
+        stored.id,
+        {
+          reason: REVOKED_REASONS.rotated,
+          replacedByToken: issuedRefreshToken.id,
+        },
+        tx,
+      );
+      // Another request rotated it first: insert nothing, so the transaction has nothing to undo.
+      if (!revoked) return false;
+      const newRefreshToken: NewRefreshToken = {
+        id: issuedRefreshToken.id,
+        userId: stored.userId,
+        tokenHash: issuedRefreshToken.tokenHash,
+        expiresAt: issuedRefreshToken.expiresAt,
+        ipAddress: context.ipAddress,
+      };
+      await this.authRepository.createRefreshToken(newRefreshToken, tx);
+      return true;
+    });
+    // 8. Not rotated: revoke the chain and throw; else sign and return (plan §7).
+    // The chain is revoked after the transaction, so it is committed even though this request fails.
+    if (!rotated) {
+      await this.authRepository.revokeTokenChain(
+        stored.id,
+        REVOKED_REASONS.reuseDetected,
+      );
+      throw new InvalidRefreshTokenError();
+    }
+    const accessTokenClaims: AccessTokenClaims = {
+      userId: user.id,
+      role: ROLE_NAMES.customer,
+    };
+    const refreshCustomerResult: RefreshCustomerResult = {
+      accessToken: this.tokens.signAccessToken(accessTokenClaims),
+      refreshToken: issuedRefreshToken,
+    };
+    return refreshCustomerResult;
   }
 }
