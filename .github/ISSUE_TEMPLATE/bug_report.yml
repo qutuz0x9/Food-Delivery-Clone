@@ -1,0 +1,69 @@
+name: Bug report
+description: Something in the API, the spec or the tooling doesn't work as expected
+title: "fix(<area>): "
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - auth
+        - customers
+        - restaurants
+        - menu
+        - cart
+        - orders
+        - payments
+        - deliveries
+        - drivers
+        - reviews
+        - promotions
+        - cities
+        - admins
+        - API spec (docs/api)
+        - Data contract / migrations
+        - CI / tooling
+    validations:
+      required: true
+
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint
+      description: Method and path, if the bug is in a route
+      placeholder: POST /api/v1/auth/login/customer
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Request body, headers, seed data — whatever someone needs to see the bug
+      placeholder: |
+        1. Register a customer
+        2. Call POST /auth/login/customer with the wrong password 6 times
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should happen, per the contract or the OpenAPI spec
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Status code, response body, logs
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: dev (compose.dev.yaml), Node 24, commit abc1234
