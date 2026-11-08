@@ -192,35 +192,41 @@ export class AuthRepository {
     return changed === 1;
   }
 
-  // Reuse detection: revokes the given row and every row rotated from it, by following replaced_by_token until it is
-  // null. Already revoked rows keep their first reason. Returns how many rows it revoked.
-  // One query per link: a chain grows by one row per refresh, and this only runs when a token is replayed. A
-  // recursive CTE would do it in one query, but the raw SQL lane isn't available on a transaction client.
+  // Ends a session: revokes the given row and every row rotated from it, by following replaced_by_token until it is
+  // null. Used by refresh (reuse detection) and logout. Already revoked rows keep their first reason. Returns how many
+  // rows it revoked. Safe when a logout or a refresh runs on the same chain at the same moment (plan §8).
+  // One query per link: a chain grows by one row per refresh. A recursive CTE would do it in one query, but the raw
+  // SQL lane isn't available on a transaction client.
   async revokeTokenChain(
     fromTokenId: string,
     reason: RevokedReason,
     client: DbClient = this.db,
   ): Promise<number> {
+    // LEARN-TODO (core, guided, skipped: written by Claude): AuthRepository.revokeTokenChain
+    // 1. Start a count at 0, and the current id at fromTokenId.
     let revoked = 0;
-    let nextId: string | null = fromTokenId;
-    while (nextId !== null) {
-      const row: Pick<
-        RefreshTokenRow,
-        "id" | "revokedAt" | "replacedByToken"
-      > | null = await client.orm.identity.RefreshToken.where({ id: nextId })
-        .select("id", "revokedAt", "replacedByToken")
-        .first();
+    let currentId: string | null = fromTokenId;
+    // 2. Loop while there is a current id.
+    while (currentId !== null) {
+      // 3. Revoke the row by id only while its revokedAt is null (nowTimestamp, reason).
+      // The condition is part of the UPDATE, so if a refresh's transaction holds this row, the update waits for it and
+      // then changes nothing: an already revoked row keeps its first reason.
+      const changed = await client.orm.identity.RefreshToken.where({ id: currentId })
+        .where((t) => t.revokedAt.isNull())
+        .updateAndCount({ revokedAt: nowTimestamp(), revokedReason: reason });
+      // 4. Add the number of rows the update changed to the count.
+      revoked += changed;
+      // 5. After the update, read the row's replacedByToken (plan §3, step 4).
+      // Read after the update, not before: after the wait above, this sees the link a parallel refresh just committed.
+      const row: Pick<RefreshTokenRow, "replacedByToken"> | null =
+        await client.orm.identity.RefreshToken.where({ id: currentId })
+          .select("replacedByToken")
+          .first();
+      // 6. No row: stop. Otherwise the next id is its replacedByToken.
       if (row === null) break;
-      // Only the live end of a chain is still active: every earlier row was revoked when it was rotated.
-      if (row.revokedAt === null) {
-        await client.orm.identity.RefreshToken.where({ id: row.id }).update({
-          revokedAt: nowTimestamp(),
-          revokedReason: reason,
-        });
-        revoked += 1;
-      }
-      nextId = row.replacedByToken;
+      currentId = row.replacedByToken;
     }
+    // 7. Return the count.
     return revoked;
   }
 }

@@ -11,5 +11,7 @@ export const buildCustomerAuthRouter = (controller: CustomerAuthController, logi
   router.post("/login/customer", loginLimiter, validate({ body: loginCustomerSchema }), controller.login);
   // No limiter: the token is 32 random bytes, so there is nothing to guess.
   router.post("/refresh/customer", controller.refresh);
+  // No access token: holding the refresh cookie is enough to end it, even after the access token has expired.
+  router.post("/logout/customer", controller.logout);
   return router;
 };

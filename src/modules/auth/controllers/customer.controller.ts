@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { CookieOptions, Request, Response } from "express";
 import type { AuthService } from "../auth.service.js";
 import type { IssuedRefreshToken } from "../auth.types.js";
 import type { LoginCustomerInput, RegisterCustomerInput } from "../auth.validation.js";
@@ -62,15 +62,28 @@ export class CustomerAuthController {
     });
   };
 
-  // HttpOnly: page scripts can't read it, so an XSS bug can't steal it. SameSite=Strict: other sites can't make
-  // the browser send it.
+  // POST /auth/logout/customer. No body and no validate, like refresh. Always 200: with no cookie or an unknown token
+  // there is nothing to revoke, and the client is logged out either way. On a 500 the cookie stays, so a retry can
+  // finish the job.
+  logout = async (req: Request, res: Response): Promise<void> => {
+    const cookie: unknown = req.cookies?.[REFRESH_TOKEN_COOKIE];
+    await this.authService.logoutCustomer(typeof cookie === "string" ? cookie : undefined);
+
+    // A browser matches a cookie by name and path, so it's cleared with the same options it was set with.
+    res.clearCookie(REFRESH_TOKEN_COOKIE, this.refreshCookieOptions());
+    res.status(200).json({ success: true, message: "Logged out successfully", data: null });
+  };
+
   private setRefreshTokenCookie(res: Response, refreshToken: IssuedRefreshToken): void {
     res.cookie(REFRESH_TOKEN_COOKIE, refreshToken.token, {
-      httpOnly: true,
-      secure: this.cookie.secure,
-      sameSite: "strict",
-      path: this.cookie.path,
+      ...this.refreshCookieOptions(),
       maxAge: refreshToken.expiresAt.getTime() - Date.now(),
     });
+  }
+
+  // HttpOnly: page scripts can't read it, so an XSS bug can't steal it. SameSite=Strict: other sites can't make
+  // the browser send it.
+  private refreshCookieOptions(): CookieOptions {
+    return { httpOnly: true, secure: this.cookie.secure, sameSite: "strict", path: this.cookie.path };
   }
 }

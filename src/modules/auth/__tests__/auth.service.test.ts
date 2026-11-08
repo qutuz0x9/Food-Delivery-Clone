@@ -71,6 +71,25 @@ const refreshToken: IssuedRefreshToken = {
   expiresAt: new Date("2026-10-26T10:00:00Z"),
 };
 
+// A row as the database returns it: timestamps are UTC text with no time zone (see src/common/timestamps.ts).
+const DAY_MS = 24 * 60 * 60 * 1000;
+const asTimestamp = (date: Date): TimestampString<6> =>
+  date.toISOString().replace("T", " ").replace("Z", "") as TimestampString<6>;
+const storedToken = (overrides: Partial<RefreshTokenRow> = {}): RefreshTokenRow =>
+  ({
+    id: "token-old",
+    userId: "user-1",
+    tokenHash: "old-token-hash",
+    expiresAt: asTimestamp(new Date(Date.now() + 7 * DAY_MS)),
+    createdAt: asTimestamp(new Date(Date.now() - DAY_MS)),
+    revokedAt: null,
+    replacedByToken: null,
+    revokedReason: null,
+    deviceId: null,
+    ipAddress: "203.0.113.7",
+    ...overrides,
+  }) as RefreshTokenRow;
+
 // Fakes for every dependency. db.transaction calls the callback with `tx`, so the tests can check that each write
 // received the transaction client.
 const setup = () => {
@@ -316,24 +335,6 @@ describe("AuthService", () => {
   });
 
   describe("refreshCustomer", () => {
-    // A row as the database returns it: timestamps are UTC text with no time zone (see src/common/timestamps.ts).
-    const DAY_MS = 24 * 60 * 60 * 1000;
-    const asTimestamp = (date: Date): TimestampString<6> =>
-      date.toISOString().replace("T", " ").replace("Z", "") as TimestampString<6>;
-    const storedToken = (overrides: Partial<RefreshTokenRow> = {}): RefreshTokenRow =>
-      ({
-        id: "token-old",
-        userId: "user-1",
-        tokenHash: "old-token-hash",
-        expiresAt: asTimestamp(new Date(Date.now() + 7 * DAY_MS)),
-        createdAt: asTimestamp(new Date(Date.now() - DAY_MS)),
-        revokedAt: null,
-        replacedByToken: null,
-        revokedReason: null,
-        deviceId: null,
-        ipAddress: "203.0.113.7",
-        ...overrides,
-      }) as RefreshTokenRow;
     const asUser = (overrides: Partial<UserRow>): UserRow => ({ ...createdUser, ...overrides }) as UserRow;
 
     // A refresh that ends in an error must not rotate the token or hand out a new one.
@@ -545,6 +546,72 @@ describe("AuthService", () => {
 
       await expect(fakes.service.refreshCustomer("raw-old-token", context)).rejects.toThrow("connection lost");
       expect(fakes.tokens.signAccessToken).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("logoutCustomer", () => {
+    // Logout never looks at the user: holding the token is enough, whatever the account's state (plan §3, rules 2-3).
+    const expectNoUserChecks = (fakes: ReturnType<typeof setup>): void => {
+      expect(fakes.authRepository.findUserById).not.toHaveBeenCalled();
+      expect(fakes.customers.findProfileByUserId).not.toHaveBeenCalled();
+    };
+
+    it.each([undefined, ""])("resolves and looks nothing up when the token is %j", async (token) => {
+      const fakes = setup();
+
+      await expect(fakes.service.logoutCustomer(token)).resolves.toBeUndefined();
+      expect(fakes.tokens.hashRefreshToken).not.toHaveBeenCalled();
+      expect(fakes.authRepository.findRefreshTokenByHash).not.toHaveBeenCalled();
+      expect(fakes.authRepository.revokeTokenChain).not.toHaveBeenCalled();
+    });
+
+    // LEARN-TODO (test, guided, skipped: written by Claude): write this test
+    // Arrange: fakes from setup(); findRefreshTokenByHash already returns null there
+    // Act: call logoutCustomer with a raw token
+    // Assert: it resolves (no error), and revokeTokenChain was not called
+    it("resolves and revokes nothing when no row has the token's hash", async () => {
+      const fakes = setup();
+
+      await expect(fakes.service.logoutCustomer("unknown-raw-token")).resolves.toBeUndefined();
+
+      expect(fakes.authRepository.findRefreshTokenByHash).toHaveBeenCalledTimes(1);
+      expect(fakes.authRepository.revokeTokenChain).not.toHaveBeenCalled();
+    });
+
+    it("looks the row up by the token's hash and revokes its chain with reason logout, outside a transaction", async () => {
+      const fakes = setup();
+      fakes.authRepository.findRefreshTokenByHash.mockResolvedValue(storedToken());
+
+      await expect(fakes.service.logoutCustomer("raw-old-token")).resolves.toBeUndefined();
+
+      expect(fakes.tokens.hashRefreshToken).toHaveBeenCalledWith("raw-old-token");
+      expect(fakes.authRepository.findRefreshTokenByHash.mock.calls[0]?.[0]).toBe("old-token-hash");
+      expect(fakes.authRepository.revokeTokenChain).toHaveBeenCalledTimes(1);
+      expect(fakes.authRepository.revokeTokenChain.mock.calls[0]?.slice(0, 2)).toEqual(["token-old", "logout"]);
+      expect(fakes.db.transaction).not.toHaveBeenCalled();
+      expectNoUserChecks(fakes);
+    });
+
+    // A revoked token may mean a thief holds the newer one; an expired one still marks a chain (plan §8).
+    it.each([
+      ["already rotated", { revokedAt: asTimestamp(new Date(Date.now() - DAY_MS)), replacedByToken: "token-next", revokedReason: "rotated" }],
+      ["expired", { expiresAt: asTimestamp(new Date(Date.now() - DAY_MS)) }],
+    ])("still revokes the chain when the token is %s, without checking the user", async (_state, overrides) => {
+      const fakes = setup();
+      fakes.authRepository.findRefreshTokenByHash.mockResolvedValue(storedToken(overrides));
+
+      await expect(fakes.service.logoutCustomer("raw-old-token")).resolves.toBeUndefined();
+
+      expect(fakes.authRepository.revokeTokenChain.mock.calls[0]?.slice(0, 2)).toEqual(["token-old", "logout"]);
+      expectNoUserChecks(fakes);
+    });
+
+    it("rethrows a database error unchanged, so it becomes a 500", async () => {
+      const fakes = setup();
+      fakes.authRepository.findRefreshTokenByHash.mockResolvedValue(storedToken());
+      fakes.authRepository.revokeTokenChain.mockRejectedValue(new Error("connection lost"));
+
+      await expect(fakes.service.logoutCustomer("raw-old-token")).rejects.toThrow("connection lost");
     });
   });
 });

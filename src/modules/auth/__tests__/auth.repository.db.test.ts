@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { TimestampString } from "@prisma/orm-postgres/target/codec-types";
 import { afterAll, describe, expect, it } from "vitest";
 import { AppError } from "../../../common/errors/app-error.js";
-import { db, type Tx } from "../../../prisma/db.js";
+import { db, type DbClient, type Tx } from "../../../prisma/db.js";
 import { withRollback } from "../../../test/with-rollback.js";
 import { EmailAlreadyExistsError, PhoneNumberInUseError } from "../auth.errors.js";
 import { AuthRepository, type NewUser } from "../auth.repository.js";
@@ -175,7 +175,7 @@ describe("AuthRepository (database)", () => {
 
     // A token row as a rotation leaves it: pass revokedAt and replacedByToken to build a chain.
     const insertToken = async (
-      tx: Tx,
+      tx: DbClient,
       userId: string,
       overrides: { id?: string; revokedAt?: TimestampString<6>; replacedByToken?: string; revokedReason?: string } = {},
     ) =>
@@ -314,6 +314,70 @@ describe("AuthRepository (database)", () => {
           expect(await repository.revokeTokenChain(token.id, "reuse_detected", tx)).toBe(0);
           expect(await tokenRow(tx, token.id)).toMatchObject({ revokedReason: "logout" });
         });
+      });
+
+      it("on logout, revokes the live end with reason logout and never writes replaced_by_token", async () => {
+        await withRollback(async (tx) => {
+          const user = await tx.orm.identity.User.create(newUser());
+          const b = await insertToken(tx, user.id);
+          const a = await insertToken(tx, user.id, { revokedAt: anHourAgo(), replacedByToken: b.id, revokedReason: "rotated" });
+
+          expect(await repository.revokeTokenChain(a.id, "logout", tx)).toBe(1);
+          expect(await tokenRow(tx, b.id)).toMatchObject({ revokedReason: "logout", replacedByToken: null });
+          expect(await tokenRow(tx, a.id)).toMatchObject({ revokedReason: "rotated", replacedByToken: b.id });
+        });
+      });
+
+      // Two connections: a refresh transaction holds T1's row lock while a logout of T1 runs. The logout's update has
+      // to wait for it, and only a read made after that wait sees the T2 the refresh created (plan §8). This test can't
+      // use withRollback (one transaction can't race itself), so it commits real rows and deletes them at the end.
+      it("finds the token a parallel refresh is creating: it reads the next link after its own update", async () => {
+        const user = await db.orm.identity.User.create(newUser());
+        const t1 = await insertToken(db, user.id);
+        const t2Id = randomUUID();
+        let refreshHoldsLock!: () => void;
+        const lockTaken = new Promise<void>((resolve) => {
+          refreshHoldsLock = resolve;
+        });
+        let letRefreshCommit!: () => void;
+        const commitAllowed = new Promise<void>((resolve) => {
+          letRefreshCommit = resolve;
+        });
+
+        try {
+          const refresh = db.transaction(async (tx) => {
+            await repository.revokeRefreshTokenIfActive(t1.id, { reason: "rotated", replacedByToken: t2Id }, tx);
+            await insertToken(tx, user.id, { id: t2Id });
+            refreshHoldsLock();
+            await commitAllowed;
+          });
+          await lockTaken;
+
+          // Started now, awaited below. An error becomes the result, so it can't go unhandled while the test waits.
+          const logout = (async (): Promise<unknown> => {
+            try {
+              return await repository.revokeTokenChain(t1.id, "logout");
+            } catch (error) {
+              return error;
+            }
+          })();
+          // Give the logout time to reach T1 and wait on its lock, then let the refresh commit.
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          letRefreshCommit();
+          await refresh;
+
+          expect(await logout).toBe(1);
+          expect(await db.orm.identity.RefreshToken.where({ id: t2Id }).first()).toMatchObject({ revokedReason: "logout" });
+          // T1 keeps the refresh's revocation: the logout didn't overwrite it.
+          expect(await db.orm.identity.RefreshToken.where({ id: t1.id }).first()).toMatchObject({
+            revokedReason: "rotated",
+            replacedByToken: t2Id,
+          });
+        } finally {
+          letRefreshCommit();
+          await db.orm.identity.RefreshToken.where({ userId: user.id }).deleteAndCount();
+          await db.orm.identity.User.where({ id: user.id }).deleteAndCount();
+        }
       });
     });
 

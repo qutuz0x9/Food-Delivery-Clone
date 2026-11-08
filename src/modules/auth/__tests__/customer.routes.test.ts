@@ -53,10 +53,14 @@ const setup = ({ loginLimit = 100 }: { loginLimit?: number } = {}) => {
       refreshToken: { ...registered().refreshToken, token: "new-raw-refresh-token" },
     }),
   );
-  const controller = new CustomerAuthController({ registerCustomer, loginCustomer, refreshCustomer } as unknown as AuthService, {
-    secure: false,
-    path: "/api/v1/auth",
-  });
+  const logoutCustomer = vi.fn(async (_token: string | undefined): Promise<void> => undefined);
+  const controller = new CustomerAuthController(
+    { registerCustomer, loginCustomer, refreshCustomer, logoutCustomer } as unknown as AuthService,
+    {
+      secure: false,
+      path: "/api/v1/auth",
+    },
+  );
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
@@ -65,7 +69,7 @@ const setup = ({ loginLimit = 100 }: { loginLimit?: number } = {}) => {
     buildCustomerAuthRouter(controller, createRateLimiter({ windowMs: 60_000, limit: loginLimit })),
   );
   app.use(errorHandler);
-  return { app, registerCustomer, loginCustomer, refreshCustomer };
+  return { app, registerCustomer, loginCustomer, refreshCustomer, logoutCustomer };
 };
 
 describe("POST /api/v1/auth/register/customer", () => {
@@ -267,5 +271,58 @@ describe("POST /api/v1/auth/refresh/customer", () => {
 
     expect(res.status).toBe(404);
     expect(refreshCustomer).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /api/v1/auth/logout/customer", () => {
+  // res.clearCookie sends the cookie again, empty and already expired. Same name and path, or the browser keeps it.
+  const expectClearedCookie = (setCookie: string[] | undefined): void => {
+    const cookie = setCookie?.[0] ?? "";
+    expect(cookie).toMatch(/^refreshToken=;/);
+    expect(cookie).toContain("Expires=Thu, 01 Jan 1970 00:00:00 GMT");
+    expect(cookie).toContain("Path=/api/v1/auth");
+    expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("SameSite=Strict");
+  };
+
+  it("returns 200 with data null, passes the cookie to the service and clears the cookie", async () => {
+    const { app, logoutCustomer } = setup();
+
+    const res = await request(app).post("/api/v1/auth/logout/customer").set("Cookie", "refreshToken=old-raw-token");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, message: "Logged out successfully", data: null });
+    expect(logoutCustomer).toHaveBeenCalledWith("old-raw-token");
+    expectClearedCookie(res.headers["set-cookie"] as string[] | undefined);
+  });
+
+  it("needs no Authorization header, and still answers 200 and clears the cookie without a cookie", async () => {
+    const { app, logoutCustomer } = setup();
+
+    const res = await request(app).post("/api/v1/auth/logout/customer");
+
+    expect(res.status).toBe(200);
+    expect(logoutCustomer.mock.calls[0]?.[0]).toBeUndefined();
+    expectClearedCookie(res.headers["set-cookie"] as string[] | undefined);
+  });
+
+  it("reads the token only from the cookie, never from the body", async () => {
+    const { app, logoutCustomer } = setup();
+
+    await request(app).post("/api/v1/auth/logout/customer").send({ refreshToken: "body-token" });
+
+    expect(logoutCustomer.mock.calls[0]?.[0]).toBeUndefined();
+  });
+
+  it("answers 500 and keeps the cookie when the service fails, so a retry can finish the logout", async () => {
+    const { app, logoutCustomer } = setup();
+    logoutCustomer.mockRejectedValue(new Error("connection lost"));
+
+    const res = await request(app).post("/api/v1/auth/logout/customer").set("Cookie", "refreshToken=old-raw-token");
+
+    expect(res.status).toBe(500);
+    expect(res.body).toMatchObject({ success: false, error: { code: "INTERNAL_SERVER_ERROR" } });
+    expect(res.text).not.toContain("connection lost");
+    expect(res.headers["set-cookie"]).toBeUndefined();
   });
 });

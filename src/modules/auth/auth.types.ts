@@ -56,6 +56,8 @@ export const REVOKED_REASONS = {
   rotated: "rotated",
   // Revoked because a token of the same chain was used again (a replay, or two refreshes at once).
   reuseDetected: "reuse_detected",
+  // Ended by the customer at POST /auth/logout/customer, with every token rotated from it. Nothing replaces it.
+  logout: "logout",
 } as const;
 
 export type RevokedReason = (typeof REVOKED_REASONS)[keyof typeof REVOKED_REASONS];

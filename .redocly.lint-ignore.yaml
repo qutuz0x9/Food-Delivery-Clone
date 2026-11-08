@@ -90,6 +90,8 @@ docs/api/paths/restaurant.yaml:
     - >-
       #/changePasswordRestaurant/post/requestBody/content/application~1json/examples/newPasswordTooShort/value/newPassword
 docs/api/paths/customer.yaml:
+  operation-4xx-response:
+    - '#/logoutCustomer/post/responses'
   no-invalid-media-type-examples:
     - >-
       #/registerCustomer/post/requestBody/content/application~1json/examples/emptyBody/value

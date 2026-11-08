@@ -256,4 +256,25 @@ export class AuthService {
     };
     return refreshCustomerResult;
   }
+
+  // Ends the session the refresh token belongs to. Never throws an app error: a missing, unknown or dead token means
+  // the client is already logged out (plan §2).
+  async logoutCustomer(refreshToken: string | undefined): Promise<void> {
+    // LEARN-TODO (core, guided, skipped: written by Claude): AuthService.logoutCustomer
+    // 1. No refreshToken (or empty): return, there is nothing to revoke.
+    if (!refreshToken) return;
+    // 2. Find the row by the token's hash (this.tokens, this.authRepository).
+    const stored = await this.authRepository.findRefreshTokenByHash(
+      this.tokens.hashRefreshToken(refreshToken),
+    );
+    // 3. No row: return.
+    if (!stored) return;
+    // 4. Revoke its chain with REVOKED_REASONS.logout. No other checks (plan §3).
+    // Revoked or expired rows are not special here: the walk skips dead rows and still reaches a live end, which is
+    // what ends a session a thief took over (plan §8).
+    await this.authRepository.revokeTokenChain(
+      stored.id,
+      REVOKED_REASONS.logout,
+    );
+  }
 }

@@ -417,37 +417,44 @@ logoutCustomer:
 
     summary: Log out a customer
     description: |
-      Logs out the currently authenticated customer by revoking the
-      refresh token, ending the session securely.
+      Ends the customer's session: revokes the refresh token from the
+      `refreshToken` HttpOnly cookie and every token rotated from it,
+      then clears the cookie.
 
-      The refresh token is read from the `refreshToken` HttpOnly cookie
-      set during login — it is not accepted in the request body or as
-      a query parameter. The response clears the cookie.
+      No access token is needed: holding the refresh token is enough to
+      end it, so a customer whose access token has expired can still
+      log out. The access token itself stays valid until it expires;
+      the client discards it.
+
+      Logout is idempotent: with no cookie, an unknown token or a token
+      that is already revoked or expired, it still answers 200 and
+      clears the cookie, because the client is logged out either way.
+      Only a server error answers otherwise, and then the cookie is kept
+      so the client can retry.
 
     operationId: logoutCustomer
 
-    security:
-      - bearerAuth: []
+    security: []
 
     parameters:
       - name: refreshToken
         in: cookie
-        required: true
+        required: false
         description: |
           Refresh token set by the customer login response. The browser sends it automatically. It is not
-          accepted in the request body or as a query parameter.
+          accepted in the request body or as a query parameter. Without it, logout still answers 200.
         schema:
           type: string
 
     responses:
       "200":
-        description: Customer logged out successfully
+        description: Customer logged out successfully (also when there was no session to end)
         headers:
           Set-Cookie:
             description: Expires the `refreshToken` cookie so the browser discards it.
             schema:
               type: string
-            example: refreshToken=; Max-Age=0; HttpOnly; Secure; SameSite=Strict
+            example: refreshToken=; Path=/api/v1/auth; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict
         content:
           application/json:
             schema:
@@ -456,12 +463,6 @@ logoutCustomer:
               success: true
               message: Logged out successfully
               data: null
-
-      "401":
-        $ref: "../responses/common.yaml#/Unauthorized"
-
-      "403":
-        $ref: "../responses/common.yaml#/Forbidden"
 
       "500":
         $ref: "../responses/common.yaml#/InternalServerError"
