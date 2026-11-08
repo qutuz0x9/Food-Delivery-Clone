@@ -78,49 +78,46 @@ src/
   - `<module>.module.ts` creates the real instances and exports the router.
   - `app.ts` exports `createApp()` separately from `listen`, so Supertest can use it.
 - **Response shape:** follow the project's existing shape. If there is none, success returns the resource as the JSON body and errors use `{ error: { code, message, details? } }`.
+- **Comments: almost none.** The user wants clean code that explains itself, with no explanation comments:
+  - Make the code clear instead: precise names for variables, methods and tests, small functions, named constants.
+  - Write a comment only when the code **can't** say it: a non-obvious reason that would make a reader "fix" the code
+    into a bug (a race, a database or library quirk, a security reason). One short line, never a paragraph.
+  - Never: comments that repeat what the code does, file or class header essays, `(plan §N)` references, section
+    banners, or comments in tests (the test name explains the test).
+  - Explanations belong in the Build Log note, not in the code.
 
 ## LEARN-TODO formats
 
-Every user-owned piece starts with a marker that is easy to search for: `LEARN-TODO (<kind>, <stage>): <Name>`.
+A user-owned piece gets **one comment line** in the code, the marker, and nothing else: no step comments, no goal, no
+hints. The marker is easy to search for: `LEARN-TODO (<kind>, <stage>): <Name>`.
 
-- **Code that must exist to compile** (methods, foundations): end the body with `throw new Error("LEARN-TODO: <Name>");`
-- **Zod schemas:** write the shape with base types, so inferred types work everywhere. The user adds the rules.
-- **User-written tests:** use `it.todo("<name>")` with the marker comment above it.
-- **Extend changes:** add the marker comment at the exact spot to change. Don't add a `throw`, so existing behavior keeps working. Update the tests so they fail until the change is made.
+Everything the user needs to write the piece (the goal, the steps at the Guided stage, the helpers, fields and errors
+to use, the tests to read) goes in the **To-Do note**, under that piece's heading (see `notes.md`).
 
-### Step comments (Guided stage only)
+- **Code that must exist to compile** (methods, foundations): the marker, then `throw new Error("LEARN-TODO: <Name>");`
+- **Zod schemas:** the marker above the schema, and the shape with base types, so inferred types work everywhere. The
+  rules themselves are listed in the To-Do note.
+- **User-written tests:** the marker above `it.todo("<name>")`.
+- **Extend changes:** the marker at the exact spot to change. Don't add a `throw`, so existing behavior keeps working.
+  Update the tests so they fail until the change is made.
 
-Keep them short, so the code stays easy to read and the user stays focused:
+### What the stages change
 
-- **One line per step**, about 80 characters at most. Never wrap a step onto a second line.
-- Each step names **one operation** only: what to do, not how, and not why. At most about 8 steps.
-- No code, and no exact Prisma or Zod method calls. Concept names are fine ("Prisma interactive transaction", "find by a unique field").
-- You may name the project's own classes, fields and helpers, and the error class to throw.
-- Everything else goes in the plan (and the To-Do note), not in the code: reasons, constraint names, edge cases, which tests cover the piece. Write "(plan §N)" at the end of a step when its details live there.
-- No `Tests:` line, and no comment explaining `void` placeholder lines.
+The code looks the same at every stage. Only the To-Do note changes:
+
+| Stage | Under the piece's heading in the To-Do note |
+| --- | --- |
+| Guided | the goal, **numbered steps** (one operation per step, what to do, not the code), and what you need |
+| Unguided (and refreshers) | the goal and what you need, **no steps** |
 
 ### Examples (TypeScript; in JavaScript, drop the types)
 
-Guided:
+A method:
 
 ```ts
 async register(input: RegisterCustomerInput): Promise<CustomerResponse> {
   // LEARN-TODO (core, guided): AuthService.register
-  // 1. If the email exists (this.customers), throw EmailAlreadyExistsError.
-  // 2. Hash the password (this.hasher).
-  // 3. In one transaction, create the customer and its profile (pass the tx).
-  // 4. Return the customer mapped with toCustomerResponse.
   throw new Error("LEARN-TODO: AuthService.register");
-}
-```
-
-Unguided (also used for refreshers, with the kind `refresher`):
-
-```ts
-async findByEmail(email: string, db: DbClient = this.prisma): Promise<Customer | null> {
-  // LEARN-TODO (core, unguided): CustomerRepository.findByEmail
-  // Goal: return the customer with this email, or null (plan §5).
-  throw new Error("LEARN-TODO: CustomerRepository.findByEmail");
 }
 ```
 
@@ -128,9 +125,6 @@ Zod rules:
 
 ```ts
 // LEARN-TODO (core, guided): registerCustomerSchema rules
-// - email: required, valid email format, trimmed, stored in lowercase
-// - password: 8 to 72 characters, at least one letter and one number
-// - name: trimmed, 2 to 100 characters
 export const registerCustomerSchema = z.object({
   email: z.string(),
   password: z.string(),
@@ -139,19 +133,14 @@ export const registerCustomerSchema = z.object({
 export type RegisterCustomerInput = z.infer<typeof registerCustomerSchema>;
 ```
 
-At the Unguided stage, the Zod comment only says: "Goal: implement the rules in plan section 6."
-
-User-written test, guided:
+A user-written test:
 
 ```ts
 // LEARN-TODO (test, guided): write this test
-// Arrange: a fake repository where findByEmail returns an existing customer
-// Act: call register with that email
-// Assert: it rejects with EmailAlreadyExistsError, and nothing is created
 it.todo("throws EmailAlreadyExistsError when the email exists");
 ```
 
-At the Unguided stage, only the marker line and the `it.todo` name remain.
+When a piece is finished (written by the user, or by Claude at their request), remove its `LEARN-TODO` line too.
 
 ## Tests Claude writes (Vitest)
 

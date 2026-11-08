@@ -78,5 +78,5 @@ piling up until the end of the feature.
    - foundation status
    - recurring mistakes
    - the feature marked `done`
-3. **Cleanup:** offer to remove the `LEARN-TODO` markers and step comments, keeping the user's code.
+3. **Cleanup:** offer to remove the `LEARN-TODO` markers, keeping the user's code.
 4. **What changed:** tell the user in one or two lines what changed in their progress. Examples: "`find by unique field` moved to Unguided", "Test writing is now on", "Next feature includes a refresher".

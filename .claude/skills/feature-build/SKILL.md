@@ -76,8 +76,8 @@ It must be complete, correct, and follow the project's conventions. The user nev
 
 | Stage | What the user gets | Moves up after |
 | --- | --- | --- |
-| **Guided** | signature + numbered step comments | 2 independent approvals |
-| **Unguided** | signature + a one-line goal | 2 independent approvals |
+| **Guided** | signature + one `LEARN-TODO` line; the goal and numbered steps in the To-Do note | 2 independent approvals |
+| **Unguided** | signature + one `LEARN-TODO` line; only the goal in the To-Do note | 2 independent approvals |
 | **Graduated** | Claude writes it | it returns as a refresher; a failed refresher moves it back to Unguided |
 
 ### Workload

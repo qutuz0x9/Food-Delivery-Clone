@@ -260,18 +260,26 @@ Anything still open goes in the To-Do note, not here.
 2. `# <Feature> To-Do`
 3. `## Before you start`: setup steps that block running the app or the tests (env vars, a command to generate a
    secret, a database step), each a checkbox with the exact command. Say which steps the tests don't need.
-4. `## My pieces, in order`: one checkbox per user piece, in the order of plan section 10:
-   - `- [ ] **<n>. <Piece>** (<kind>, <stage>)`
-   - under it, indented, in this order:
-     - the file, and what the piece must do in one line;
-     - **Before:** "read the `expect` lines of `<test file>` first: they say exactly what the piece must do"
-       (when a test covers it);
-     - the exact command that runs its tests (a test file filter, e.g. `npx vitest run auth.validation`; when no
-       test covers it, `npm run typecheck` plus a manual check: the exact request or script that shows it works);
-     - **Self-check:** "run `npm run lint` and the test; read every message, because an unused variable often
-       means a missing step";
-     - "done when" (which tests turn green), then "→ `/feature-build review <piece>`".
-   - Point the user to the first piece and why it comes first.
+4. `## My pieces, in order`: **the only place the user's instructions live**, because the code holds just the
+   `LEARN-TODO` line (see `stack.md`). One line first: which piece to start with, and why. Then one `###` heading per
+   piece, in the order of plan section 10. The heading is the **task in plain words**, numbered, e.g.
+   `### 1. Revoke the whole token chain safely`. Under it, in this order:
+   - `- [ ] Done`, a checkbox to tick when the piece is approved.
+   - **Where:** the file, the class and method (or schema / test name), its kind and stage, and the exact signature
+     in a `ts` fence, so the user knows the inputs and the return type.
+   - **Goal:** one or two sentences: what the piece must do and why it matters in this feature.
+   - **Steps** (Guided only): a numbered list, one operation per step, in the order the code runs: what to do, not
+     the code. Name the project's own classes, fields, helpers and error classes. Leave it out at the Unguided stage.
+   - **What you need:** everything else needed to write it alone, as bullets: the helpers, fields, constants and
+     error classes to use (with their file), the rules and edge cases it must respect, and the plan section that
+     explains them. Never the solution code, and no exact ORM or Zod call (asking "how do I call X?" is a free API
+     lookup).
+   - **Tests:** the test file and the `describe` / `it` names that cover it, with "read their `expect` lines first:
+     they say exactly what the piece must do". When no test covers it: the manual check (the exact request or
+     script).
+   - **Run:** the exact command (e.g. `npx vitest run auth.service -t logoutCustomer`).
+   - **Done when:** which tests turn green, then "run `npm run lint` too, because an unused variable often means a
+     missing step", then "→ `/feature-build review <piece>`".
 5. `## When I'm stuck`: say "hint for `<piece>`" to get hints that grow one level per request; ask "how do I call
    `<API>`?" for a free API example (it doesn't count as a hint); paste an error to get it explained (not fixed).
 6. `## Finish`: checkboxes for the full test run (`npm test` shows `<total> passed`), the type check, lint, and
