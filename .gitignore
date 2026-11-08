@@ -9,3 +9,6 @@ dist/
 .env.*
 !.env.*.example
 !.env.example
+
+# Personal learning notes (plans, progress, drills): kept locally, not in the repo
+.learning/
