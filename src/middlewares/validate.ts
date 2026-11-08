@@ -12,17 +12,13 @@ export interface ValidatedRequestData {
   query?: unknown;
 }
 
-// Parses the request with zod before the controller runs. On failure the ZodError goes to errorHandler (400).
-// The parsed body replaces req.body. Parsed params and query go on res.locals.validated, because req.query is
-// read-only in Express 5.
 export const validate =
   (schemas: RequestSchemas): RequestHandler =>
   (req: Request, res: Response, next: NextFunction) => {
     const validated: ValidatedRequestData = {};
 
     if (schemas.body) {
-      // Express 5 leaves req.body undefined when the request has no JSON body; parse it as {} so the client gets
-      // "field is required" errors instead of one "expected object" error.
+      // Express 5 leaves req.body undefined without a JSON body; {} gives one error per missing field.
       const result = schemas.body.safeParse(req.body ?? {});
       if (!result.success) return next(result.error);
       req.body = result.data;

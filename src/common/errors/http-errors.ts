@@ -1,8 +1,5 @@
 import { AppError } from "./app-error.js";
 
-// One class per HTTP error status the API documents. Feature errors extend these (see auth.errors.ts), so the error
-// middleware only needs to know about AppError.
-
 export class ValidationError extends AppError {
   constructor(fields: Readonly<Record<string, string>>, message = "Validation failed") {
     super(400, "VALIDATION_ERROR", message, fields);

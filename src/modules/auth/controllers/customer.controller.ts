@@ -6,13 +6,10 @@ import type { LoginCustomerInput, RegisterCustomerInput } from "../auth.validati
 export const REFRESH_TOKEN_COOKIE = "refreshToken";
 
 export interface RefreshCookieConfig {
-  // true in production: the cookie is only sent over HTTPS.
   readonly secure: boolean;
-  // Only the auth routes (refresh, logout) need the cookie, so the browser doesn't send it anywhere else.
   readonly path: string;
 }
 
-// HTTP in and out for the customer auth routes. No rules here: those live in AuthService.
 export class CustomerAuthController {
   private readonly authService: AuthService;
   private readonly cookie: RefreshCookieConfig;
@@ -22,7 +19,6 @@ export class CustomerAuthController {
     this.cookie = cookie;
   }
 
-  // POST /auth/register/customer. req.body was already parsed by validate(registerCustomerSchema).
   register = async (req: Request<Record<string, string>, unknown, RegisterCustomerInput>, res: Response): Promise<void> => {
     const result = await this.authService.registerCustomer(req.body, { ipAddress: req.ip ?? null });
 
@@ -34,7 +30,6 @@ export class CustomerAuthController {
     });
   };
 
-  // POST /auth/login/customer. req.body was already parsed by validate(loginCustomerSchema).
   login = async (req: Request<Record<string, string>, unknown, LoginCustomerInput>, res: Response): Promise<void> => {
     const result = await this.authService.loginCustomer(req.body, { ipAddress: req.ip ?? null });
 
@@ -46,8 +41,6 @@ export class CustomerAuthController {
     });
   };
 
-  // POST /auth/refresh/customer. No body and no validate: the cookie is the only input, and a missing one must be a
-  // 401 from the service, not Zod's 400. cookie-parser (app.ts) filled req.cookies.
   refresh = async (req: Request, res: Response): Promise<void> => {
     const cookie: unknown = req.cookies?.[REFRESH_TOKEN_COOKIE];
     const result = await this.authService.refreshCustomer(typeof cookie === "string" ? cookie : undefined, {
@@ -62,14 +55,11 @@ export class CustomerAuthController {
     });
   };
 
-  // POST /auth/logout/customer. No body and no validate, like refresh. Always 200: with no cookie or an unknown token
-  // there is nothing to revoke, and the client is logged out either way. On a 500 the cookie stays, so a retry can
-  // finish the job.
   logout = async (req: Request, res: Response): Promise<void> => {
     const cookie: unknown = req.cookies?.[REFRESH_TOKEN_COOKIE];
     await this.authService.logoutCustomer(typeof cookie === "string" ? cookie : undefined);
 
-    // A browser matches a cookie by name and path, so it's cleared with the same options it was set with.
+    // Same options as when it was set: browsers match a cookie by name and path.
     res.clearCookie(REFRESH_TOKEN_COOKIE, this.refreshCookieOptions());
     res.status(200).json({ success: true, message: "Logged out successfully", data: null });
   };
@@ -81,8 +71,6 @@ export class CustomerAuthController {
     });
   }
 
-  // HttpOnly: page scripts can't read it, so an XSS bug can't steal it. SameSite=Strict: other sites can't make
-  // the browser send it.
   private refreshCookieOptions(): CookieOptions {
     return { httpOnly: true, secure: this.cookie.secure, sameSite: "strict", path: this.cookie.path };
   }

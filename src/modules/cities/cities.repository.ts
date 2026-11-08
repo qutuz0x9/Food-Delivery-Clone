@@ -12,11 +12,6 @@ export class CitiesRepository {
   }
 
   async findActive(client: DbClient = this.db): Promise<CityRow[]> {
-    // LEARN-TODO (core, guided): CitiesRepository.findActive
-    // 1. Start a query on the City model of client (namespace public).
-    // 2. Keep only the rows where isActive is true.
-    // 3. Sort by name, then by country (plan §2).
-    // 4. Return all the matching rows.
     const cities = await client.orm.public.City.where({ isActive: true })
       .orderBy((city) => city.name.asc())
       .orderBy((city) => city.country.asc())

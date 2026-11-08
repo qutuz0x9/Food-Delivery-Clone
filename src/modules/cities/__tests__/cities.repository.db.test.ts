@@ -5,12 +5,8 @@ import { db, type Tx } from "../../../prisma/db.js";
 import { withRollback } from "../../../test/with-rollback.js";
 import { CitiesRepository } from "../cities.repository.js";
 
-// Runs against the db-test container: `npm run test:db:up`, `npm run test:db:migrate`, then `npm run test:db`.
-// Every test runs in a transaction that is rolled back (withRollback), so the test database stays empty.
-
 const repository = new CitiesRepository(db);
 
-// cities.id has no database default, so the test creates it, as the app will.
 const createCity = async (tx: Tx, name: string, country: string, isActive = true): Promise<string> => {
   const city = await tx.orm.public.City.create({
     id: randomUUID(),
@@ -44,7 +40,6 @@ describe("CitiesRepository (database)", () => {
 
     it("sorts by name, then country", async () => {
       await withRollback(async (tx) => {
-        // Inserted out of order, and two cities share a name, so only ORDER BY name, country passes.
         const tag = randomUUID();
         const bEgypt = await createCity(tx, `${tag} B`, "Egypt");
         const aUsa = await createCity(tx, `${tag} A`, "USA");

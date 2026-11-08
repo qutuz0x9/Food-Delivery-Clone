@@ -10,7 +10,6 @@ import { CustomerAuthController } from "./controllers/customer.controller.js";
 import { buildCustomerAuthRouter } from "./routes/customer.routes.js";
 import { TokenService, type TokenConfig } from "./token.service.js";
 
-// Wiring: the one place that creates the module's real instances and reads env.
 const tokenConfig: TokenConfig = {
   accessSecret: env.JWT_ACCESS_SECRET,
   accessTtlSeconds: env.JWT_ACCESS_TTL_SECONDS,
@@ -31,9 +30,7 @@ const customerController = new CustomerAuthController(authService, {
   path: "/api/v1/auth",
 });
 
-// 10 login attempts per IP every 15 minutes: plenty for a person, far too few for a password-guessing script.
 const loginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 10 });
 
-// Mounted at /api/v1/auth by src/routes.ts. Driver and admin auth routers join this one later.
 export const authRouter = Router();
 authRouter.use(buildCustomerAuthRouter(customerController, loginLimiter));

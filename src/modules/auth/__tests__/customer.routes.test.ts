@@ -42,8 +42,6 @@ const registered = (): RegisterCustomerResult => ({
   },
 });
 
-// The real router, validation, controller, rate limiter and errorHandler, with a fake AuthService: no database.
-// Each setup builds a new limiter, so the attempt counts never leak from one test to the next.
 const setup = ({ loginLimit = 100 }: { loginLimit?: number } = {}) => {
   const registerCustomer = vi.fn(async (): Promise<RegisterCustomerResult> => registered());
   const loginCustomer = vi.fn(async (): Promise<LoginCustomerResult> => registered());
@@ -275,7 +273,6 @@ describe("POST /api/v1/auth/refresh/customer", () => {
 });
 
 describe("POST /api/v1/auth/logout/customer", () => {
-  // res.clearCookie sends the cookie again, empty and already expired. Same name and path, or the browser keeps it.
   const expectClearedCookie = (setCookie: string[] | undefined): void => {
     const cookie = setCookie?.[0] ?? "";
     expect(cookie).toMatch(/^refreshToken=;/);

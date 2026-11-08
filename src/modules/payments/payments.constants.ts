@@ -1,7 +1,6 @@
 import type { PaymentMethod, PaymentMethodDetails } from "./payments.types.js";
 
-// One entry per payment_method value. Record<PaymentMethod, ...> needs exactly one key per enum value, so adding or
-// removing a value in the contract (then npm run contract:emit) breaks the build until this object matches.
+// Record<PaymentMethod, ...> fails the build until every payment_method value has an entry.
 export const PAYMENT_METHOD_DETAILS: Readonly<Record<PaymentMethod, PaymentMethodDetails>> = {
   cash: { label: "Cash on delivery", online: false },
   credit_card: { label: "Credit card", online: true },

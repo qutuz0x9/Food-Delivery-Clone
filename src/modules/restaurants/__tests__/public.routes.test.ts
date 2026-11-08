@@ -8,7 +8,6 @@ import { buildCuisinesRouter } from "../routes/public.routes.js";
 
 const cuisines = ["Burgers", "Desserts", "Grills"];
 
-// The real router, controller and errorHandler, with a fake RestaurantsService: no database.
 const setup = (listPublicCuisines = vi.fn(async (): Promise<string[]> => cuisines)) => {
   const app = express();
   app.use(express.json());

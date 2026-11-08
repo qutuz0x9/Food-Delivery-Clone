@@ -4,12 +4,8 @@ import { db, type Tx } from "../../../prisma/db.js";
 import { withRollback } from "../../../test/with-rollback.js";
 import { CustomersRepository } from "../customers.repository.js";
 
-// Runs against the db-test container: `npm run test:db:up`, `npm run test:db:migrate`, then `npm run test:db`.
-// Every test runs in a transaction that is rolled back (withRollback), so the test database stays empty.
-
 const repository = new CustomersRepository(db);
 
-// A user with unique values, so tests never collide with each other.
 const createUser = async (tx: Tx): Promise<string> => {
   const id = randomUUID();
   const user = await tx.orm.identity.User.create({

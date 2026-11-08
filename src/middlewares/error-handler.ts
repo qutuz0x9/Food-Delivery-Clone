@@ -3,10 +3,8 @@ import { ZodError } from "zod";
 import { AppError } from "../common/errors/app-error.js";
 import { logger } from "../config/logger.js";
 
-// Last middleware in app.ts. Its 4 parameters mark it as an error handler, so keep `_next`.
+// Express needs all 4 parameters to treat this as an error handler: keep _next.
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-  // LEARN-TODO (foundation, guided): errorHandler
-  // 1. AppError → its status code and the error envelope (no `fields` when empty).
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       success: false,
@@ -18,13 +16,10 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     });
     return;
   }
-  // ZodError (from validate) → 400 with the first message per field.
   if (err instanceof ZodError) {
     const fields: Record<string, string> = {};
     for (const issue of err.issues) {
-      // Nested paths become "profile.name". String() because a path segment may also be a number or a symbol.
       const key = issue.path.map(String).join(".");
-      // A field can break several rules; the client gets the first message only.
       if (!(key in fields)) fields[key] = issue.message;
     }
     res.status(400).json({
@@ -35,9 +30,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     return;
   }
 
-  // Anything else is a bug or an outage. Log everything for us; tell the client nothing about the cause.
-  // res.err hands the error to requestLogger, so the request's one log line carries the real error and its stack
-  // (otherwise pino-http adds a stand-in "failed with status code 500" error). Without requestLogger, log it here.
+  // res.err hands the error and its stack to requestLogger's line for this request.
   res.err = err;
   if (!req.log) logger.error({ err }, "unhandled error");
   res.status(500).json({

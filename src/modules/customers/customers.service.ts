@@ -3,8 +3,6 @@ import type { CustomerRow, CustomersRepository, NewCustomerProfile } from "./cus
 
 export type CustomerProfile = CustomerRow;
 
-// Rules for the customers table. Other modules reach it through ../customers/index.js. Registration creates the
-// profile here, passing its own transaction client so the profile commits or rolls back with the user.
 export class CustomersService {
   private readonly customersRepository: CustomersRepository;
 
@@ -16,7 +14,6 @@ export class CustomersService {
     return this.customersRepository.createProfile(data, client);
   }
 
-  // Login asks this to tell a customer account from a driver, restaurant or admin one.
   async findProfileByUserId(userId: string): Promise<CustomerProfile | null> {
     return this.customersRepository.findByUserId(userId);
   }

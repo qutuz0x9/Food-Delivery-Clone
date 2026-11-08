@@ -9,13 +9,11 @@ const valid = {
   phoneNumber: "+201234567890",
 };
 
-// The paths of the fields that failed, so each test checks that the right rule fired.
 const failedFields = (body: unknown): string[] => {
   const result = registerCustomerSchema.safeParse(body);
   return result.success ? [] : [...new Set(result.error.issues.map((issue) => issue.path.join(".")))];
 };
 
-// A syntactically valid address of exactly `length` characters: a 64-character local part and 60-character labels.
 const emailOfLength = (length: number): string => {
   const local = "a".repeat(64);
   const labels = ["b".repeat(60), "c".repeat(60), "d".repeat(60)].join(".");
@@ -78,11 +76,11 @@ describe("registerCustomerSchema", () => {
   });
 
   it("rejects a phone number that is not E.164", () => {
-    expect(failedFields({ ...valid, phoneNumber: "01234567890" })).toEqual(["phoneNumber"]); // no "+"
-    expect(failedFields({ ...valid, phoneNumber: "+01234567890" })).toEqual(["phoneNumber"]); // starts with 0
-    expect(failedFields({ ...valid, phoneNumber: "+20 123 456 7890" })).toEqual(["phoneNumber"]); // spaces
-    expect(failedFields({ ...valid, phoneNumber: "+1234567" })).toEqual(["phoneNumber"]); // 7 digits
-    expect(failedFields({ ...valid, phoneNumber: "+1234567890123456" })).toEqual(["phoneNumber"]); // 16 digits
+    expect(failedFields({ ...valid, phoneNumber: "01234567890" })).toEqual(["phoneNumber"]);
+    expect(failedFields({ ...valid, phoneNumber: "+01234567890" })).toEqual(["phoneNumber"]);
+    expect(failedFields({ ...valid, phoneNumber: "+20 123 456 7890" })).toEqual(["phoneNumber"]);
+    expect(failedFields({ ...valid, phoneNumber: "+1234567" })).toEqual(["phoneNumber"]);
+    expect(failedFields({ ...valid, phoneNumber: "+1234567890123456" })).toEqual(["phoneNumber"]);
   });
 
   it("accepts phone numbers of 8 and 15 digits", () => {

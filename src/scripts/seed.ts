@@ -2,39 +2,21 @@ import { createHash, randomBytes, randomUUID, scryptSync } from "node:crypto";
 import type { Char, Numeric, TimeString, TimestampString, Varchar } from "@prisma/orm-postgres/target/codec-types";
 import { db } from "../prisma/db.js";
 
-// Seed data for dev and staging only, never prod: the reference cities plus realistic rows in every other table that
-// follow the rules in the contract (order totals, status history, one driver per order, payouts that add up, rating
-// caches that match the published reviews).
-//
-// It only seeds an empty database (migrated, no rows yet) and refuses otherwise, so it never mixes with existing data.
-// To seed again, reset the database first (`npm run docker:dev:reset`). Runs in one transaction, so a failure leaves
-// the database untouched.
-//
-// Every demo user signs in with DEMO_PASSWORD. The hash format (scrypt$salt$hash) is a placeholder until the auth
-// module picks its hashing library; reseed if that format changes.
-
 const DEMO_PASSWORD = "Password123!";
-const TAX_RATE = 0.14; // Not in the contract (no system settings table); Egypt's 14% VAT, for demo totals only.
+const TAX_RATE = 0.14; // Not in the contract (no system settings table): demo totals only.
 const CURRENCY = "EGP" as Char<3>;
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-// ---------------------------------------------------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------------------------------------------------
 
 const NOW = new Date();
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
 
-// Dates are relative to when the seed runs, so the demo data always looks recent.
 const ago = (days: number, minutes = 0): Date => new Date(NOW.getTime() - days * DAY - minutes * MINUTE);
 const plus = (date: Date, minutes: number): Date => new Date(date.getTime() + minutes * MINUTE);
 const day = (date: Date) => date.toISOString().slice(0, 10);
 
-// Prisma 8 brands length- and precision-limited columns (VarChar(100), Numeric(10, 2), Timestamp(6), ...) so a value
-// cannot skip the limit by accident. The brand exists only at compile time, so these helpers do the real check or
-// formatting and then tell the type system it was done.
+// Prisma 8 brands limited columns at compile time only, so these helpers check the value, then cast.
 const varchar = <N extends number>(value: string, max: N): Varchar<N> => {
   if (value.length > max) throw new Error(`Value is ${value.length} characters, the column allows ${max}: ${value}`);
   return value as Varchar<N>;
@@ -56,10 +38,6 @@ const must = <T>(value: T | undefined, what: string): T => {
   return value;
 };
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Data
-// ---------------------------------------------------------------------------------------------------------------------
-
 type CityName = "Cairo" | "Giza" | "Alexandria";
 type OrderStatus =
   | "pending"
@@ -74,7 +52,7 @@ type OrderStatus =
 type PaymentMethod = "cash" | "credit_card" | "debit_card" | "apple_pay" | "google_pay" | "wallet";
 type ReviewStatus = "pending" | "published" | "hidden" | "deleted";
 
-// The ids match the ones used in the examples in docs/api/, so what Swagger UI shows is what is in the database.
+// Same ids as the examples in docs/api/, so Swagger UI shows what is in the database.
 const CITIES = [
   { id: "5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21", name: "Cairo", country: "Egypt" },
   { id: "7a4c1e92-0d5b-4b3f-9e68-1f2a3b4c5d6e", name: "Giza", country: "Egypt" },
@@ -424,7 +402,6 @@ const PAYOUTS = [
   { key: "tarek-1", driver: "tarek", periodStart: ago(13), periodEnd: ago(1), status: "processing", paidAt: null },
 ] as const;
 
-// Order of a full delivery, the minutes after placing at which each status is reached, and who makes the change.
 const FLOW: Record<OrderStatus, OrderStatus[]> = {
   pending: ["pending"],
   accepted: ["pending", "accepted"],
@@ -448,10 +425,6 @@ const STATUS_ACTOR: Record<OrderStatus, "customer" | "restaurant" | "driver"> = 
   ready_for_pickup: "restaurant", picked_up: "driver", out_for_delivery: "driver", delivered: "driver",
 };
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Seeding
-// ---------------------------------------------------------------------------------------------------------------------
-
 type MenuItemRef = {
   id: string;
   name: string;
@@ -461,7 +434,6 @@ type MenuItemRef = {
 type ChosenOption = { groupId: string; groupName: string; valueId: string; valueName: string; adjustment: number };
 
 async function seed(tx: Tx) {
-  // Cities ---------------------------------------------------------------------------------------------------------
   const cities = new Map<string, { id: string; name: string }>();
   for (const city of CITIES) {
     await tx.orm.public.City.create({ id: city.id, name: varchar(city.name, 100), country: varchar(city.country, 100) });
@@ -469,7 +441,6 @@ async function seed(tx: Tx) {
   }
   const cityOf = (name: CityName) => must(cities.get(name), `city "${name}"`);
 
-  // Roles ----------------------------------------------------------------------------------------------------------
   const roleIds = new Map<RoleName, string>();
   for (const role of ROLES) {
     const id = randomUUID();
@@ -498,7 +469,6 @@ async function seed(tx: Tx) {
     return id;
   };
 
-  // Admins ---------------------------------------------------------------------------------------------------------
   const admins = new Map<string, { userId: string; email: string }>();
   for (const admin of ADMINS) {
     const userId = await createUser({ email: admin.email, phone: admin.phone, role: "Admin", createdAt: ago(120) });
@@ -526,7 +496,6 @@ async function seed(tx: Tx) {
     });
   };
 
-  // Customers and their saved addresses ----------------------------------------------------------------------------
   const customers = new Map<string, { id: string; userId: string; name: string; phone: string; addresses: Map<string, (typeof CUSTOMERS)[number]["addresses"][number]> }>();
   for (const customer of CUSTOMERS) {
     const createdAt = ago(90);
@@ -552,7 +521,6 @@ async function seed(tx: Tx) {
     }
   }
 
-  // Sign-in records: an external login, a pending verification code, rotated refresh tokens and a used reset link.
   const ahmed = must(customers.get("ahmed"), "customer ahmed");
   const mona = must(customers.get("mona"), "customer mona");
   const sara = must(customers.get("sara"), "customer sara");
@@ -579,7 +547,6 @@ async function seed(tx: Tx) {
     createdAt: ts(ago(15)), ipAddress: "156.205.44.91", deviceId: "pixel-8-mona",
   });
 
-  // Restaurants, branches, hours, cuisines, menus, promotions ------------------------------------------------------
   const restaurants = new Map<string, {
     id: string; userId: string; deliveryFee: number;
     branches: Map<string, { id: string; city: CityName }>;
@@ -608,7 +575,6 @@ async function seed(tx: Tx) {
         latitude: coordinate(branch.lat), longitude: coordinate(branch.lng), availabilityStatus: branch.availability, createdAt: ts(createdAt),
       });
       for (let dayOfWeek = 0; dayOfWeek <= 6; dayOfWeek++) {
-        // Pizza Roma closes on Mondays; Fridays open late everywhere else.
         const isClosed = restaurant.key === "pizzaroma" && dayOfWeek === 1;
         await tx.orm.public.RestaurantOperatingHour.create({
           id: randomUUID(), branchId, dayOfWeek, isClosed,
@@ -670,7 +636,6 @@ async function seed(tx: Tx) {
     restaurants.set(restaurant.key, { id, userId, deliveryFee: restaurant.deliveryFee, branches, items });
   }
 
-  // Drivers, vehicles, documents, live location --------------------------------------------------------------------
   const drivers = new Map<string, { id: string; userId: string; city: CityName; status: string }>();
   for (const driver of DRIVERS) {
     const createdAt = ago(80);
@@ -704,7 +669,6 @@ async function seed(tx: Tx) {
       });
     }
     if (driver.location) {
-      // A short trail of pings, newest last.
       for (let ping = 3; ping >= 1; ping--) {
         await tx.orm.public.DriverLocation.create({
           driverId: id, latitude: coordinate(driver.location[0] + ping * 0.0012), longitude: coordinate(driver.location[1] - ping * 0.0009),
@@ -729,7 +693,6 @@ async function seed(tx: Tx) {
     payouts.set(payout.key, { id, driverId, status: payout.status, total: 0 });
   }
 
-  // Resolve a cart/order line into prices and the chosen option values.
   const priceLine = (items: Map<string, MenuItemRef>, line: Line) => {
     const item = must(items.get(line.item), `menu item "${line.item}"`);
     const chosen: ChosenOption[] = [];
@@ -744,7 +707,6 @@ async function seed(tx: Tx) {
     return { item, chosen, unitPrice, totalPrice: unitPrice * line.qty };
   };
 
-  // Carts ----------------------------------------------------------------------------------------------------------
   for (const cart of CARTS) {
     const restaurant = must(restaurants.get(cart.restaurant), `restaurant ${cart.restaurant}`);
     const lines = cart.lines.map((line) => ({ line, ...priceLine(restaurant.items, line) }));
@@ -767,7 +729,6 @@ async function seed(tx: Tx) {
     }
   }
 
-  // Orders: snapshot, lines, status history, payment, dispatch, earnings, reviews -----------------------------------
   const restaurantRatings = new Map<string, number[]>();
   const driverRatings = new Map<string, number[]>();
   const completedDeliveries = new Map<string, number>();
@@ -830,7 +791,6 @@ async function seed(tx: Tx) {
       });
     }
 
-    // Payment: online methods are charged when the order is placed; cash is collected by the driver on delivery.
     const paymentId = randomUUID();
     const isCash = order.payment === "cash";
     const endedEarly = order.status === "cancelled" || order.status === "rejected";
@@ -854,7 +814,6 @@ async function seed(tx: Tx) {
       });
     }
 
-    // Dispatch: once accepted, every active driver in the branch's city gets an offer; the first to accept wins.
     if (steps.includes("accepted")) {
       const offeredAt = at("accepted");
       const winner = order.driver;
@@ -892,7 +851,6 @@ async function seed(tx: Tx) {
       }
     }
 
-    // Reviews are only written for delivered orders.
     if (order.restaurantReview) {
       const review = order.restaurantReview;
       const reviewId = randomUUID();
@@ -927,7 +885,6 @@ async function seed(tx: Tx) {
     }
   }
 
-  // Cached totals: payout amounts, rating averages and delivery counts must match the rows above.
   for (const payout of payouts.values()) {
     await tx.orm.public.DriverPayout.where({ id: payout.id }).update({ amount: money(payout.total) });
   }
@@ -941,7 +898,6 @@ async function seed(tx: Tx) {
   }
 }
 
-// Users and cities are the roots every other row hangs off, so if both are empty nothing else can exist yet.
 const hasData = (await db.orm.identity.User.first()) !== null || (await db.orm.public.City.first()) !== null;
 if (hasData) {
   console.error("The database already has data. Seeding only runs on an empty database: reset it first (npm run docker:<env>:reset).");

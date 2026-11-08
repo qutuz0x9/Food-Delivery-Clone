@@ -5,9 +5,6 @@ import { db, type Tx } from "../../../prisma/db.js";
 import { withRollback } from "../../../test/with-rollback.js";
 import { RestaurantsRepository } from "../restaurants.repository.js";
 
-// Runs against the db-test container: `npm run test:db:up`, `npm run test:db:migrate`, then `npm run test:db`.
-// Every test runs in a transaction that is rolled back (withRollback), so the test database stays empty.
-
 const repository = new RestaurantsRepository(db);
 
 interface RestaurantSetup {
@@ -18,7 +15,6 @@ interface RestaurantSetup {
   readonly cuisines: readonly { readonly name: string; readonly isActive?: boolean }[];
 }
 
-// A user, its restaurant, one branch and the cuisine tags. The defaults make a restaurant customers can see.
 const createRestaurant = async (tx: Tx, setup: RestaurantSetup): Promise<void> => {
   const userId = randomUUID();
   await tx.orm.identity.User.create({
@@ -68,7 +64,6 @@ const createRestaurant = async (tx: Tx, setup: RestaurantSetup): Promise<void> =
   }
 };
 
-// Only this test's names, so rows from other tests or a seeded database can't change the result.
 const ours = (names: string[], tag: string): string[] => names.filter((name) => name.startsWith(tag));
 
 afterAll(async () => {

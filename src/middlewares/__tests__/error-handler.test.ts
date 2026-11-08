@@ -8,7 +8,6 @@ import { logger } from "../../config/logger.js";
 import { EmailAlreadyExistsError } from "../../modules/auth/auth.errors.js";
 import { errorHandler } from "../error-handler.js";
 
-// An app whose only route throws `error`, with the real errorHandler behind it.
 const appThrowing = (error: unknown) => {
   const app = express();
   app.get("/", () => {
@@ -86,7 +85,6 @@ describe("errorHandler", () => {
   });
 
   it("logs an unknown error and responds 500 without leaking its message", async () => {
-    // No request logger in this small app, so errorHandler falls back to the app logger.
     const log = vi.spyOn(logger, "error");
     const secret = new Error("connection to db-internal:5432 refused");
 

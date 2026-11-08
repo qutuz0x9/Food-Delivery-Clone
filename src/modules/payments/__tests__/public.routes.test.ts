@@ -12,7 +12,6 @@ const paymentMethods: PaymentMethodResponse[] = [
   { method: "apple_pay", label: "Apple Pay", online: true },
 ];
 
-// The real router, controller and errorHandler, with a fake PaymentsService.
 const setup = (listMethods = vi.fn((): PaymentMethodResponse[] => paymentMethods)) => {
   const app = express();
   app.use(express.json());
@@ -59,7 +58,6 @@ describe("GET /payment-methods", () => {
   });
 
   it("answers 500 without details when the service throws", async () => {
-    // A synchronous throw, like a bug inside listMethods.
     const { app } = setup(vi.fn((): PaymentMethodResponse[] => {
       throw new Error("Cannot read properties of undefined (reading 'label')");
     }));

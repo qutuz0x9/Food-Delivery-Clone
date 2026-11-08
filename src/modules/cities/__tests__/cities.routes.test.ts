@@ -12,7 +12,6 @@ const cities: CityResponse[] = [
   { id: "5e2a9c14-7b3d-4f68-8a01-9c4d6e8f0b21", name: "Cairo", country: "Egypt" },
 ];
 
-// The real router, controller and errorHandler, with a fake CitiesService: no database.
 const setup = (listActive = vi.fn(async (): Promise<CityResponse[]> => cities)) => {
   const app = express();
   app.use(express.json());

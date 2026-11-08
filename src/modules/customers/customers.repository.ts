@@ -22,7 +22,7 @@ export class CustomersRepository {
     data: NewCustomerProfile,
     client: DbClient = this.db,
   ): Promise<CustomerRow> {
-    // customers.id has no database default in the contract, so the app generates it.
+    // customers.id has no database default.
     return client.orm.public.Customer.create({ id: randomUUID(), ...data });
   }
 
@@ -30,12 +30,9 @@ export class CustomersRepository {
     userId: string,
     client: DbClient = this.db,
   ): Promise<CustomerRow | null> {
-    // LEARN-TODO (core, guided): CustomersRepository.findByUserId
-    // 1. Find the customer profile by userId (a unique field).
     const customer = await client.orm.public.Customer.where({
       userId,
     }).first();
-    // 2. Return the row, or null.
     return customer;
   }
 }

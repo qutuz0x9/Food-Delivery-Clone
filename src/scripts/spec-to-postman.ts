@@ -1,21 +1,6 @@
 import fs from "node:fs";
 import SwaggerParser from "@apidevtools/swagger-parser";
 
-// Turns docs/api/ into a Postman Collection v2.1 file for Apidog, with a success case and failure cases for every
-// operation. OpenAPI has no place for saved requests, so an OpenAPI import gives each endpoint a single "Success"
-// case. Postman saved examples do import into Apidog as endpoint cases, so each case below is one saved example on
-// its operation's request:
-//
-// - success: the example path/query values, the `valid` body and the token of the operation's role
-// - 400: every negative request-body example (missingEmail, ...), an invalid path id and an invalid query value
-// - 401: no access token; 403: the token of another role; 404: an id that does not exist
-// - 409, 422: depend on stored data, so they send `Prefer: code=...`, which makes the Prism mock return that response
-//   (a real server ignores the header)
-//
-// A 400 case's expected body lists exactly the fields its request gets wrong, as the real API's validation will.
-//
-// Usage: npm run postman:cases [-- --only registerCustomer,loginCustomer]
-
 const SPEC = "docs/api/openapi.yaml";
 const OUT_DIR = "dist/postman";
 const OUT_FILE = `${OUT_DIR}/food-delivery.postman_collection.json`;
@@ -69,7 +54,6 @@ const only = onlyArg === -1 ? null : new Set((process.argv[onlyArg + 1] ?? "").s
 
 const spec = (await SwaggerParser.bundle(SPEC)) as unknown as Json;
 
-// Follows a local "#/components/..." pointer, as left by the bundle.
 const resolve = (node: unknown): unknown => {
   if (!isObject(node) || typeof node["$ref"] !== "string") return node;
   let target: unknown = spec;
@@ -86,13 +70,11 @@ const mediaOf = (node: unknown, type: string): Json | undefined => {
   return isObject(media) ? media : undefined;
 };
 
-// "firstName" -> "First name", for error messages in the style of responses/common.yaml#/ValidationError.
 const label = (field: string): string => {
   const words = field.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase();
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
-// The first rule a value breaks, as the real API's validation would report it, or null when the value is valid.
 const fieldError = (field: string, schema: Json, value: unknown): string | null => {
   const name = label(field);
   if (value === null) return schema["nullable"] === true ? null : `${name} is required`;
@@ -131,7 +113,6 @@ const fieldError = (field: string, schema: Json, value: unknown): string | null 
   return null;
 };
 
-// Every field a request body gets wrong against its schema: { field: message }. Empty when the body is valid.
 const validationErrors = (rawSchema: unknown, body: unknown): Record<string, string> => {
   const schema = resolve(rawSchema);
   if (!isObject(schema) || !isObject(body)) return {};
@@ -161,7 +142,6 @@ const validationBody = (fields: Record<string, string>): Json => ({
   error: { code: "VALIDATION_ERROR", fields },
 });
 
-// The response example for a status code: its `example`, or the first of its named `examples`.
 const responseExample = (responses: Json, code: string): unknown => {
   const media = mediaOf(responses[code], "application/json");
   if (!media) return undefined;
@@ -177,7 +157,6 @@ interface PickedExample {
   value: unknown;
 }
 
-// The named example of a response that fits the case: the first of `keys` the response has, else its first example.
 // `key` goes into the Prefer header, so the Prism mock returns this example and not just the first one.
 const pickExample = (responses: Json, code: string, keys: readonly string[]): PickedExample => {
   const media = mediaOf(responses[code], "application/json");
@@ -192,20 +171,16 @@ const messageOf = (body: unknown): string | null => (isObject(body) && typeof bo
 
 const preferFor = (code: string, picked: PickedExample): string => (picked.key ? `code=${code}, example=${picked.key}` : `code=${code}`);
 
-// The sentence of an operation's description that explains a status, e.g. "The label must be unique within the
-// restaurant (`409` otherwise)." -> "The label must be unique within the restaurant".
 const reasonFor = (operation: Json, code: string): string | null => {
   const description = text(operation["description"], "").replace(/\s+/g, " ");
   const sentence = description.split(/(?<=\.)\s/).find((part) => part.includes(`\`${code}\``));
   if (!sentence) return null;
-  // "(`409` if the email is taken)" names the cause directly: "The email is taken".
   const cause = new RegExp(`\\(\`${code}\` (?:if|when) ([^)]+)\\)`).exec(sentence)?.[1];
   if (cause) return cause.charAt(0).toUpperCase() + cause.slice(1);
   const reason = sentence.replace(/\s*\([^)]*`\d{3}`[^)]*\)/g, "").replace(/\.$/, "").trim();
   return reason.length > 0 && !reason.includes(`\`${code}\``) ? reason : null;
 };
 
-// Which shared Conflict example a 409 is, judged from the sentence that explains it.
 const conflictKeys = (path: string, reason: string | null): string[] => {
   const why = (reason ?? "").toLowerCase();
   if (path.includes("delivery-requests")) return ["offerNoLongerAvailable"];
@@ -214,7 +189,6 @@ const conflictKeys = (path: string, reason: string | null): string[] => {
   return ["invalidState"];
 };
 
-// Whose token an operation needs, read from the route conventions in CLAUDE.md. null: any logged-in user.
 const actorFor = (path: string): Actor | null => {
   const auth = /^\/auth\/[^/]+\/(customer|driver|admin)$/.exec(path);
   if (auth?.[1]) return auth[1] as Actor;
@@ -227,7 +201,6 @@ const actorFor = (path: string): Actor | null => {
 
 const tokenOf = (actor: Actor): string => `{{${actor}Token}}`;
 
-// A value that breaks a parameter's schema, or null when nothing about it can be broken.
 const invalidValue = (schema: Json): unknown => {
   if (schema["format"] === "uuid") return "not-a-uuid";
   if (schema["format"] === "date" || schema["format"] === "date-time") return "not-a-date";
@@ -239,7 +212,6 @@ const invalidValue = (schema: Json): unknown => {
   return null;
 };
 
-// A parameter value as it travels in a URL, where everything is text.
 const asParam = (value: unknown): string => (typeof value === "string" ? value : JSON.stringify(value));
 
 const servers = spec["servers"];
@@ -292,7 +264,6 @@ for (const [path, rawItem] of Object.entries(paths)) {
     const queryParams = parameters.filter((parameter) => parameter.in === "query");
     const hasCookie = parameters.some((parameter) => parameter.in === "cookie");
 
-    // Request body: JSON with named examples, or multipart form fields (file uploads).
     const json = mediaOf(operation["requestBody"], "application/json");
     const multipart = mediaOf(operation["requestBody"], "multipart/form-data");
     const bodyExamples = json && isObject(json["examples"]) ? json["examples"] : {};
@@ -309,8 +280,7 @@ for (const [path, rawItem] of Object.entries(paths)) {
       ),
       prefer: null,
     };
-    // The Prism mock answers a request that breaks the schema with 422 when the operation declares 422, so a
-    // validation case there asks for the 400 explicitly.
+    // Prism answers a schema-breaking request with 422 when the operation declares 422, so ask for the 400 explicitly.
     const validationPrefer = codes.includes("422") ? "code=400" : null;
 
     const cases: Case[] = [{ name: `Valid request (${successCode})`, code: successCode, parts: valid, expected: responseExample(responses, successCode) }];
@@ -396,7 +366,6 @@ for (const [path, rawItem] of Object.entries(paths)) {
 
     if (codes.includes("404")) {
       const target = pathParams.at(-1);
-      // "addressId" -> "address", which picks deliveryAddressNotFound over the generic resourceNotFound.
       const stem = target ? target.name.replace(/Id$/, "").toLowerCase() : "";
       const examples = mediaOf(responses["404"], "application/json")?.["examples"];
       const specific = isObject(examples) && stem ? Object.keys(examples).filter((key) => key.toLowerCase().includes(stem)) : [];

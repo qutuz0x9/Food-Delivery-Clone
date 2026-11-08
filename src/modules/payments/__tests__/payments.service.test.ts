@@ -4,8 +4,7 @@ import { PAYMENT_METHOD_DETAILS } from "../payments.constants.js";
 import { PaymentsService } from "../payments.service.js";
 
 describe("PAYMENT_METHOD_DETAILS", () => {
-  // The Record type already checks this at compile time; this catches a contract.json that was emitted without
-  // regenerating contract.d.ts (or the other way round).
+  // Catches a contract.json emitted without regenerating contract.d.ts, which the type check can't see.
   it("covers every value of the contract's payment_method enum", () => {
     const enumValues = contractJson.storage.namespaces.public.entries.valueSet.payment_method.values;
     const keys = Object.keys(PAYMENT_METHOD_DETAILS);
@@ -23,8 +22,6 @@ describe("PaymentsService", () => {
       const methods = service.listMethods();
 
       expect(methods).toHaveLength(6);
-      // Each expected item must match exactly, so an extra field on any item fails the test. The order is checked
-      // by the next test.
       expect(methods).toEqual(
         expect.arrayContaining([
           { method: "cash", label: "Cash on delivery", online: false },
@@ -50,7 +47,6 @@ describe("PaymentsService", () => {
       const first = service.listMethods();
       const expected = [...first];
 
-      // A caller (or a bug) reorders the list it got back. The next request must not see that.
       first.reverse();
 
       expect(service.listMethods()).toStrictEqual(expected);

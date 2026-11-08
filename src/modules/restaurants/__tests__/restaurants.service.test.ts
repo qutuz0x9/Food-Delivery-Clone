@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import type { RestaurantsRepository } from "../restaurants.repository.js";
 import { RestaurantsService } from "../restaurants.service.js";
 
-// A fake repository: the service is tested without a database.
 const setup = (found: string[]) => {
   const findPublicCuisineNames = vi.fn(async (): Promise<string[]> => found);
   const service = new RestaurantsService({ findPublicCuisineNames } as unknown as RestaurantsRepository);

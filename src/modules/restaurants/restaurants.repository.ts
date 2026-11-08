@@ -7,9 +7,7 @@ export class RestaurantsRepository {
     this.db = db;
   }
 
-  // The distinct names of the active cuisine tags (restaurant_categories) of every restaurant a customer can see:
-  // approved, its user active and not deleted, and at least one active branch. Sorted A to Z.
-  // Raw SQL because the ORM has no DISTINCT and Restaurant declares no relation to its branches.
+  // Raw SQL: the ORM has no DISTINCT, and Restaurant declares no relation to its branches.
   async findPublicCuisineNames(client: DbClient = this.db): Promise<string[]> {
     const plan = rootDb.raw.sql`
       SELECT DISTINCT rc.name AS name
@@ -28,7 +26,7 @@ export class RestaurantsRepository {
       .returnsRow({ name: "sql/varchar@1" })
       .build();
 
-    // The db client runs a plan through its runtime; a transaction (tests, withRollback) runs it itself.
+    // The db client runs a plan through its runtime; a transaction client runs it itself.
     const rows = await ("runtime" in client ? client.runtime().query(plan) : client.query(plan));
     return rows.map((row) => row.name);
   }

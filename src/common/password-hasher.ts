@@ -11,21 +11,19 @@ interface StoredHash {
   readonly key: Buffer;
 }
 
-// Hashed instead of a real one when there is no user, so that case costs one scrypt too. Its result is never used.
+// Hashed when there is no user, so a missing email takes as long as a wrong password.
 const DUMMY_HASH: StoredHash = { salt: Buffer.alloc(SALT_BYTES), key: Buffer.alloc(KEY_LENGTH) };
 
 const parseStoredHash = (stored: string): StoredHash => {
   const [scheme, saltHex, keyHex] = stored.split("$");
   if (scheme !== "scrypt" || !saltHex || !keyHex) {
-    // A bad hash in the database is a data bug, not a wrong password: let it become a 500.
+    // A malformed stored hash is a data bug: let it become a 500, not a wrong password.
     throw new Error("Stored password hash is not in the scrypt$<salt>$<hash> format");
   }
   return { salt: Buffer.from(saltHex, "hex"), key: Buffer.from(keyHex, "hex") };
 };
 
-// Hashes passwords with scrypt from node:crypto, stored as `scrypt$<salt hex>$<hash hex>`. That is the format
-// src/scripts/seed.ts writes, so seeded demo users and registered users share one format. The async scrypt runs on
-// libuv's thread pool, so hashing does not block other requests.
+// Same format as src/scripts/seed.ts: scrypt$<salt hex>$<hash hex>.
 export class PasswordHasher {
   async hash(password: string): Promise<string> {
     const salt = randomBytes(SALT_BYTES);
@@ -33,10 +31,6 @@ export class PasswordHasher {
     return `scrypt$${salt.toString("hex")}$${key.toString("hex")}`;
   }
 
-  // A hash can't be reversed, so this hashes `password` again with the salt saved in `storedHash` and compares the
-  // two results. timingSafeEqual takes the same time wherever the bytes differ, so the answer's speed leaks nothing.
-  // Pass null when there is no user: it still runs scrypt (on a dummy) and returns false, so "no such email" takes
-  // as long as "wrong password".
   async verify(password: string, storedHash: string | null): Promise<boolean> {
     const { salt, key } = storedHash === null ? DUMMY_HASH : parseStoredHash(storedHash);
     const candidate = await scryptAsync(password, salt, key.length);

@@ -7,12 +7,8 @@ import { withRollback } from "../../../test/with-rollback.js";
 import { EmailAlreadyExistsError, PhoneNumberInUseError } from "../auth.errors.js";
 import { AuthRepository, type NewUser } from "../auth.repository.js";
 
-// Runs against the db-test container: `npm run test:db:up`, `npm run test:db:migrate`, then `npm run test:db`.
-// Every test runs in a transaction that is rolled back (withRollback), so the test database stays empty.
-
 const repository = new AuthRepository(db);
 
-// Unique values per call, so tests never collide with each other.
 const newUser = (overrides: Partial<NewUser> = {}): NewUser => {
   const id = randomUUID();
   return {
@@ -28,7 +24,6 @@ const softDelete = async (userId: string, tx: Tx): Promise<void> => {
   await tx.orm.identity.User.where({ id: userId }).update({ deletedAt: new Date().toISOString() as TimestampString<6> });
 };
 
-// Resolves to the error a promise rejects with, or fails the test if it resolves.
 const rejectionOf = async (promise: Promise<unknown>): Promise<unknown> => {
   try {
     await promise;
@@ -105,7 +100,6 @@ describe("AuthRepository (database)", () => {
       await withRollback(async (tx) => {
         const first = await repository.createUser(newUser(), tx);
 
-        // Same email in another case: only users_normalized_email_key catches it.
         const error = await rejectionOf(
           repository.createUser(newUser({ email: first.email.toUpperCase(), normalizedEmail: first.normalizedEmail }), tx),
         );
@@ -126,7 +120,6 @@ describe("AuthRepository (database)", () => {
 
     it("rethrows any other database error unchanged, not as a 409", async () => {
       await withRollback(async (tx) => {
-        // email is NOT NULL: a different kind of failure than a duplicate.
         const error = await rejectionOf(repository.createUser(newUser({ email: null as unknown as string }), tx));
 
         expect(error).toBeInstanceOf(Error);
@@ -173,7 +166,6 @@ describe("AuthRepository (database)", () => {
     const inOneDay = (): TimestampString<6> => new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() as TimestampString<6>;
     const anHourAgo = (): TimestampString<6> => new Date(Date.now() - 60 * 60 * 1000).toISOString() as TimestampString<6>;
 
-    // A token row as a rotation leaves it: pass revokedAt and replacedByToken to build a chain.
     const insertToken = async (
       tx: DbClient,
       userId: string,
@@ -286,7 +278,6 @@ describe("AuthRepository (database)", () => {
         await withRollback(async (tx) => {
           const user = await tx.orm.identity.User.create(newUser());
           const other = await tx.orm.identity.User.create(newUser());
-          // A → B → C: A and B were rotated, C is the live token.
           const c = await insertToken(tx, user.id);
           const b = await insertToken(tx, user.id, { revokedAt: anHourAgo(), replacedByToken: c.id, revokedReason: "rotated" });
           const a = await insertToken(tx, user.id, { revokedAt: anHourAgo(), replacedByToken: b.id, revokedReason: "rotated" });
@@ -300,7 +291,6 @@ describe("AuthRepository (database)", () => {
           expect((await tokenRow(tx, c.id))?.revokedAt).toEqual(expect.any(String));
           expect(await tokenRow(tx, a.id)).toMatchObject({ revokedReason: "rotated", revokedAt: a.revokedAt });
           expect(await tokenRow(tx, b.id)).toMatchObject({ revokedReason: "rotated", revokedAt: b.revokedAt });
-          // Another login of the same user (another device) is not part of this chain.
           expect(await tokenRow(tx, otherDevice.id)).toMatchObject({ revokedAt: null });
           expect(await tokenRow(tx, otherUsers.id)).toMatchObject({ revokedAt: null });
         });
@@ -328,9 +318,7 @@ describe("AuthRepository (database)", () => {
         });
       });
 
-      // Two connections: a refresh transaction holds T1's row lock while a logout of T1 runs. The logout's update has
-      // to wait for it, and only a read made after that wait sees the T2 the refresh created (plan §8). This test can't
-      // use withRollback (one transaction can't race itself), so it commits real rows and deletes them at the end.
+      // Can't use withRollback (one transaction can't race itself), so it commits real rows and deletes them.
       it("finds the token a parallel refresh is creating: it reads the next link after its own update", async () => {
         const user = await db.orm.identity.User.create(newUser());
         const t1 = await insertToken(db, user.id);
@@ -353,7 +341,7 @@ describe("AuthRepository (database)", () => {
           });
           await lockTaken;
 
-          // Started now, awaited below. An error becomes the result, so it can't go unhandled while the test waits.
+          // An error becomes the result, so it can't count as unhandled while the test waits.
           const logout = (async (): Promise<unknown> => {
             try {
               return await repository.revokeTokenChain(t1.id, "logout");
@@ -361,14 +349,13 @@ describe("AuthRepository (database)", () => {
               return error;
             }
           })();
-          // Give the logout time to reach T1 and wait on its lock, then let the refresh commit.
+          // Let the logout reach T1 and wait on its lock, then let the refresh commit.
           await new Promise((resolve) => setTimeout(resolve, 200));
           letRefreshCommit();
           await refresh;
 
           expect(await logout).toBe(1);
           expect(await db.orm.identity.RefreshToken.where({ id: t2Id }).first()).toMatchObject({ revokedReason: "logout" });
-          // T1 keeps the refresh's revocation: the logout didn't overwrite it.
           expect(await db.orm.identity.RefreshToken.where({ id: t1.id }).first()).toMatchObject({
             revokedReason: "rotated",
             replacedByToken: t2Id,

@@ -28,7 +28,6 @@ import {
 import type { LoginCustomerInput, RegisterCustomerInput } from "../auth.validation.js";
 import type { TokenService } from "../token.service.js";
 
-// Input as the validate middleware hands it over: already trimmed.
 const input: RegisterCustomerInput = {
   email: "John@Example.com",
   password: "StrongPassword123!",
@@ -71,7 +70,6 @@ const refreshToken: IssuedRefreshToken = {
   expiresAt: new Date("2026-10-26T10:00:00Z"),
 };
 
-// A row as the database returns it: timestamps are UTC text with no time zone (see src/common/timestamps.ts).
 const DAY_MS = 24 * 60 * 60 * 1000;
 const asTimestamp = (date: Date): TimestampString<6> =>
   date.toISOString().replace("T", " ").replace("Z", "") as TimestampString<6>;
@@ -90,8 +88,6 @@ const storedToken = (overrides: Partial<RefreshTokenRow> = {}): RefreshTokenRow 
     ...overrides,
   }) as RefreshTokenRow;
 
-// Fakes for every dependency. db.transaction calls the callback with `tx`, so the tests can check that each write
-// received the transaction client.
 const setup = () => {
   const tx = { label: "transaction client" } as unknown as Tx;
   const db = { transaction: vi.fn(async (callback: (client: Tx) => Promise<unknown>) => callback(tx)) };
@@ -225,7 +221,6 @@ describe("AuthService", () => {
 
     it("does not sign an access token when a write in the transaction fails", async () => {
       const { service, authRepository, tokens } = setup();
-      // The race: the pre-check passed, but another request inserted the same email first.
       authRepository.createUser.mockRejectedValue(new EmailAlreadyExistsError());
 
       await expect(service.registerCustomer(input, context)).rejects.toBeInstanceOf(EmailAlreadyExistsError);
@@ -236,7 +231,6 @@ describe("AuthService", () => {
     const loginInput: LoginCustomerInput = { email: "John@Example.com", password: "StrongPassword123!" };
     const asUser = (overrides: Partial<UserRow>): UserRow => ({ ...createdUser, ...overrides }) as UserRow;
 
-    // Everything the fakes saw that could carry a token or a session: none of it may happen on a failed login.
     const expectNothingIssued = (fakes: ReturnType<typeof setup>): void => {
       expect(fakes.authRepository.createRefreshToken).not.toHaveBeenCalled();
       expect(fakes.tokens.signAccessToken).not.toHaveBeenCalled();
@@ -285,7 +279,6 @@ describe("AuthService", () => {
       fakes.hasher.verify.mockResolvedValue(false);
 
       await expect(fakes.service.loginCustomer(loginInput, context)).rejects.toBeInstanceOf(InvalidCredentialsError);
-      // The dummy check makes "no such email" as slow as "wrong password" (plan §8).
       expect(fakes.hasher.verify).toHaveBeenCalledWith("StrongPassword123!", null);
       expectNothingIssued(fakes);
     });
@@ -337,14 +330,12 @@ describe("AuthService", () => {
   describe("refreshCustomer", () => {
     const asUser = (overrides: Partial<UserRow>): UserRow => ({ ...createdUser, ...overrides }) as UserRow;
 
-    // A refresh that ends in an error must not rotate the token or hand out a new one.
     const expectNoRotation = (fakes: ReturnType<typeof setup>): void => {
       expect(fakes.authRepository.revokeRefreshTokenIfActive).not.toHaveBeenCalled();
       expect(fakes.authRepository.createRefreshToken).not.toHaveBeenCalled();
       expect(fakes.tokens.signAccessToken).not.toHaveBeenCalled();
     };
 
-    // Rejects with InvalidRefreshTokenError and returns it, so a test can also check the message.
     const invalidRefresh = async (promise: Promise<unknown>): Promise<InvalidRefreshTokenError> => {
       const error: unknown = await promise.catch((e: unknown) => e);
       expect(error).toBeInstanceOf(InvalidRefreshTokenError);
@@ -381,9 +372,7 @@ describe("AuthService", () => {
       expectNoRotation(fakes);
     });
 
-    // LEARN-TODO (test, guided, skipped: written by Claude): write this test
     it("revokes the chain and throws InvalidRefreshTokenError when the token was already revoked", async () => {
-      // Arrange: findRefreshTokenByHash returns a stored token whose revokedAt is set
       const fakes = setup();
       fakes.authRepository.findRefreshTokenByHash.mockResolvedValue(
         storedToken({
@@ -393,18 +382,14 @@ describe("AuthService", () => {
         }),
       );
 
-      // Act: call refreshCustomer with a raw token
       const error = await invalidRefresh(fakes.service.refreshCustomer("raw-old-token", context));
 
-      // Assert: it rejects with InvalidRefreshTokenError
       expect(error).toMatchObject({ statusCode: 401, code: "INVALID_REFRESH_TOKEN" });
-      // Assert: revokeTokenChain got the row's id and REVOKED_REASONS.reuseDetected
       expect(fakes.authRepository.revokeTokenChain).toHaveBeenCalledTimes(1);
       expect(fakes.authRepository.revokeTokenChain.mock.calls[0]?.slice(0, 2)).toEqual([
         "token-old",
         REVOKED_REASONS.reuseDetected,
       ]);
-      // Assert: nothing was rotated (expectNoRotation)
       expectNoRotation(fakes);
       expect(fakes.authRepository.findUserById).not.toHaveBeenCalled();
     });
@@ -438,7 +423,6 @@ describe("AuthService", () => {
       fakes.authRepository.findRefreshTokenByHash.mockResolvedValue(
         storedToken({ expiresAt: asTimestamp(new Date(Date.now() + 60 * 60_000)) }),
       );
-      // Read as Tokyo time (UTC+9), the text would mean 8 hours ago, and the token would look expired.
       const originalTz = process.env["TZ"];
       process.env["TZ"] = "Asia/Tokyo";
       try {
@@ -508,7 +492,6 @@ describe("AuthService", () => {
         },
         tx,
       );
-      // The conditional revoke runs first, so a lost race inserts nothing.
       const revokeOrder = authRepository.revokeRefreshTokenIfActive.mock.invocationCallOrder[0] ?? 0;
       const insertOrder = authRepository.createRefreshToken.mock.invocationCallOrder[0] ?? 0;
       expect(revokeOrder).toBeLessThan(insertOrder);
@@ -528,7 +511,6 @@ describe("AuthService", () => {
     it("revokes the chain and inserts nothing when another request rotated the token first", async () => {
       const fakes = setup();
       fakes.authRepository.findRefreshTokenByHash.mockResolvedValue(storedToken());
-      // The read said "active", but the conditional update found revoked_at already set.
       fakes.authRepository.revokeRefreshTokenIfActive.mockResolvedValue(false);
 
       await invalidRefresh(fakes.service.refreshCustomer("raw-old-token", context));
@@ -550,7 +532,6 @@ describe("AuthService", () => {
   });
 
   describe("logoutCustomer", () => {
-    // Logout never looks at the user: holding the token is enough, whatever the account's state (plan §3, rules 2-3).
     const expectNoUserChecks = (fakes: ReturnType<typeof setup>): void => {
       expect(fakes.authRepository.findUserById).not.toHaveBeenCalled();
       expect(fakes.customers.findProfileByUserId).not.toHaveBeenCalled();
@@ -565,10 +546,6 @@ describe("AuthService", () => {
       expect(fakes.authRepository.revokeTokenChain).not.toHaveBeenCalled();
     });
 
-    // LEARN-TODO (test, guided, skipped: written by Claude): write this test
-    // Arrange: fakes from setup(); findRefreshTokenByHash already returns null there
-    // Act: call logoutCustomer with a raw token
-    // Assert: it resolves (no error), and revokeTokenChain was not called
     it("resolves and revokes nothing when no row has the token's hash", async () => {
       const fakes = setup();
 
@@ -592,7 +569,6 @@ describe("AuthService", () => {
       expectNoUserChecks(fakes);
     });
 
-    // A revoked token may mean a thief holds the newer one; an expired one still marks a chain (plan §8).
     it.each([
       ["already rotated", { revokedAt: asTimestamp(new Date(Date.now() - DAY_MS)), replacedByToken: "token-next", revokedReason: "rotated" }],
       ["expired", { expiresAt: asTimestamp(new Date(Date.now() - DAY_MS)) }],
