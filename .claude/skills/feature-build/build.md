@@ -31,17 +31,21 @@ Interview the user one section at a time: all the questions of a section go in o
 Go through these 7 sections in order. Adapt the questions to the feature: drop the ones that don't apply, and add one when the feature needs it (for example, "Should register also log the user in?").
 
 1. **Endpoint:** method → route → request body → success status → response body
-2. **Business logic and flow:** the questions below, in this order. Point to `.claude/rules/domain-rules.md` (or the
-   project's rules file) and the contract as places to look, without hinting at the answers:
-   - **Actors:** who sends the request, and who else is affected by what it does?
-   - **Rules:** every business rule this feature must follow, one per line, and where each one comes from (the
-     contract, the rules file, or "my own decision").
-   - **Flow:** every step from "the client sends the request" to "the client gets the response", one per line, in
-     order: what is read, checked, decided, written and returned. Plain words are fine; layer names are a bonus.
-   - **Decisions:** at each point where the flow can go two ways, the condition and what happens on each side.
-   - **State changes:** which rows move from one state to another (for example `active → revoked`), and what may
-     never happen (for example "a token is never rotated twice").
-   - **After the response:** anything that runs later or elsewhere (an email, a job), or "nothing".
+2. **Business logic and flow:** no numbered questions here; the user prefers this. It works in three steps:
+   1. **The user tells the flow in their own words,** from "the client sends the request" to "the client gets the
+      response", in one go. Ask for it in one line, and name what a full flow usually covers so they can include it:
+      who is affected, the rules and where they come from, what is read, checked, decided and written, what happens
+      on each side of a check, which rows change state, and anything after the response. Point to
+      `.claude/rules/domain-rules.md` (or the project's rules file) and the contract as places to look.
+   2. **Claude checks the flow and gives hints, not answers and not questions.** Write each hint as a short
+      statement that points at **where** to look or **what kind** of thing is missing, never at the fix. For example:
+      "The Accounts section of `domain-rules.md` has a rule about presenting a token; compare your flow with it."
+      or "Your flow has checks but doesn't say what happens when one fails." or "One column you set is read by
+      another feature." At most 5 hints, the most important first. No verdicts here; they go in the You vs me table.
+   3. **The user may revise the flow once** (or say `done`). The revised flow is the one compared and scored.
+
+   In the Design Review note, this section gets one `####` per step or rule of the final flow, plus one per item the
+   user missed.
 3. **Errors:** every error case the user can think of, one per line, each with its status code
 4. **Data:** tables → fields and types → values the app must generate → constraints (required, unique, length) → indexes
 5. **Validation:** rules for each field → which rules go in the Zod schema and which in the service
@@ -60,8 +64,8 @@ Each message:
 - May point to where to look (for example, "read `src/prisma/contract.prisma`"), but never hints at the answer.
 - Does not judge the answers. Keep all feedback for the You vs me table. If an answer is unclear or a number is missing, ask about only those numbers in one short follow-up.
 
-In Errors and Edge cases, the user lists cases instead of answering numbered questions. In Business logic and
-flow, the Rules, Flow and Decisions answers are lists too: one item per line. After their list, ask once "More cases, or `done`?" before moving on.
+In Errors and Edge cases, the user lists cases instead of answering numbered questions. After their list, ask once
+"More cases, or `done`?" before moving on. Business logic and flow follows its own three steps (above).
 
 When a section is finished, show it filled in, then ask all the questions of the next section in the same message:
 
