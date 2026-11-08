@@ -27,3 +27,7 @@ This project is in the design/documentation phase — the data model and API doc
   - Still to document: roles and claims, session management, a live map of driver positions, and a few administrator oversight views (promotions, menu items, platform-wide earnings).
 
 Run `npm run dev` and open `http://localhost:3000/api-docs` to browse the current API documentation interactively.
+
+## License
+
+Released under the [MIT License](LICENSE).

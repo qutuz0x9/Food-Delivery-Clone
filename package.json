@@ -23,6 +23,7 @@
     "url": "git+https://github.com/qutuz0x9/Food-Delivery-Clone.git"
   },
   "author": "qutuz0x9",
+  "license": "MIT",
   "type": "module",
   "main": "index.js",
   "directories": {
