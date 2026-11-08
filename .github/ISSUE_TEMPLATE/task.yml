@@ -1,0 +1,32 @@
+name: Task
+description: Refactor, docs, tooling, CI or contract work that isn't a feature or a bug
+title: "chore: "
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - chore
+        - refactor
+        - docs
+        - ci
+        - build
+        - test
+        - perf
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What and why
+    validations:
+      required: true
+
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      placeholder: |
+        - [ ] ...

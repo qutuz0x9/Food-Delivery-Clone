@@ -1,0 +1,67 @@
+name: Feature
+description: A new endpoint or behavior for one of the four actors
+title: "feat(<area>): "
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: actor
+    attributes:
+      label: Actor
+      multiple: true
+      options:
+        - Customer
+        - Restaurant
+        - Driver
+        - Admin
+        - Public (no auth)
+    validations:
+      required: true
+
+  - type: input
+    id: area
+    attributes:
+      label: Module
+      description: The src/modules/ folder that owns the tables this touches
+      placeholder: orders
+    validations:
+      required: true
+
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      placeholder: As a customer, I want to cancel a pending order so that I'm not charged for food I no longer want.
+    validations:
+      required: true
+
+  - type: textarea
+    id: endpoints
+    attributes:
+      label: Endpoints
+      description: Method and path, following the route conventions in CLAUDE.md
+      placeholder: POST /api/v1/customers/me/orders/:orderId/cancel
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] Only orders in `pending` can be cancelled
+        - [ ] A row is written to order_status_history
+        - [ ] 409 when the order has already been accepted
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contract
+    attributes:
+      label: Contract check
+      options:
+        - label: The tables, enums and constraints this needs already exist in `src/prisma/contract.prisma`
+        - label: This needs a contract change (describe it below)
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Contract changes, open questions, related issues
