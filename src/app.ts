@@ -10,7 +10,7 @@ import { apiRouter } from "./routes.js";
 
 const app: Express = express();
 
-// First, so requests that fail in later middleware are still logged.
+// First, so requests that fail in later middleware are still logged. 
 app.use(requestLogger);
 app.use(express.json());
 app.use(cookieParser());
