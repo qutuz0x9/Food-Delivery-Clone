@@ -97,6 +97,20 @@ Unauthorized:
             message: Access token is required
             error:
               code: INVALID_ACCESS_TOKEN
+        invalidToken:
+          summary: The access token is malformed, has a bad signature, or its user no longer exists (protected endpoint)
+          value:
+            success: false
+            message: Access token is invalid
+            error:
+              code: INVALID_ACCESS_TOKEN
+        expiredToken:
+          summary: The access token has expired; call the actor's refresh endpoint and retry (protected endpoint)
+          value:
+            success: false
+            message: Access token has expired
+            error:
+              code: ACCESS_TOKEN_EXPIRED
 
 InvalidResetToken:
   description: Password reset token is invalid, expired, or already used
