@@ -1,5 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { loginCustomerSchema, registerCustomerSchema } from "../auth.validation.js";
+import { ROLE_NAMES } from "../auth.types.js";
+import { accessTokenClaimsSchema, loginCustomerSchema, registerCustomerSchema } from "../auth.validation.js";
 
 const valid = {
   email: "John@Example.com",
@@ -131,5 +133,36 @@ describe("loginCustomerSchema", () => {
   it("has no strength rules: a short or simple password still reaches the password check", () => {
     expect(failedLoginFields({ ...validLogin, password: "password" })).toEqual([]);
     expect(failedLoginFields({ ...validLogin, password: "a" })).toEqual([]);
+  });
+});
+
+describe("accessTokenClaimsSchema", () => {
+  const sub = randomUUID();
+
+  it("accepts a payload with a uuid sub and a known role, and keeps only those two claims", () => {
+    const result = accessTokenClaimsSchema.safeParse({ sub, role: ROLE_NAMES.customer, iat: 1, exp: 2 });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ sub, role: ROLE_NAMES.customer });
+  });
+
+  it.each(Object.values(ROLE_NAMES))("accepts the role %s", (role) => {
+    expect(accessTokenClaimsSchema.safeParse({ sub, role }).success).toBe(true);
+  });
+
+  it.each([
+    ["no sub", { role: ROLE_NAMES.customer }],
+    ["a sub that is not a uuid", { sub: "user-1", role: ROLE_NAMES.customer }],
+    ["a number as sub", { sub: 42, role: ROLE_NAMES.customer }],
+    ["no role", { sub }],
+    ["an unknown role", { sub, role: "SuperAdmin" }],
+    ["a role in the wrong case", { sub, role: "customer" }],
+    ["a number as role", { sub, role: 1 }],
+  ])("rejects a payload with %s", (_case, payload) => {
+    expect(accessTokenClaimsSchema.safeParse(payload).success).toBe(false);
+  });
+
+  it.each([["a string", "just-a-string"], ["null", null]])("rejects %s instead of an object", (_case, payload) => {
+    expect(accessTokenClaimsSchema.safeParse(payload).success).toBe(false);
   });
 });
