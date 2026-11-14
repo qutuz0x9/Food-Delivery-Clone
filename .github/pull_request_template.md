@@ -6,6 +6,10 @@
 
 Closes #
 
+## Why
+
+<!-- The problem or reason. Link the issue if it already explains it. -->
+
 ## Type
 
 - [ ] feat
@@ -17,6 +21,13 @@ Closes #
 ## Endpoints
 
 <!-- Routes added or changed, e.g. POST /api/v1/auth/logout/customer. Delete this section if none. -->
+
+## Risk
+
+- [ ] Backward compatible
+- [ ] Changes behavior of an existing endpoint (describe below)
+- [ ] Breaking: response shape, route or required field changed
+- [ ] Includes a migration; it can be undone without losing data
 
 ## Checklist
 

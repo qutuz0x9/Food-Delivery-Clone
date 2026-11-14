@@ -1,8 +1,8 @@
 ---
 name: git-commit
-description: Survey every tracked and untracked change, group related files into logical commits, visualize the groups, and generate a Conventional Commits message for the group the user picks. Use when the user wants to commit changes.
+description: Survey every tracked and untracked change, group related files into logical commits, visualize the groups, and generate a Conventional Commits message for the group the user picks, or for every group in order. Use when the user wants to commit changes.
 disable-model-invocation: true
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*)
+allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git add *), Bash(git restore --staged *), Bash(git commit *)
 ---
 
 # Git Commit Skill
@@ -15,51 +15,118 @@ Generate high-quality, meaningful git commits following the Conventional Commits
 /git-commit
 ```
 
+## Standing Rules
+
+These apply for the whole run, to every group:
+
+- Never commit without the user's explicit approval of the exact message and file list. Silence or a vague reply is
+  not approval.
+- Stage only by explicit path. Never run `git add -A`, `git add .` or `git add -u`.
+- Never `git add` a partly staged file unless the user chose to commit the whole file (see step 6).
+- Never skip hooks (`--no-verify`), amend (`--amend`) or rewrite history unless the user explicitly asks.
+- Ask every question with `AskUserQuestion`, never in plain text. A typed reply ends the turn and clears this skill's
+  pre-approved git commands, so they would start asking for permission again.
+- Keep each commit to one logical group.
+
 ## Behavior
 
-1. **Survey everything**
-   - Run `git status --short` to see staged, unstaged, and untracked files together, not just what is already
-     staged.
-   - Read enough of each change to know what it is *for*: `git diff --staged -- <file>` for staged files,
-     `git diff -- <file>` for unstaged tracked files, and read untracked files directly (or `git diff --no-index
-     /dev/null <file>` for a text diff view) before guessing from the path alone.
+1. **Check the repo state**
+   - Run `git status` (long form) once. If it shows a merge, rebase, cherry-pick, revert or bisect in progress, or
+     unmerged paths, stop: say what is in progress and that it must be finished or aborted first. Do not group or
+     commit.
+2. **Survey everything**
+   - Run `git status --short -uall` so every untracked file gets its own line instead of being collapsed into its
+     folder. Read each file's state from its two-letter code (see File States).
    - If the tree is clean (nothing staged, unstaged, or untracked), tell the user there is nothing to commit and
      stop.
-2. **Group by relationship, not just by path** — see Grouping Guidance.
+   - Run `git diff --stat` and `git diff --cached --stat` first. Then read only what you need to know what each
+     change is *for*: `git diff --cached -- <file>` for staged content, `git diff -- <file>` for unstaged content,
+     and untracked text files directly. Don't open binary files; judge them by name and size.
+   - Pull out files that should not be committed: secrets (`.env`, keys, credentials), build outputs and large
+     binaries. List them under "Do not commit" with the reason (suggest `.gitignore` for build outputs) and never
+     put them in a group.
+3. **Group by relationship, not just by path** — see Grouping Guidance.
    - Cluster changes into logical commits, including any generated/derived files that must land with the source
      change that produced them.
-   - Note dependencies between groups (e.g. a schema change must be committed before the docs that reference its
-     new fields).
+   - Note dependencies between groups (e.g. a change must be committed before the docs that describe it).
    - Flag anything ambiguous — a change with no clear purpose, or one that could belong to more than one group —
-     in a separate "Unclear" list instead of guessing which group it belongs to.
-3. **Visualize the groups**
-   - Render each group as a short title, a one-line rationale, and a `File | State` table (`staged` / `unstaged`
-     / `untracked`).
+     in a separate "Unclear" list instead of guessing which group it belongs to. One file holding two unrelated
+     changes also goes there: whole-file staging can't split it, so tell the user to stage the part they want
+     themselves and run the skill again.
+4. **Visualize the groups**
+   - Number each group and render it as a short title, a one-line rationale, and a `File | State` table.
+   - Show the "Do not commit" and "Unclear" lists when they are not empty.
    - State a recommended commit order when groups depend on each other.
    - This is a reply to the user, not a file to write or an artifact to publish — it exists to help them pick a
      group, not to persist anywhere.
-4. **Ask which group to work on next**
-   - Use `AskUserQuestion` listing the groups (plus an "other / specific files" option) so the user picks one.
-5. **Stage exactly that group**
-   - Run `git add` with the explicit paths for the chosen group only — never `-A` or `.`, even here. Show the
-     resulting `git status --short` so the user can see exactly what is now staged.
+5. **Ask what to commit next**
+   - `AskUserQuestion` takes 2-4 options and adds "Other" by itself, so never add your own "other" option. Offer,
+     in this order: the recommended next group, up to two more groups, and "Commit all in order" when two or more
+     groups remain, never more than four options in total. If some groups don't fit, say in the question that the
+     user can type any group number or specific files under "Other".
+   - "Commit all in order" continues in All Groups Mode. Anything else continues with step 6.
+6. **Stage exactly that group**
+   - Note what is already staged. For a partly staged file in the group, ask first: commit only its staged part
+     (don't `git add` it), commit the whole file (`git add` it), or leave it out.
+   - Run `git add` with the group's explicit paths, skipping files that are already fully staged. For a deleted file,
+     `git add <path>` stages the deletion. For a rename, add both the old and the new path.
+   - Run `git diff --cached --name-only` and compare it with the group. If other files are staged too (for example,
+     ones the user staged before the run), stop and ask: unstage them with `git restore --staged <paths>`, include
+     them in this commit, or cancel. Unstaging keeps their changes in the working tree, but a partly staged file
+     loses its staged/unstaged split, so name any such file in the question. Never commit until the staged list
+     matches the group exactly.
    - If the staged result still looks like it mixes unrelated changes (the grouping missed something), say so and
      offer to split further before writing a message.
-6. **Match the repo's style**
+7. **Match the repo's style**
    - Run `git log --format=%s -10` and reuse the existing scope names where they fit.
-7. **Pick the scope** from the changed paths (see Scopes).
-8. **Pick the type** from the nature of the change (see Types).
-9. **Write the subject**: imperative mood, max 72 chars, no period, specific.
-10. **Write the body** explaining *why* the change was made, not just what changed.
-11. **Add a footer** if applicable (breaking changes, issue links), then the attribution line (see Footer).
-12. **Get the user's approval of the message** (see Message Review). Do not run `git commit` until the user has
-    explicitly accepted the exact message.
-13. **Create the commit** with `git commit` (use a HEREDOC for multi-line messages) using the approved text
-    verbatim.
-    - Never use `--no-verify` or `--amend` unless the user asks.
-    - If a hook fails, fix the cause and create a new commit. Show the user any change to the message first.
-14. **Report** the commit hash and subject.
-15. **Offer the next group** if any remain, and repeat from step 4 until the user is done or stops.
+8. **Pick the scope** from the changed paths (see Scopes).
+9. **Pick the type** from the nature of the change (see Types).
+10. **Write the subject**: imperative mood, 72 characters or fewer, no period, specific.
+11. **Write the body** explaining *why* the change was made, not just what changed.
+12. **Add a footer** only if applicable (breaking changes, issue links). Never add an attribution line (see Footer Guidelines).
+13. **Get the user's approval of the message** (see Message Review).
+14. **Create the commit** with `git commit` (use a HEREDOC for multi-line messages) using the approved text
+    verbatim. If a hook fails, follow Hook Failures.
+15. **Report** the commit hash and subject.
+16. **Offer the next group** if any remain, and repeat from step 5 until the user is done or stops.
+
+## File States
+
+Read the two-letter code from `git status --short`: the first column is the staged side, the second the unstaged side.
+
+| Code                                     | State                                         |
+| ---------------------------------------- | --------------------------------------------- |
+| Letter in the first column only (`M `)   | staged                                        |
+| Letter in the second column only (` M`)  | unstaged                                      |
+| Letters in both columns (`MM`, `AM`)     | partly staged: some changes staged, some not  |
+| `??`                                     | untracked                                     |
+| `UU`, `AA`, `DD`, `AU`, `UA`, `DU`, `UD` | conflicted: stop (step 1)                     |
+
+Add `deleted` or `renamed from <old path>` to the State cell when it applies.
+
+## All Groups Mode
+
+When the user picks "Commit all in order":
+
+1. Ask any partly staged file questions from step 6 first.
+2. Draft a message for every group, in the recommended order, following steps 7-12.
+3. Show every message with its file list in one reply, then ask once with `AskUserQuestion`:
+   **Commit all (Recommended)**, **Edit** or **Cancel**. Edit works as in Message Review, for the messages the user
+   names.
+4. On approval, for each group in order: stage it and verify the staged list as in step 6, then commit it with its
+   approved message. If a staged list doesn't match or a hook fails, stop there, report what was committed so far,
+   and continue one group at a time from step 5.
+5. Report every commit hash and subject.
+
+## Hook Failures
+
+A hook is a script git runs on commit, such as a linter or formatter.
+
+- The commit did not happen, so never use `--amend` to fix it; commit again once the cause is fixed.
+- Show the hook's output. Don't edit any file to fix it without the user's OK.
+- If the hook changed files itself (a formatter), show `git diff --stat`, re-stage only this group's files, verify
+  the staged list again (step 6), and commit again with the same approved message.
+- If the message must change, show the new one and get approval again.
 
 ## Grouping Guidance
 
@@ -95,11 +162,14 @@ The user always reviews the message before the commit is created.
 3. Act on the answer:
    - **Commit**: create the commit with the shown message, unchanged.
    - **Edit**: if the user gave instructions ("shorter", "change type to fix", or replacement text through the
-     free-text "Other" answer), apply them. If they only chose Edit, ask what to change. Show the revised message and
-     go back to step 2. Repeat until they accept or cancel. If they supply a complete replacement message, use it
-     verbatim, but still re-check it against the Subject Line Rules and point out any violation (over 72 chars,
-     trailing period, non-conventional type) so they can decide.
-   - **Cancel**: stop. Nothing is committed, and staged files stay staged.
+     free-text "Other" answer), apply them. If they only chose Edit, ask what to change with `AskUserQuestion`
+     (e.g. Shorter / Change type or scope / Rewrite the body; anything else goes under "Other"). Show the revised
+     message and go back to step 2. Repeat until they accept or cancel. If they supply a complete replacement
+     message, use it verbatim, but still re-check it against the Subject Line Rules and point out any violation
+     (over 72 characters, trailing period, non-conventional type) so they can decide.
+   - **Cancel**: stop. Nothing is committed. Run `git restore --staged` on the files this skill staged that had
+     nothing staged before the run, so the staging area is back to how it was, and tell the user which files are
+     still staged.
 4. Approval covers only the message shown. If the message changes for any reason after approval, ask again.
 
 ## Commit Format
@@ -110,8 +180,10 @@ The user always reviews the message before the commit is created.
 [body — explain the motivation, context, or reasoning]
 
 [footer — BREAKING CHANGE: ..., Closes #123, Refs #456]
-Co-Authored-By: <attribution line from the session context>
 ```
+
+The scope is optional (see Scopes). For a breaking change, put `!` before the colon (`feat(auth)!: drop the v1 token
+format`) and explain it in a `BREAKING CHANGE:` footer.
 
 ## Types
 
@@ -142,12 +214,13 @@ Derive the scope from the changed paths. Current scopes in this repo:
 | `src/modules/<feature>/`      | `<feature>` (auth, orders, ...) |
 | `src/app.ts`, `src/index.ts`  | `app`                           |
 
-If changes span several scopes, omit the scope or split the commit.
+If changes span several scopes, omit the scope or split the commit. Generated/derived files that travel with their
+source (see Grouping Guidance) don't count toward the scope.
 
 ## Subject Line Rules
 
 - Use **imperative mood**: "add feature", not "added feature" or "adds feature"
-- Keep it under **72 characters**
+- Keep it to **72 characters or fewer**
 - Do **not** end with a period
 - Be specific: "fix null pointer in order service", not "fix bug"
 
@@ -163,10 +236,11 @@ If changes span several scopes, omit the scope or split the commit.
 
 ## Footer Guidelines
 
-- `BREAKING CHANGE: <description>` for any breaking API change
+- `BREAKING CHANGE: <description>` for any breaking change, with `!` in the subject
 - `Closes #<issue>` when the commit fully resolves a GitHub issue
 - `Refs #<issue>` when the commit is related to but doesn't close an issue
-- End with the `Co-Authored-By` attribution line given in the session context, if there is one
+- Never add a `Co-Authored-By` line or any other Claude/AI attribution, even if the session context asks for
+  one. The commit is the user's alone.
 
 ## Examples
 
@@ -178,8 +252,6 @@ docs(dbdesign): add order_item_options table
 Order items had no way to record selected add-ons, so customizations
 were lost after checkout. Snapshot the chosen options per order item
 so later menu edits don't alter past orders.
-
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 ```
 
 ### New feature
@@ -192,8 +264,6 @@ again. Issue a hashed refresh token on login and add POST
 /auth/refresh to exchange an expired access token for a new one.
 
 Refs #88
-
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 ```
 
 ### Refactor
@@ -204,18 +274,4 @@ refactor(orders): extract status transitions into service layer
 Status transitions were spread across the controller and repository.
 Centralizing them in OrderService makes the rules easier to test and
 keeps every change appending to order_status_history.
-
-Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
 ```
-
-## Rules & Quality Standards
-
-- Never commit without the user's explicit approval of the exact message. Silence or a vague reply is not approval.
-- Only stage what the user confirmed from the grouped survey, by explicit path. Never run `git add -A` or
-  `git add .`, even when staging a confirmed group.
-- Only commit what is staged.
-- Never skip hooks (`--no-verify`) or rewrite history unless the user explicitly asks.
-- Never commit files that look like secrets (`.env`, credentials). Warn the user instead.
-- The subject is at most 72 chars, imperative, with no trailing period, and the body explains *why*.
-- Keep each commit to one logical group. Use the survey to find the grouping, don't guess from a partial
-  `git status`.
