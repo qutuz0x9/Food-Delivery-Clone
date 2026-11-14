@@ -6,6 +6,7 @@ import { toCustomerResponse } from "./auth.mapper.js";
 import {
   AccountNotActiveError,
   EmailAlreadyExistsError,
+  InvalidAccessTokenError,
   InvalidCredentialsError,
   InvalidRefreshTokenError,
   NotACustomerError,
@@ -19,6 +20,7 @@ import type {
 import {
   REVOKED_REASONS,
   ROLE_NAMES,
+  type AuthContext,
   type IssuedRefreshToken,
   type LoginCustomerResult,
   type RefreshCustomerResult,
@@ -223,6 +225,16 @@ export class AuthService {
       refreshToken: issuedRefreshToken,
     };
     return refreshCustomerResult;
+  }
+
+  async authenticate(accessToken: string): Promise<AuthContext> {
+    const claims = this.tokens.verifyAccessToken(accessToken);
+    const user = await this.authRepository.findUserById(claims.userId);
+    if (!user) throw new InvalidAccessTokenError();
+    if (user.accountStatus !== "active")
+      throw new AccountNotActiveError(user.accountStatus);
+    const context: AuthContext = { userId: user.id, role: claims.role };
+    return context;
   }
 
   async logoutCustomer(refreshToken: string | undefined): Promise<void> {

@@ -8,7 +8,7 @@
     "outDir": "./dist",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "preserve",
+    "module": "nodenext",
     "target": "esnext",
     "types": [
       "node"
@@ -22,7 +22,6 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "rewriteRelativeImportExtensions": true,
     "erasableSyntaxOnly": true,
     "noEmit": false,
 
@@ -46,7 +45,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    "moduleResolution": "bundler",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true
   },
   "include": ["src/**/*.ts", "src/**/*.json"],

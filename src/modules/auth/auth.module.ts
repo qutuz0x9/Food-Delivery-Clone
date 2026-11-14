@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PasswordHasher } from "../../common/password-hasher.js";
 import { env } from "../../config/env.js";
+import { createAuthenticate } from "../../middlewares/authenticate.js";
 import { createRateLimiter } from "../../middlewares/rate-limit.js";
 import { db } from "../../prisma/db.js";
 import { customersService } from "../customers/index.js";
@@ -24,6 +25,9 @@ const authService = new AuthService(
   new PasswordHasher(),
   tokenService,
 );
+
+// The Middleware Itself and We will use it in #9 Issues for the GET /customer/me
+export const authenticate = createAuthenticate(authService);
 
 const customerController = new CustomerAuthController(authService, {
   secure: env.NODE_ENV === "production",

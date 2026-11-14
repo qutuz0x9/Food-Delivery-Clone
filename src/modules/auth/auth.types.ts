@@ -9,6 +9,11 @@ export const ROLE_NAMES = {
 
 export type RoleName = (typeof ROLE_NAMES)[keyof typeof ROLE_NAMES];
 
+export interface AuthContext {
+  readonly userId: string;
+  readonly role: RoleName;
+}
+
 export interface CustomerResponse {
   readonly id: string;
   readonly email: string;

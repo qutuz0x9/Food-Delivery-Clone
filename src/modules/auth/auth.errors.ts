@@ -35,6 +35,20 @@ export class InvalidRefreshTokenError extends UnauthorizedError {
   }
 }
 
+export class InvalidAccessTokenError extends UnauthorizedError {
+  // reason is a Union type it should be missing or invalid, if no value the default is invalid
+  // "missing":Ok - "invalid": Ok - "": Ok - "expired": compile error: not one of the two values
+  constructor(reason: "missing" | "invalid" = "invalid") {
+    super(reason === "missing" ? "Access token is required" : "Access token is invalid", "INVALID_ACCESS_TOKEN");
+  }
+}
+
+export class AccessTokenExpiredError extends UnauthorizedError {
+  constructor() {
+    super("Access token has expired", "ACCESS_TOKEN_EXPIRED");
+  }
+}
+
 export class EmailAlreadyExistsError extends ConflictError {
   constructor() {
     super("Email address is already registered", "EMAIL_ALREADY_EXISTS");
