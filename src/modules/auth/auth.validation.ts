@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ROLE_NAMES } from "./auth.types.js";
 
 const E164_PHONE = /^\+[1-9]\d{7,14}$/;
 
@@ -44,3 +45,9 @@ export const loginCustomerSchema = z.object({
     .max(128, "Password must be at most 128 characters"),
 });
 export type LoginCustomerInput = z.infer<typeof loginCustomerSchema>;
+
+export const accessTokenClaimsSchema = z.object({
+  sub: z.uuid(),
+  role: z.enum(ROLE_NAMES),
+});
+export type AccessTokenPayload = z.infer<typeof accessTokenClaimsSchema>;
