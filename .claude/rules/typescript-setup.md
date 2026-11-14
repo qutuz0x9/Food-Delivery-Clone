@@ -13,8 +13,9 @@ build.
 ## Module and Compiler Setup
 
 - Write relative imports with a `.js` extension (`import app from "./app.js"`), even though the source is `.ts`.
-  `nodenext` requires an explicit extension, and `rewriteRelativeImportExtensions` would also accept `.ts`, but `.js`
-  is the convention here.
+  The type check enforces it: `nodenext` rejects a missing extension (`TS2307`), and a `.ts` extension is rejected too
+  (`TS5097`), because `rewriteRelativeImportExtensions` is off. `.vscode/settings.json` makes VS Code's auto-imports
+  write `.js`.
 - `verbatimModuleSyntax`: use `import type` / `type` modifiers for type-only imports (oxlint enforces it).
 - `erasableSyntaxOnly`: no `enum`, `namespace` or constructor parameter properties. Use `as const` objects and
   union types instead (this matters when mirroring the DB enums such as `order_status`).
