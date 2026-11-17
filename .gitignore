@@ -12,3 +12,4 @@ dist/
 
 # Personal learning notes (plans, progress, drills): kept locally, not in the repo
 .learning/
+.apiqut/
