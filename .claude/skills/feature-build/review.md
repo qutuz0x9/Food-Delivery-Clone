@@ -69,14 +69,16 @@ piling up until the end of the feature.
 
 ## When approved
 
-1. **Commit and PR practice:** ask the user to write a commit message (Conventional Commits, e.g. `feat(auth): register customer`) and a short PR description: what, why, how it was tested, and risks.
-   - Give 2–3 lines of feedback.
-   - Don't commit for them unless they ask.
+1. **Commit and PR:** the user writes the commit messages (Conventional Commits, e.g. `feat(auth): register customer`)
+   and the PR (what, why, how it was tested, risks, `Closes #N`), and merges it.
+   - Don't commit, push or merge for them unless they ask.
+   - Don't review the text here. After the merge, suggest `/feature-build git-review`, which reviews the commits, the
+     PR and the squash commit in full.
 2. **Progress:** update `.learning/progress.md` following `progress-rules.md`:
    - concept counts and stages
    - refresher result
    - foundation status
    - recurring mistakes
-   - the feature marked `done`
+   - the feature marked `done` once its PR is merged
 3. **Cleanup:** offer to remove the `LEARN-TODO` markers, keeping the user's code.
 4. **What changed:** tell the user in one or two lines what changed in their progress. Examples: "`find by unique field` moved to Unguided", "Test writing is now on", "Next feature includes a refresher".

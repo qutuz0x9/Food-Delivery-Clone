@@ -88,5 +88,6 @@ Count honestly, per concept and per foundation, following `progress-rules.md`:
 - A foundation is `written` when the user wrote it and it was correct or only needed Should fixes. If parts were
   skipped, write that next to it.
 - Set the feature's status to `final-reviewed (<overall>/10)`. It becomes `done` after the user types the fixes, all
-  tests pass, and the "When approved" steps of `review.md` run (commit and PR practice).
+  tests pass, the "When approved" steps of `review.md` run, and the PR is merged. Then suggest
+  `/feature-build git-review`.
 - Keep recurring mistakes that the review still found.

@@ -1,6 +1,7 @@
 ---
 name: git-commit
-description: Survey every tracked and untracked change, group related files into logical commits, visualize the groups, and generate a Conventional Commits message for the group the user picks, or for every group in order. Use when the user wants to commit changes.
+description: Survey every tracked and untracked change, group related files into logical commits, visualize the groups, and generate a Conventional Commits message for the group the user picks, or for every group in order. With `plan`, only propose the groups, the staging command and a short brief for each message, so the user stages and writes the commits themselves. Use when the user wants to commit changes or plan their commits.
+argument-hint: "[plan]"
 disable-model-invocation: true
 allowed-tools: Bash(git status *), Bash(git diff *), Bash(git log *), Bash(git add *), Bash(git restore --staged *), Bash(git commit *)
 ---
@@ -12,7 +13,8 @@ Generate high-quality, meaningful git commits following the Conventional Commits
 ## Usage
 
 ```txt
-/git-commit
+/git-commit        # group the changes, then stage and commit the groups you approve
+/git-commit plan   # group the changes and brief each commit; stage and commit nothing
 ```
 
 ## Standing Rules
@@ -27,6 +29,7 @@ These apply for the whole run, to every group:
 - Ask every question with `AskUserQuestion`, never in plain text. A typed reply ends the turn and clears this skill's
   pre-approved git commands, so they would start asking for permission again.
 - Keep each commit to one logical group.
+- In plan mode (`/git-commit plan`), never run `git add`, `git restore` or `git commit`: see Plan Mode.
 
 ## Behavior
 
@@ -89,6 +92,54 @@ These apply for the whole run, to every group:
     verbatim. If a hook fails, follow Hook Failures.
 15. **Report** the commit hash and subject.
 16. **Offer the next group** if any remain, and repeat from step 5 until the user is done or stops.
+
+## Plan Mode
+
+`/git-commit plan` helps the user commit by hand: it says which files belong together and what each message should
+say, and the user stages, writes and commits every group themselves. It is practice, so **don't write the finished
+message**: give the decisions and the content, and leave the wording to the user.
+
+1. Run steps 1-4 of Behavior exactly as usual: check the repo state, survey every change, group, and show the
+   groups with the "Do not commit" and "Unclear" lists.
+2. For each group, in the recommended order, add under its table:
+   - **Together or alone:** one line on why these files form one commit, or why this file stands alone (a separate
+     topic, a different scope, a tool change that isn't part of the feature).
+   - **Order:** whether it must come before or after another group, and why. A commit must build on its own, so code
+     that imports a file from another group goes after that group, or both become one group.
+   - **Stage it:** the exact command to copy, with explicit paths, in a `sh` fence: `git add <path> <path>`.
+   - **Message brief**, as short bullets, never a finished message:
+     - **Type and scope:** the pair to use (see Types and Scopes) and why, reusing a scope from
+       `git log --format=%s -10` when one fits.
+     - **Subject:** what the change does for a reader, in plain words (not the final wording); remind the rules
+       (imperative, 72 characters or fewer, no period).
+     - **Body:** the 1-2 points of **why** the body should explain (the problem, the rule or the decision behind the
+       change), taken from the diff, the plan or the linked issue. 2-3 lines; no list of files.
+     - **Footer:** `Closes #N` or `Refs #N` when an issue applies (from the branch name, the plan or the issue
+       list), otherwise none.
+     - **Watch out:** the one mistake this commit invites, if any (a type that looks right but isn't, a scope that
+       spans two areas, something that is easy to forget to mention).
+3. End with **How to commit each group**, as a short checklist the user follows per group:
+   `git add …` → `git diff --cached --stat` (only this group's files?) → `git commit` (write the message in the
+   editor) → next group. Mention `git restore --staged <file>` to un-stage a file added by mistake.
+4. Stop there. Plan mode asks no `AskUserQuestion` and changes nothing in the repo. If the user then wants Claude to
+   commit a group after all, they run `/git-commit` without `plan`.
+
+A group's brief looks like this:
+
+````markdown
+**Together or alone:** together: the route, its controller and its tests are one feature surface.
+**Order:** after group 1 (the controller imports the new error class).
+
+```sh
+git add src/modules/customers/routes src/modules/customers/controllers src/routes.ts
+```
+
+- **Type and scope:** `feat(customers)`: a new endpoint in the customers module.
+- **Subject:** say that customers can now read their own profile at `/customers/me`.
+- **Body:** why `/me` takes the id from the token (no IDOR), and that a missing profile is a 404.
+- **Footer:** `Closes #9`.
+- **Watch out:** the spec change is in group 3; don't describe it here.
+````
 
 ## File States
 

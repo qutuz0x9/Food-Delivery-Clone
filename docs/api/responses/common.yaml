@@ -213,6 +213,13 @@ NotFound:
             message: Delivery address not found
             error:
               code: DELIVERY_ADDRESS_NOT_FOUND
+        customerProfileNotFound:
+          summary: No customer profile for the authenticated user
+          value:
+            success: false
+            message: Customer profile not found
+            error:
+              code: CUSTOMER_NOT_FOUND
         resourceNotFound:
           summary: Generic resource not found
           value:

@@ -32,6 +32,10 @@ The user's progress lives in the project at `.learning/progress.md`. Create it f
 - **Recurring mistake:** a Must fix that appears in two or more reviews. Remove it after two approved reviews in a row where that concept was practiced without the mistake.
   - When it is recorded, its concept gets **focus**, and the next session offers a drill on that exact pattern
     (see SKILL.md, "At the start of every mode"). Record the drill in the Drills table.
+- **Git reviews** (`git-review.md`): one per merged feature PR. Record the date, PR, the commits / PR / squash
+  scores, the overall and the biggest miss in the Git reviews table. Git concepts have no stages (Claude never writes
+  commits or PRs): count approvals (a part scored 8 or more with no Must fix) and keep the last result. A git Must
+  fix seen in two git reviews is a recurring mistake.
 - **Language concepts:** when a review's Must fix is a JavaScript/TypeScript mistake (not a backend one), record it
   under its Language concept and offer a drill. Language concepts move up like core concepts: a passed drill without
   hints counts as one independent approval at the concept's stage.
@@ -61,6 +65,11 @@ Reuse these names. Add new ones only when nothing fits.
   - work after commit
   - authorization check
 - **Tests:** unit test with fakes, route test with Supertest, schema test
+- **Git:**
+  - commit messages (what and why)
+  - commit size and order (each one builds)
+  - PR description
+  - squash commit
 - **Language (JavaScript/TypeScript):**
   - classes and instances (`new`, `extends`, `super`, fields)
   - control flow and early return
@@ -80,16 +89,18 @@ Show a short summary:
 - the last solo session and its verdict
 - recurring mistakes
 - language concepts and the drills done
+- the last git review and its scores
 
 Then suggest **one** next step. Pick in this order:
 
 1. A drill, if a recurring mistake has no passed drill yet.
 2. A solo session, if one is due.
 3. Finishing a feature that is `final-reviewed` but not `done` yet.
-4. A feature that practices a focus concept or a recurring mistake.
-5. A bug hunt, if none in the last 3 features.
-6. An extend task, if none in the last 3 features.
-7. A feature with the concept closest to moving up.
+4. A git review, if the last merged feature PR has none.
+5. A feature that practices a focus concept or a recurring mistake.
+6. A bug hunt, if none in the last 3 features.
+7. An extend task, if none in the last 3 features.
+8. A feature with the concept closest to moving up.
 
 ## Template
 
@@ -136,4 +147,8 @@ Then suggest **one** next step. Pick in this order:
 ## Solo sessions
 | Date | Task | Time used | Verdict | Focus after |
 |---|---|---|---|---|
+
+## Git reviews
+| Date | PR | Commits | PR | Squash | Overall | Biggest miss |
+|---|---|---|---|---|---|---|
 ```

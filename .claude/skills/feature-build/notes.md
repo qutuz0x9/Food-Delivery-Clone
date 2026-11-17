@@ -18,9 +18,11 @@ them, with `00- Overview.md` as the hub:
 | `NN- (Review) <headline>.md` (06, 07, ...) | every `/feature-build review` of this feature, one note per review |
 | `NN- (Review) Piece Reviews.md` | the first `/feature-build review <piece>`; every later piece review is appended (see `review.md`) |
 | `NN- (Final Review) <Feature>.md` | `/feature-build final-review`; its format is in `final-review.md` |
+| `NN- (Git Review) PR <n>.md` | `/feature-build git-review`, after the merge; its format is in `git-review.md` |
 
-One note lives **outside** the feature folders, shared by all features:
-`04- Projects/<project>/03- Development/Features/00- Design Checklist.md` (see "Design Checklist" below).
+Two notes live **outside** the feature folders, shared by all features:
+`04- Projects/<project>/03- Development/Features/00- Design Checklist.md` (see "Design Checklist" below) and
+`00- Git Checklist.md` next to it (see `git-review.md`).
 
 ## 00- Overview.md
 
