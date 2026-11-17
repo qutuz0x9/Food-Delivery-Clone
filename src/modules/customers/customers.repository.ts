@@ -5,6 +5,17 @@ import type { DbClient } from "../../prisma/db.js";
 
 export type CustomerRow = Scalars<Models.public_Customer>;
 
+type UserRow = Scalars<Models.identity_User>;
+
+export type ProfileUser = Pick<
+  UserRow,
+  "email" | "phoneNumber" | "emailVerifiedAt"
+>;
+
+export type CustomerWithUserRow = CustomerRow & {
+  readonly user: ProfileUser | null;
+};
+
 export interface NewCustomerProfile {
   readonly userId: string;
   readonly firstName: string;
@@ -34,5 +45,22 @@ export class CustomersRepository {
       userId,
     }).first();
     return customer;
+  }
+
+  async findProfileByUserId(
+    userId: string,
+    client: DbClient = this.db,
+  ): Promise<CustomerWithUserRow | null> {
+    const customerWithUserRow = await client.orm.public.Customer.where({
+      userId,
+    })
+      .where((customer) =>
+        customer.user.some((user) => user.deletedAt.isNull()),
+      )
+      .include("user", (user) =>
+        user.select("email", "phoneNumber", "emailVerifiedAt"),
+      )
+      .first();
+    return customerWithUserRow;
   }
 }
