@@ -11,14 +11,19 @@ them, with `00- Overview.md` as the hub:
 | --- | --- |
 | `00- Overview.md` | Phase 1, together with the Database Diagram; **updated after every step below** |
 | `01- Database Diagram.md` | Phase 1: before the first design question (extend: before the impact analysis) |
-| `02- Design Review (You vs Me).md` | Phase 1: after the You vs me table, the rating and the plan, before "Reply `go`" |
-| `03- Logic & Flow.md` | Phase 1: right after the Design Review, from the agreed design; Phase 2 adds the real code names |
-| `04- Build Log.md` | Phase 2: after Verify and Progress, before the report |
-| `05- To-Do.md` | Phase 2: right after the Build Log |
-| `NN- (Review) <headline>.md` (06, 07, ...) | every `/feature-build review` of this feature, one note per review |
+| `02- Test Design.md` | Phase 1: by the `test-designer` agent, right after the Edge cases section; its Test cases section after the plan |
+| `03- Design Review (You vs Me).md` | Phase 1: after the You vs me table, the rating and the plan, before "Reply `go`" |
+| `04- Logic & Flow.md` | Phase 1: right after the Design Review, from the agreed design; Phase 2 adds the real code names |
+| `05- Build Log.md` | Phase 2: after Verify and Progress, before the report |
+| `06- To-Do.md` | Phase 2: right after the Build Log |
+| `NN- (Review) <headline>.md` (07, 08, ...) | every `/feature-build review` of this feature, one note per review |
 | `NN- (Review) Piece Reviews.md` | the first `/feature-build review <piece>`; every later piece review is appended (see `review.md`) |
 | `NN- (Final Review) <Feature>.md` | `/feature-build final-review`; its format is in `final-review.md` |
 | `NN- (Git Review) PR <n>.md` | `/feature-build git-review`, after the merge; its format is in `git-review.md` |
+
+A note takes the next free number when it is written, so the numbers above are for build mode. Extend mode has no
+Test Design note, so its later notes are one lower (`02- Design Review`). Older feature folders keep the numbers they
+were written with.
 
 Two notes live **outside** the feature folders, shared by all features:
 `04- Projects/<project>/03- Development/Features/00- Design Checklist.md` (see "Design Checklist" below) and
@@ -116,7 +121,31 @@ Sections, in order:
 
 In the first interview message, give the note's path in one line ("the tables are in ...").
 
-## 02- Design Review (You vs Me).md
+## 02- Test Design.md
+
+`type/reference`, tags `topic/testing` and `concept/testing`. The `test-designer` agent
+(`.claude/agents/test-designer.md`) writes it right after the Edge cases section of the design interview, in build
+mode only. It teaches the test-design techniques on the user's own feature. Once the design is agreed, it becomes the
+feature's list of test cases.
+
+Sections, in order:
+
+1. A `>[!Note]` callout: the date, the feature, the sources used (the contract models, the `domain-rules.md`
+   sections), and links to the Overview and the Database Diagram.
+2. `# <Feature>: Edge Cases and Test Design`
+3. `## The techniques`: one line for each technique used in this note, saying what it is and what kind of bug it
+   finds, in simple words. Don't use this feature's cases as examples, because that would give away the answers.
+4. `## My cases, by technique`: a table of # | my case (the user's words, shortened) | technique | test layer (schema,
+   service, route, repository). Cases from the Errors section count too.
+5. `## Hints`: the agent's hints as checkboxes, `- [ ] [Technique] <statement>`, so the user can tick each one they
+   act on.
+6. `## Test cases (after the design)`: until the You vs me table, only one line: "Filled in after the You vs me
+   table, so the hints stay hints." After the plan is written, Claude replaces that line with a table of # | case |
+   mine or missed | technique | layer | expected result | test (`describe › it` from plan section 9) | written by.
+
+The agent's full list of missed cases never goes in this note before the You vs me table.
+
+## 03- Design Review (You vs Me).md
 
 `type/comparison`. Sections, in order:
 
@@ -171,7 +200,7 @@ In the first interview message, give the note's path in one line ("the tables ar
 If the user changes the design after the table and before `go`, update the note to the agreed design before you
 scaffold.
 
-## 03- Logic & Flow.md
+## 04- Logic & Flow.md
 
 `type/concept`, tags `topic/express` (or the sibling notes' topic) and `concept/architecture`. The feature's business
 logic in pictures: what the rules are, in which order the code applies them, and why each decision goes the way it
@@ -217,7 +246,7 @@ Sections, in order:
 - Node ids are short and unique within one diagram (`check1`, `revoke`); never reuse an id with another label.
 - Label edges with the condition: `-->|yes|`, `-->|no|`.
 
-## 04- Build Log.md
+## 05- Build Log.md
 
 `type/concept`. Helps the user understand the code Claude wrote after `go`. It explains the code, not the story of
 writing it.
@@ -253,7 +282,7 @@ Sections, in order:
 
 Anything still open goes in the To-Do note, not here.
 
-## 05- To-Do.md
+## 06- To-Do.md
 
 `type/study-guide`. A checklist the user follows, step by step, to finish the feature. Use Obsidian checkboxes
 (`- [ ]`), so the user can tick them off. Sections, in order:
@@ -297,8 +326,8 @@ One note per review, directly in the feature's folder (no subfolder), so every n
 root and the user can go back over their mistakes feature by feature.
 
 - **Name:** `NN- (Review) <headline>.md`. `NN` continues the numbering of the feature folder, so the first review
-  is `06-` (after `05- To-Do.md`). The headline names the main problem in a few words, e.g.
-  `06- (Review) errorHandler Returns 200 and Hangs`. When a review approves with nothing to fix, use
+  is `07-` (after `06- To-Do.md`). The headline names the main problem in a few words, e.g.
+  `07- (Review) errorHandler Returns 200 and Hangs`. When a review approves with nothing to fix, use
   `NN- (Review) <piece> Approved`.
 - **Frontmatter:** `type/bug`, plus `Date: <today>` as sibling notes use.
 - **Sections, in order:**
@@ -309,7 +338,7 @@ root and the user can go back over their mistakes feature by feature.
   5. `## Investigation`: one `###` per failure or problem, quoting the failure message, the test's expectation and
      the user's code (real excerpts), explaining what happens at runtime, and ending with a hint as a question.
   6. `## Root cause`: a table of problem | cause | `file:line`.
-  7. `## Review`: the review format from `review.md`: Tests, Good, Must fix, Should fix, Nice to have, Verdict,
+  7. `## Review`: the review format from `review.md`: Tests, Test coverage, Good, Must fix, Should fix, Nice to have, Verdict,
      Check your understanding, SQL check. Hints and questions only; never corrected code.
   8. `## How to verify after the fixes`: the commands, with the goal for each.
   9. `## Key Takeaways`: 3–5 lessons the user can reuse in the next feature.

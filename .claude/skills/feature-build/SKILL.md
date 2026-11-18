@@ -1,7 +1,7 @@
 ---
 name: feature-build
-description: Learning mode that grows a junior backend engineer to mid level in Node.js + Express (TypeScript or JavaScript) with Prisma, Zod and Vitest. Use when the user runs /feature-build or asks to build, extend or debug a feature "in learning mode". The user designs the feature and writes the core logic, validation rules, queries and some tests; Claude writes the boilerplate, reviews like a staff engineer, and tracks progress. Modes: build, extend, bug-hunt, solo (take-home practice), review (whole feature or one piece), final-review (scores and correct versions), git-review (commits, PR and squash commit after the merge), drill (short JavaScript/TypeScript practice), progress.
-argument-hint: <feature> | extend <change> | bug-hunt [check] | solo [done] | review | final-review | git-review [pr] | progress
+description: Learning mode that grows a junior backend engineer to mid level in Node.js + Express (TypeScript or JavaScript) with Prisma, Zod and Vitest. Use when the user runs /feature-build or asks to build, extend or debug a feature "in learning mode". The user designs the feature and writes the core logic, validation rules, queries and some tests; Claude writes the boilerplate, reviews like a staff engineer, and tracks progress. Modes: build, extend, bug-hunt, solo (take-home practice), review (whole feature or one piece), test-check (edge cases and test cases, by test-design technique), final-review (scores and correct versions), git-review (commits, PR and squash commit after the merge), drill (short JavaScript/TypeScript practice), progress.
+argument-hint: <feature> | extend <change> | bug-hunt [check] | solo [done] | review | test-check [feature] | final-review | git-review [pr] | progress
 ---
 
 # Learn Build
@@ -32,6 +32,7 @@ Request: $ARGUMENTS
 | `/feature-build solo` · `solo done` | Timed take-home task from a blank folder | `practice.md` (Solo) |
 | `/feature-build review` | Review the user's work (hints only) | `review.md`, `stack.md` |
 | `/feature-build review <piece>` | Quick review of one piece, right after the user writes it (hints only) | `review.md` (Piece review), `stack.md` |
+| `/feature-build test-check [feature]` | Check the edge cases and test cases with test-design techniques, through the `test-designer` agent (hints only) | `review.md` (Test check) |
 | `/feature-build drill [concept]` · `drill check` | 5–10 minute JavaScript/TypeScript drill in a scratch file | `practice.md` (Drill) |
 | `/feature-build final-review` | Close a feature: scores, the correct version of every step, the missing parts implemented | `final-review.md`, `review.md`, `stack.md`, `notes.md` |
 | `/feature-build git-review [pr]` | After the merge: review my commit messages, PR and squash commit (what I explained well, what I missed, what to improve) | `git-review.md` |
