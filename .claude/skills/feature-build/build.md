@@ -67,6 +67,19 @@ Each message:
 In Errors and Edge cases, the user lists cases instead of answering numbered questions. After their list, ask once
 "More cases, or `done`?" before moving on. Business logic and flow follows its own three steps (above).
 
+**Test design, after Edge cases:** when the user says `done` in Edge cases, launch the `test-designer` agent with
+phase `design`, the feature and its module, the user's answers to all 7 sections, and the vault feature folder. It
+writes `02- Test Design.md` (see `notes.md`) and returns `COVERED`, `HINTS` and a `FULL LIST`. Then:
+
+1. Add the note's row to the Overview. In chat, give the note's path, then the `COVERED` list and the `HINTS`
+   exactly as the agent wrote them, with no answers added.
+2. The user may add cases once, or say `done`. The revised list is the one compared and scored. Add the new cases
+   to the note's "My cases, by technique" table.
+3. Keep the `FULL LIST` out of the chat and the note until the You vs me table. Use it there, in the Edge cases
+   row's "My design" and its **Missed** verdicts, and in plan sections 8 and 9.
+
+If the agent fails, say so in one line and go on without it.
+
 When a section is finished, show it filled in, then ask all the questions of the next section in the same message:
 
 ```txt
@@ -108,14 +121,19 @@ A **must-fix gap** is any of these:
   rules forbid
 
 Then write the plan from the agreed design, the **Design Review** note and the **Logic & Flow** note (see
-`notes.md`). Add every **Missed**, **Wrong** and must-fix item of the You vs me table to the **Design Checklist** (create it on the first round).
+`notes.md`), and fill the **Test Design** note's "Test cases (after the design)" section from the agent's full list
+and plan section 9. Add every **Missed**, **Wrong** and must-fix item of the You vs me table to the **Design Checklist** (create it on the first round).
 
 ### Design stage `draft`
 
 1. Create `.learning/plans/<feature-slug>.md` with the plan template headings and a one-line hint under each. The user fills in sections 1–3 and 5–8.
 2. Tell the user to fill it in and say `ready`. Stop.
 3. **Design review:** for each section, list what's good and the issues as **Must fix / Should fix**. Write the issues as questions, not answers. Rate the round (same scale as above).
-4. The user revises until there are no Must-fix issues. Then Claude writes sections 4, 9, 10 and 11, and finalizes the plan.
+   For section 8, first launch the `test-designer` agent with phase `design`, the plan path and the vault feature
+   folder. It writes the Test Design note. Its hints are the section 8 issues, and its full list stays hidden, as
+   in the `questions` stage.
+4. The user revises until there are no Must-fix issues. Then Claude writes sections 4, 9, 10 and 11, finalizes the
+   plan, and fills the Test Design note's "Test cases (after the design)" section.
 5. Write the **Design Review** note (see `notes.md`), with the user's plan sections as "My answers", and the **Logic
    & Flow** note from the finalized plan. Add the round's Must-fix issues to the **Design Checklist**.
 

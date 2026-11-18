@@ -28,10 +28,18 @@
      - Arrange / act / assert is clear.
      - The assertion checks the thing the test name promises.
      - The test would fail if the code were broken. Say how you checked.
+   - **Test coverage:** launch the `test-designer` agent with phase `review`, the plan path, the feature's test
+     files and the test output of step 4. Then:
+     - its `USER HINTS` become Must fix / Should fix items, and its `FULL LIST` stays hidden, for the hint ladder
+     - its `CLAUDE GAPS` are Claude-owned tests: fix them (step 7)
+     - for its `NEW CASES`, add the tests to Claude-owned files, and give a hint when the user's code doesn't handle
+       the case
    - **A written foundation:** correct, and consistent with the rest of the app.
    - **Readability and conventions:** naming, structure, small functions, no `any` in TS.
 6. **Write the review note** in the feature's folder, named `NN- (Review) <headline>.md` (see `notes.md`), and update the feature's `00- Overview.md` (the new row, the piece statuses). Use this format inside the note's `## Review` section, and give the user its path with a short summary in chat:
    - **Tests:** X passed, Y failed (list the failing names)
+   - **Test coverage:** how many of the plan's errors and edge cases have a test, then the agent's coverage table
+     with only the `missing` and `weak` rows, and the Claude-owned tests that were added or fixed.
    - **Good:** 1–3 specific things they did well.
    - **Must fix / Should fix / Nice to have:** each item gives `file:line`, the problem as a hint or question, and why it matters. Give no corrected code; the hint ladder applies if they ask.
    - **Verdict:** `Approved` or `Another pass needed`
@@ -49,13 +57,27 @@ piling up until the end of the feature.
 
 1. **Find the piece** by name in the latest `in progress` feature (e.g. `createUser`, `AppError`, `schema`).
 2. **Run** lint, the type check and only the tests that cover the piece (the To-Do note lists them).
-3. **Read the piece** with the checks of step 5 that apply to it.
+3. **Read the piece** with the checks of step 5 that apply to it. If the piece is a test, also launch the
+   `test-designer` agent with phase `review` for that test only.
 4. **Reply in chat, short:** tests for this piece, 1–2 things done well, Must fix / Should fix as hints or
    questions, and `Approved` or `Another pass needed`.
 5. **Append it to the note** `NN- (Review) Piece Reviews.md` in the feature's folder (create it on the first piece
    review, numbered like other review notes). One section per review: `## <date> · <piece> · <verdict>`, then the
    same content as the chat reply. Update `00- Overview.md` (the piece's status).
 6. **Progress:** an approved piece counts like an approval in a full review (see `progress-rules.md`).
+
+## Test check: `/feature-build test-check [feature]`
+
+An on-demand check of a feature's edge cases and test cases, at any step.
+
+1. **Find the feature:** from the argument, or the latest `in progress` feature in `.learning/progress.md`. Read its
+   plan.
+2. **Launch** the `test-designer` agent with phase `check` and the plan path. It reviews the tests when the feature
+   has some, and the plan's cases when it doesn't.
+3. **Reply in chat, short:** the coverage table or the `COVERED` list, then the hints. Keep the `FULL LIST` hidden.
+   Show it only when the user asks for the answers.
+4. **Claude gaps:** list them, and offer in one line to fix them.
+5. Write no note and change no progress.
 
 ## SQL check (after the user answers)
 
